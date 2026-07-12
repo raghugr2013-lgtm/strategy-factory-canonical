@@ -1,0 +1,4 @@
+{
+  "_comment": "Static list of TradingView pages the ingestion pipeline is allowed to fetch. Keep this small and human-curated — this is NOT a scraper.",
+  "urls": []
+}

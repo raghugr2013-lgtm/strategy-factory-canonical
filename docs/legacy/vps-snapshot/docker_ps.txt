@@ -1,0 +1,14 @@
+CONTAINER ID   IMAGE                             COMMAND                   CREATED      STATUS                PORTS                                                                          NAMES
+ef6ee8bdc59f   factory-backend:latest            "/bin/sh -c 'echo \"[…"   2 days ago   Up 2 days (healthy)   8001/tcp                                                                       factory-runner
+8a8d1cee6837   factory-backend:latest            "uvicorn server:app …"    2 days ago   Up 2 days (healthy)   8001/tcp                                                                       factory-backend
+f39ec51cc41d   nginx:1.27-alpine                 "/docker-entrypoint.…"    3 days ago   Up 2 days (healthy)   80/tcp                                                                         factory-frontend
+4b86d7f955d8   grafana/promtail:latest           "/usr/bin/promtail -…"    4 days ago   Up 4 days                                                                                            promtail
+630f73b84c23   grafana/loki:latest               "/usr/bin/loki -conf…"    4 days ago   Up 4 days             3100/tcp                                                                       loki
+ec4e379a7ab7   gcr.io/cadvisor/cadvisor:latest   "/usr/bin/cadvisor -…"    4 days ago   Up 4 days (healthy)   8080/tcp                                                                       cadvisor
+4f57b0c1ba35   prom/node-exporter:latest         "/bin/node_exporter …"    4 days ago   Up 4 days             9100/tcp                                                                       node-exporter
+e7ce1971e61e   grafana/grafana-oss:latest        "/run.sh"                 4 days ago   Up 4 days             3000/tcp                                                                       grafana
+6c2247efabd1   prom/prometheus:latest            "/bin/prometheus --c…"    4 days ago   Up 4 days             9090/tcp                                                                       prometheus
+371acf1f95f6   portainer/portainer-ce:latest     "/portainer -H unix:…"    4 days ago   Up 4 days             8000/tcp, 9000/tcp, 9443/tcp                                                   portainer
+28a808862bc8   traefik:v3.6.2                    "/entrypoint.sh --co…"    4 days ago   Up 4 days             0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp   traefik
+3c02b9a6f553   redis:7-alpine                    "docker-entrypoint.s…"    4 days ago   Up 4 days             6379/tcp                                                                       redis
+0f24917792a1   mongo:8                           "docker-entrypoint.s…"    4 days ago   Up 4 days             27017/tcp                                                                      mongodb

@@ -1,0 +1,663 @@
+/* ============================================================================
+ * ASF DESIGN TOKENS — Phase U-1 (Opus 4.8 design-system source of truth)
+ * ----------------------------------------------------------------------------
+ * Single-source-of-truth CSS custom properties for the AI Strategy Factory
+ * (ASF) command-shell UI. Loaded ONCE from /app/frontend/src/index.css.
+ *
+ *  Scope:    drop-in dark-first token sheet, light-mode optional (U-6).
+ *  Rules:    five sacred verdict colours (#4ADE80/#FACC15/#F87171/#94A3B8
+ *            /#A78BFA) — never remap. No hex outside this file.
+ *  Motion:   animate only opacity / transform / background-color.
+ *            Hover 120ms · drawer 180ms · page 240ms.
+ *  Glass:    overlay scrims only @ 12px backdrop-blur. NEVER on cards.
+ *  A11y:     compact-density verdict chips carry P/W/F/A/I letter prefix.
+ * ========================================================================== */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --asf-bg-canvas:           #0A0C10;
+  --asf-bg-surface:          #11141A;
+  --asf-bg-surface-elevated: #161A22;
+  --asf-bg-surface-sunken:   #080A0E;
+
+  /* ── Borders ──────────────────────────────────────────────────────────── */
+  --asf-border-default:    #1F242E;
+  --asf-border-emphasized: #2C333F;
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --asf-text-primary:   #E6EAF2;
+  --asf-text-secondary: #9CA3B0;
+  --asf-text-tertiary:  #5C6473;
+  --asf-text-inverse:   #0A0C10;
+
+  /* ── Accent (Binance gold — institutional dark workstation; M0 2026-06-11) ─── */
+  --asf-accent-primary:       #F0B90B;
+  --asf-accent-primary-hover: #FFD13A;
+
+  /* ── Verdict taxonomy (SACRED) ────────────────────────────────────────── */
+  --asf-accent-success: #4ADE80;  /* passed · alive · WITHIN_TOLERANCE       */
+  --asf-accent-warn:    #FACC15;  /* warn · stale · NEEDS_MORE_EVIDENCE      */
+  --asf-accent-danger:  #F87171;  /* failed · dead · DIVERGED · drifting     */
+  --asf-accent-neutral: #94A3B8;  /* advisory_only · null · none             */
+  --asf-accent-info:    #A78BFA;  /* info · new (sparingly)                  */
+
+  /* Verdict @ alpha (background fills for VerdictBadge) */
+  --asf-accent-success-fill: rgba(74, 222, 128, 0.16);
+  --asf-accent-warn-fill:    rgba(250, 204, 21, 0.16);
+  --asf-accent-danger-fill:  rgba(248, 113, 113, 0.16);
+  --asf-accent-neutral-fill: rgba(148, 163, 184, 0.16);
+  --asf-accent-info-fill:    rgba(167, 139, 250, 0.16);
+
+  /* Verdict @ hover-fill (8% — used by outlined VerdictChip on hover) */
+  --asf-accent-success-hover: rgba(74, 222, 128, 0.08);
+  --asf-accent-warn-hover:    rgba(250, 204, 21, 0.08);
+  --asf-accent-danger-hover:  rgba(248, 113, 113, 0.08);
+  --asf-accent-neutral-hover: rgba(148, 163, 184, 0.08);
+  --asf-accent-info-hover:    rgba(167, 139, 250, 0.08);
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --asf-font-sans: "IBM Plex Sans", "Inter", system-ui, -apple-system,
+                   "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --asf-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace,
+                   "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+
+  --asf-fs-display: 48px;
+  --asf-fs-h1:      24px;
+  --asf-fs-h2:      18px;
+  --asf-fs-card:    14px;
+  --asf-fs-body:    14px;
+  --asf-fs-caption: 12px;
+
+  --asf-fw-normal:  400;
+  --asf-fw-medium:  500;
+  --asf-fw-semi:    600;
+
+  --asf-lh-body:    1.45;
+  --asf-lh-heading: 1.25;
+  --asf-lh-table:   1.20;
+  --asf-lh-prose:   1.60;
+
+  --asf-tracking-caption: 0.08em;
+  --asf-tracking-wordmark: 0.18em;
+
+  /* ── Spacing scale (4 → 48) ───────────────────────────────────────────── */
+  --asf-space-1:  4px;
+  --asf-space-2:  8px;
+  --asf-space-3:  12px;
+  --asf-space-4:  16px;
+  --asf-space-5:  20px;
+  --asf-space-6:  24px;
+  --asf-space-7:  32px;
+  --asf-space-8:  40px;
+  --asf-space-9:  48px;
+
+  /* ── Radius ───────────────────────────────────────────────────────────── */
+  --asf-radius-card: 6px;
+  --asf-radius-chip: 4px;
+
+  /* ── Density (default = the middle row) ───────────────────────────────── */
+  --asf-row-compact:  28px;
+  --asf-row-default:  36px;
+  --asf-row-spacious: 44px;
+
+  --asf-pad-compact:  12px;
+  --asf-pad-default:  16px;
+  --asf-pad-spacious: 24px;
+
+  /* ── Elevation (overlays only — NEVER on cards) ───────────────────────── */
+  --asf-shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.50);
+  --asf-shadow-modal:   0 16px 48px rgba(0, 0, 0, 0.60);
+  --asf-shadow-toast:   0 8px 24px rgba(0, 0, 0, 0.70);
+
+  /* ── Backdrop / glass (overlay scrims only) ───────────────────────────── */
+  --asf-backdrop:      rgba(0, 0, 0, 0.60);
+  --asf-backdrop-blur: 12px;
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --asf-dur-hover:  120ms;
+  --asf-dur-drawer: 180ms;
+  --asf-dur-page:   240ms;
+
+  --asf-ease-enter: cubic-bezier(0.4, 0, 0.2, 1);
+  --asf-ease-exit:  cubic-bezier(0.4, 0, 1, 1);
+
+  /* ── Z-index ──────────────────────────────────────────────────────────── */
+  --asf-z-canvas:  0;
+  --asf-z-rail:    20;
+  --asf-z-header:  30;
+  --asf-z-popover: 50;
+  --asf-z-scrim:   90;
+  --asf-z-modal:   100;
+  --asf-z-toast:   200;
+
+  /* ── Focus ────────────────────────────────────────────────────────────── */
+  --asf-focus-ring:   var(--asf-accent-primary);
+  --asf-focus-width:  2px;
+  --asf-focus-offset: 2px;
+}
+
+/* ── Light theme — REMOVED 2026-06-11 (M0) ───────────────────────────────
+ * Per operator decision: ASF becomes DARK-ONLY going forward.
+ * The previous `[data-theme="light"]` block has been deleted.
+ * See /app/memory/visual_approval_package/11_THEMETOGGLE_REMOVAL.md and
+ *     /app/memory/visual_approval_package/08_ADDENDUM_OPERATOR_FEEDBACK.md (C1).
+ */
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --asf-dur-hover:  0ms;
+    --asf-dur-drawer: 0ms;
+    --asf-dur-page:   0ms;
+  }
+}
+
+/* ============================================================================
+ * Surface utilities — opt-in primitives consumed by ASF components.
+ *
+ * These class names are namespaced (`.asf-*`) so they don't collide with
+ * the existing command/shell or shadcn styles. Components consume them
+ * directly; shadcn primitives (Card/Skeleton/Badge) consume them only via
+ * the explicit `data-asf="true"` attribute set by the operator at the
+ * component call-site. Nothing in this sheet styles existing surfaces by
+ * accident.
+ * ========================================================================== */
+
+.asf-card {
+  background: var(--asf-bg-surface);
+  border: 1px solid var(--asf-border-default);
+  border-radius: var(--asf-radius-card);
+  box-shadow: none;
+  color: var(--asf-text-primary);
+  font-family: var(--asf-font-sans);
+  transition: border-color var(--asf-dur-hover) var(--asf-ease-enter);
+}
+
+.asf-card:hover {
+  border-color: var(--asf-border-emphasized);
+}
+
+.asf-card__hd {
+  display: flex;
+  align-items: center;
+  gap: var(--asf-space-2);
+  padding: var(--asf-space-3) var(--asf-space-4);
+  border-bottom: 1px solid var(--asf-border-default);
+  font-size: var(--asf-fs-caption);
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+  color: var(--asf-text-secondary);
+}
+
+.asf-card__body {
+  padding: var(--asf-space-4);
+}
+
+/* ── Skeleton (replaces spinners for read paths) ───────────────────────── */
+.asf-skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--asf-bg-surface-elevated) 0%,
+    var(--asf-border-default) 50%,
+    var(--asf-bg-surface-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: asf-skel-shimmer 1400ms linear infinite;
+  border-radius: var(--asf-radius-chip);
+  color: transparent;
+}
+
+.asf-skeleton--line {
+  height: 12px;
+  width: 60%;
+}
+
+.asf-skeleton--block {
+  height: 64px;
+  width: 100%;
+}
+
+.asf-skeleton--kpi {
+  height: 96px;
+  width: 100%;
+}
+
+.asf-skeleton--table-row {
+  height: 36px;
+  width: 100%;
+  margin-bottom: var(--asf-space-1);
+}
+
+@keyframes asf-skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asf-skeleton {
+    animation: none;
+    background: var(--asf-bg-surface-elevated);
+  }
+}
+
+/* ── Empty state primitive (one-line explanation + next-action button) ─── */
+.asf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--asf-space-3);
+  padding: var(--asf-space-6);
+  background: var(--asf-bg-surface);
+  border: 1px solid var(--asf-border-default);
+  border-radius: var(--asf-radius-card);
+  color: var(--asf-text-secondary);
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-body);
+  line-height: var(--asf-lh-body);
+}
+
+.asf-empty__icon {
+  width: 24px;
+  height: 24px;
+  color: var(--asf-text-tertiary);
+}
+
+.asf-empty__title {
+  color: var(--asf-text-primary);
+  font-size: var(--asf-fs-h2);
+  font-weight: var(--asf-fw-semi);
+  line-height: var(--asf-lh-heading);
+}
+
+.asf-empty__body {
+  color: var(--asf-text-secondary);
+}
+
+.asf-empty__action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--asf-space-2);
+  padding: var(--asf-space-2) var(--asf-space-3);
+  background: transparent;
+  border: 1px solid var(--asf-accent-primary);
+  border-radius: var(--asf-radius-chip);
+  color: var(--asf-accent-primary);
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-medium);
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--asf-dur-hover) var(--asf-ease-enter);
+}
+
+.asf-empty__action:hover {
+  background: var(--asf-accent-success-hover); /* tiny semantically-neutral wash */
+  background: rgba(122, 184, 255, 0.08);
+}
+
+.asf-empty__action:focus-visible {
+  outline: var(--asf-focus-width) solid var(--asf-focus-ring);
+  outline-offset: var(--asf-focus-offset);
+}
+
+.asf-empty__doc {
+  color: var(--asf-text-tertiary);
+  font-size: var(--asf-fs-caption);
+  text-decoration: underline;
+}
+
+/* ── VerdictBadge (filled) ─────────────────────────────────────────────── */
+.asf-vbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--asf-space-1);
+  padding: 2px var(--asf-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--asf-radius-chip);
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-medium);
+  letter-spacing: var(--asf-tracking-caption);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.asf-vbadge[data-verdict="success"] {
+  background: var(--asf-accent-success-fill);
+  border-color: var(--asf-accent-success);
+  color: var(--asf-accent-success);
+}
+.asf-vbadge[data-verdict="warn"] {
+  background: var(--asf-accent-warn-fill);
+  border-color: var(--asf-accent-warn);
+  color: var(--asf-accent-warn);
+}
+.asf-vbadge[data-verdict="danger"] {
+  background: var(--asf-accent-danger-fill);
+  border-color: var(--asf-accent-danger);
+  color: var(--asf-accent-danger);
+}
+.asf-vbadge[data-verdict="neutral"] {
+  background: var(--asf-accent-neutral-fill);
+  border-color: var(--asf-accent-neutral);
+  color: var(--asf-accent-neutral);
+}
+.asf-vbadge[data-verdict="info"] {
+  background: var(--asf-accent-info-fill);
+  border-color: var(--asf-accent-info);
+  color: var(--asf-accent-info);
+}
+
+/* ── VerdictChip (outlined) ────────────────────────────────────────────── */
+.asf-vchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--asf-space-1);
+  padding: 2px var(--asf-space-2);
+  background: transparent;
+  border: 1px solid;
+  border-radius: var(--asf-radius-chip);
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-medium);
+  letter-spacing: var(--asf-tracking-caption);
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color var(--asf-dur-hover) var(--asf-ease-enter);
+}
+
+.asf-vchip[data-verdict="success"] { border-color: var(--asf-accent-success); color: var(--asf-accent-success); }
+.asf-vchip[data-verdict="warn"]    { border-color: var(--asf-accent-warn);    color: var(--asf-accent-warn); }
+.asf-vchip[data-verdict="danger"]  { border-color: var(--asf-accent-danger);  color: var(--asf-accent-danger); }
+.asf-vchip[data-verdict="neutral"] { border-color: var(--asf-accent-neutral); color: var(--asf-accent-neutral); }
+.asf-vchip[data-verdict="info"]    { border-color: var(--asf-accent-info);    color: var(--asf-accent-info); }
+
+.asf-vchip[data-verdict="success"]:hover { background: var(--asf-accent-success-hover); }
+.asf-vchip[data-verdict="warn"]:hover    { background: var(--asf-accent-warn-hover); }
+.asf-vchip[data-verdict="danger"]:hover  { background: var(--asf-accent-danger-hover); }
+.asf-vchip[data-verdict="neutral"]:hover { background: var(--asf-accent-neutral-hover); }
+.asf-vchip[data-verdict="info"]:hover    { background: var(--asf-accent-info-hover); }
+
+.asf-vbadge:focus-visible,
+.asf-vchip:focus-visible {
+  outline: var(--asf-focus-width) solid var(--asf-focus-ring);
+  outline-offset: var(--asf-focus-offset);
+}
+
+/* Letter prefix (P/W/F/A/I) — colour-blind safety, compact density. */
+.asf-vbadge__letter,
+.asf-vchip__letter {
+  font-family: var(--asf-font-mono);
+  font-weight: var(--asf-fw-semi);
+  font-size: 10px;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+.asf-vbadge[data-density="compact"] .asf-vbadge__letter,
+.asf-vchip[data-density="compact"]  .asf-vchip__letter { display: inline; }
+
+/* Default + spacious densities hide the letter prefix to reduce visual noise. */
+.asf-vbadge[data-density="default"]  .asf-vbadge__letter,
+.asf-vbadge[data-density="spacious"] .asf-vbadge__letter,
+.asf-vchip[data-density="default"]   .asf-vchip__letter,
+.asf-vchip[data-density="spacious"]  .asf-vchip__letter { display: none; }
+
+/* Dot indicator (used inside legend rows). */
+.asf-vchip__dot,
+.asf-vbadge__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── IndicatorLegend (+S2) ─────────────────────────────────────────────── */
+.asf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--asf-space-3);
+  padding: var(--asf-space-2) var(--asf-space-3);
+  background: var(--asf-bg-surface-sunken);
+  border: 1px solid var(--asf-border-default);
+  border-radius: var(--asf-radius-card);
+  color: var(--asf-text-secondary);
+  font-family: var(--asf-font-sans);
+  font-size: 11px;
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+}
+
+.asf-legend__title {
+  color: var(--asf-text-tertiary);
+  font-weight: var(--asf-fw-semi);
+  margin-right: var(--asf-space-2);
+}
+
+.asf-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--asf-space-1);
+  color: var(--asf-text-secondary);
+}
+
+.asf-legend__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.asf-legend__dot[data-verdict="success"] { background: var(--asf-accent-success); }
+.asf-legend__dot[data-verdict="warn"]    { background: var(--asf-accent-warn); }
+.asf-legend__dot[data-verdict="danger"]  { background: var(--asf-accent-danger); }
+.asf-legend__dot[data-verdict="neutral"] { background: var(--asf-accent-neutral); }
+.asf-legend__dot[data-verdict="info"]    { background: var(--asf-accent-info); }
+
+.asf-legend__letter {
+  display: inline-block;
+  min-width: 12px;
+  font-family: var(--asf-font-mono);
+  font-size: 10px;
+  font-weight: var(--asf-fw-semi);
+  color: var(--asf-text-tertiary);
+}
+
+/* ── Mono utility for inline numeric values (KpiTile etc, used in U-2). ── */
+.asf-mono {
+  font-family: var(--asf-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+ * Phase U-2 — AsfKpiTile
+ * ========================================================================== */
+.asf-kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--asf-space-2);
+  min-height: 88px;
+  padding: var(--asf-space-4);
+  background: var(--asf-bg-surface);
+  border: 1px solid var(--asf-border-default);
+  border-radius: var(--asf-radius-card);
+  color: var(--asf-text-primary);
+  font-family: var(--asf-font-sans);
+  transition: border-color var(--asf-dur-hover) var(--asf-ease-enter);
+}
+.asf-kpi-tile--sunken {
+  background: var(--asf-bg-surface-sunken);
+}
+.asf-kpi-tile:hover {
+  border-color: var(--asf-border-emphasized);
+}
+.asf-kpi-tile__label {
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-semi);
+  color: var(--asf-text-secondary);
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+}
+.asf-kpi-tile__value-row {
+  display: flex;
+  align-items: center;
+  gap: var(--asf-space-2);
+}
+.asf-kpi-tile__value {
+  font-size: var(--asf-fs-h1);
+  font-weight: var(--asf-fw-semi);
+  color: var(--asf-text-primary);
+  line-height: var(--asf-lh-heading);
+}
+.asf-kpi-tile__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--asf-accent-neutral);
+}
+.asf-kpi-tile__dot[data-verdict="success"] { background: var(--asf-accent-success); }
+.asf-kpi-tile__dot[data-verdict="warn"]    { background: var(--asf-accent-warn); }
+.asf-kpi-tile__dot[data-verdict="danger"]  { background: var(--asf-accent-danger); }
+.asf-kpi-tile__dot[data-verdict="neutral"] { background: var(--asf-accent-neutral); }
+.asf-kpi-tile__dot[data-verdict="info"]    { background: var(--asf-accent-info); }
+.asf-kpi-tile__delta {
+  font-size: var(--asf-fs-caption);
+  color: var(--asf-text-tertiary);
+  letter-spacing: 0.04em;
+}
+.asf-kpi-tile__delta[data-verdict="success"] { color: var(--asf-accent-success); }
+.asf-kpi-tile__delta[data-verdict="warn"]    { color: var(--asf-accent-warn); }
+.asf-kpi-tile__delta[data-verdict="danger"]  { color: var(--asf-accent-danger); }
+.asf-kpi-tile__delta[data-verdict="info"]    { color: var(--asf-accent-info); }
+
+/* Grid helper used by every screen's KPI strip. */
+.asf-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--asf-space-3);
+}
+
+/* ============================================================================
+ * Phase U-2 — AsfTable
+ * ========================================================================== */
+.asf-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--asf-border-default);
+  border-radius: var(--asf-radius-card);
+  background: var(--asf-bg-surface);
+}
+.asf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-body);
+  color: var(--asf-text-primary);
+}
+.asf-table__head {
+  background: var(--asf-bg-surface-sunken);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.asf-table__th {
+  height: 32px;
+  padding: 0 var(--asf-space-3);
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-semi);
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+  color: var(--asf-text-secondary);
+  text-align: left;
+  border-bottom: 1px solid var(--asf-border-default);
+  white-space: nowrap;
+}
+.asf-table__th[data-align="right"]  { text-align: right; }
+.asf-table__th[data-align="center"] { text-align: center; }
+.asf-table__row {
+  border-bottom: 1px solid var(--asf-border-default);
+  transition: background-color var(--asf-dur-hover) var(--asf-ease-enter);
+}
+.asf-table__row:last-child { border-bottom: none; }
+.asf-table__body .asf-table__row:hover {
+  background: var(--asf-bg-surface-elevated);
+}
+.asf-table__td {
+  height: var(--asf-row-default);
+  padding: 0 var(--asf-space-3);
+  color: var(--asf-text-primary);
+  line-height: var(--asf-lh-table);
+  border-bottom: 1px solid transparent;
+  vertical-align: middle;
+}
+.asf-table__td[data-align="right"]  { text-align: right; }
+.asf-table__td[data-align="center"] { text-align: center; }
+.asf-table__td.asf-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact density: 28 px rows. */
+[data-cmd-density="compact"] .asf-table__td { height: var(--asf-row-compact); }
+[data-cmd-density="spacious"] .asf-table__td { height: var(--asf-row-spacious); }
+
+/* ============================================================================
+ * Phase U-2 — Module-section utilities (header/spacing/typography unifiers)
+ * ========================================================================== */
+.asf-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--asf-space-4);
+}
+.asf-section + .asf-section { margin-top: var(--asf-space-4); }
+
+.asf-section__hd {
+  display: flex;
+  align-items: center;
+  gap: var(--asf-space-3);
+  flex-wrap: wrap;
+  padding: 0;
+  border: none;
+}
+.asf-section__hd-title {
+  font-family: var(--asf-font-sans);
+  font-size: var(--asf-fs-caption);
+  font-weight: var(--asf-fw-semi);
+  letter-spacing: var(--asf-tracking-caption);
+  text-transform: uppercase;
+  color: var(--asf-text-secondary);
+  margin: 0;
+}
+.asf-section__hd-spacer { flex: 1; }
+.asf-section__hd-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--asf-space-2);
+}
+
+/* Suppress legacy ghost-text section titles inside migrated panels — the
+ * `panel__hd` provided by ModuleSurface already names the section. The
+ * legacy components retain their internal headers for the standalone
+ * (legacy) routes; only when wrapped by `.asf-u2-panel` are they hidden. */
+.asf-u2-panel .asf-legacy-title { display: none !important; }
+
+/* Phase U-2 — StatusRail readability hardening (G-2 fix).
+ * Single-line, ellipsis, with a thin sunken background. */
+[data-ui="command"] .cmd-shell__status {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+[data-ui="command"] .cmd-status__chips {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+

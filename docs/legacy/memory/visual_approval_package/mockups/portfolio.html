@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Portfolio · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab">Trade Runner</button>
+    <button class="tab active">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn">⊞</button><button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn">🔔<span class="badge">3</span></button><button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div><button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step done"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">→</span><button class="lc-step current"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">→</span><button class="lc-step next"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">10</span><span>Deployment</span></button></div></div>
+
+<main class="main">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">Portfolio Builder</div>
+      <div class="page-sub">Compose a deployable bundle from deployment-ready strategies.</div>
+    </div>
+    <div class="page-actions">
+      <a class="next-cta" href="auto_factory.html" data-testid="next-cta"><span class="next-num">7</span><span>Next: Compile Master Bot</span><span class="arrow">→</span></a>
+      <button class="btn">Discard</button>
+      <button class="btn">Save draft</button>
+      <button class="btn btn-primary">Promote bundle to deployment ▶</button>
+    </div>
+  </div>
+
+  <div class="subtabs">
+    <button class="subtab active">Builder</button>
+    <button class="subtab">Panel &amp; Intelligence</button>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-grid">
+    <div class="kpi kpi-accent"><span class="kpi-label">Selected</span><span class="kpi-value gold">3 / 23</span><span class="kpi-foot">deploy-ready</span></div>
+    <div class="kpi kpi-pos"><span class="kpi-label">Bundle PF</span><span class="kpi-value pos">1.41</span><span class="kpi-foot pos">▲ vs single 1.28</span></div>
+    <div class="kpi"><span class="kpi-label">Bundle Sharpe</span><span class="kpi-value">1.27</span><span class="kpi-foot pos">▲ 0.09</span></div>
+    <div class="kpi"><span class="kpi-label">Max correlation</span><span class="kpi-value">0.32</span><span class="kpi-foot">acceptable</span></div>
+    <div class="kpi kpi-neg"><span class="kpi-label">Expected DD</span><span class="kpi-value neg">−5.4 %</span><span class="kpi-foot">90 % confidence</span></div>
+    <div class="kpi"><span class="kpi-label">Target broker</span><span class="kpi-value" style="font-size:13px;color:var(--accent-primary)">PAPER</span><span class="kpi-foot">cTrader-Live coming</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="grid" style="grid-template-columns: minmax(0,1.4fr) minmax(420px,1fr)">
+
+    <!-- LEFT: Candidate list -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Candidate strategies <span class="chip muted">23 deployment-ready</span></div>
+        <div style="display:flex;gap:6px">
+          <input class="btn" style="background:var(--surface-sunken);font-weight:400;color:var(--text-secondary);width:180px" placeholder="🔍 Filter…" />
+          <button class="btn">Sort: Sharpe ▾</button>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th><span class="check"></span></th>
+          <th>ID</th><th>Pair</th><th>TF</th>
+          <th class="right">PF</th><th class="right">Sharpe</th><th class="right">Win %</th>
+          <th class="right">Trades</th><th class="right">DD</th>
+          <th>Corr to selected</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="check on">✓</span></td><td class="mono">s_021α</td><td>EURUSD</td><td class="muted">H1</td>
+              <td class="num gold" style="color:var(--accent-primary)">1.41</td><td class="num">1.32</td><td class="num">58.2 %</td>
+              <td class="num">742</td><td class="num neg">−4.7 %</td><td class="muted">— (anchor)</td></tr>
+          <tr><td><span class="check on">✓</span></td><td class="mono">s_032α</td><td>XAUUSD</td><td class="muted">M15</td>
+              <td class="num gold" style="color:var(--accent-primary)">1.55</td><td class="num">1.48</td><td class="num">61.4 %</td>
+              <td class="num">418</td><td class="num neg">−3.1 %</td><td class="num">0.18</td></tr>
+          <tr><td><span class="check on">✓</span></td><td class="mono">s_055α</td><td>GBPUSD</td><td class="muted">M30</td>
+              <td class="num">1.37</td><td class="num">1.21</td><td class="num">57.1 %</td>
+              <td class="num">512</td><td class="num neg">−5.2 %</td><td class="num">0.32</td></tr>
+          <tr><td><span class="check">✓</span></td><td class="mono">s_044</td><td>USDJPY</td><td class="muted">H4</td>
+              <td class="num">1.18</td><td class="num">0.94</td><td class="num">53.7 %</td>
+              <td class="num">312</td><td class="num neg">−5.4 %</td><td class="num">0.41</td></tr>
+          <tr><td><span class="check">✓</span></td><td class="mono">s_063β</td><td>AUDUSD</td><td class="muted">M30</td>
+              <td class="num">1.22</td><td class="num">0.98</td><td class="num">54.1 %</td>
+              <td class="num">228</td><td class="num neg">−4.9 %</td><td class="num">0.28</td></tr>
+          <tr><td><span class="check">✓</span></td><td class="mono">s_071</td><td>USDCAD</td><td class="muted">H1</td>
+              <td class="num">1.20</td><td class="num">0.92</td><td class="num">53.4 %</td>
+              <td class="num">191</td><td class="num neg">−5.8 %</td><td class="num">0.36</td></tr>
+          <tr><td><span class="check">✓</span></td><td class="mono">s_088</td><td>USDCHF</td><td class="muted">M30</td>
+              <td class="num">1.14</td><td class="num">0.84</td><td class="num">52.1 %</td>
+              <td class="num">152</td><td class="num neg">−6.1 %</td><td class="num">0.44</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT: Selected bundle composer -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Selected bundle <span class="chip ok">3 strategies</span></div>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm">Auto-allocate</button><button class="btn btn-sm btn-ghost">Equal-weight</button></div>
+      </div>
+      <div class="card-pad">
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <!-- Allocation row -->
+          <div style="background:var(--surface-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div class="mono" style="font-size:13px;font-weight:600">s_021α · EURUSD · H1</div>
+                <div class="muted-text">PF 1.41 · Sharpe 1.32 · trades 742 · anchor</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mono" style="font-size:16px;font-weight:700;color:var(--accent-primary);font-variant-numeric:tabular-nums">35 %</span>
+                <button class="btn btn-sm btn-danger">×</button>
+              </div>
+            </div>
+            <div class="bar" style="margin-top:8px"><div class="fill" style="width:35%"></div></div>
+          </div>
+          <div style="background:var(--surface-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div class="mono" style="font-size:13px;font-weight:600">s_032α · XAUUSD · M15</div>
+                <div class="muted-text">PF 1.55 · Sharpe 1.48 · trades 418 · diversifier (gold)</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mono" style="font-size:16px;font-weight:700;color:var(--accent-primary)">25 %</span>
+                <button class="btn btn-sm btn-danger">×</button>
+              </div>
+            </div>
+            <div class="bar" style="margin-top:8px"><div class="fill" style="width:25%"></div></div>
+          </div>
+          <div style="background:var(--surface-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div class="mono" style="font-size:13px;font-weight:600">s_055α · GBPUSD · M30</div>
+                <div class="muted-text">PF 1.37 · Sharpe 1.21 · trades 512 · diversifier (GBP)</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mono" style="font-size:16px;font-weight:700;color:var(--accent-primary)">40 %</span>
+                <button class="btn btn-sm btn-danger">×</button>
+              </div>
+            </div>
+            <div class="bar" style="margin-top:8px"><div class="fill" style="width:40%"></div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-label">Combined metrics</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div class="kpi"><span class="kpi-label">Combined PF</span><span class="kpi-value pos">1.41</span></div>
+          <div class="kpi"><span class="kpi-label">Combined Sharpe</span><span class="kpi-value">1.27</span></div>
+          <div class="kpi"><span class="kpi-label">Diversity score</span><span class="kpi-value gold">0.71</span></div>
+          <div class="kpi"><span class="kpi-label">Avg correlation</span><span class="kpi-value">0.25</span></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-label">Target deployment broker</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <span class="broker-chip active">● PAPER · in-process replay</span>
+          <span class="broker-chip future">cTrader Live · FUTURE</span>
+          <span class="broker-chip future">cTrader Demo · FUTURE</span>
+        </div>
+        <div class="muted-text" style="margin-top:8px">On promote, the bundle compiles to .cbotpacks targeting the selected broker. cTrader broker hooks reserved for post-RC1 integration.</div>
+
+        <div class="divider"></div>
+
+        <div class="section-label">Prop-firm fitness</div>
+        <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px;margin-top:8px">
+          <span>FTMO (5 % daily / 10 % total)</span><span class="chip ok">FIT</span>
+          <span>MyForexFunds (6 % / 12 %)</span><span class="chip ok">FIT</span>
+          <span>The5%ers (4 % / 8 %)</span><span class="chip warn">tight on DD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:idle</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>ingest:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

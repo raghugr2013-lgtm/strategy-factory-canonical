@@ -1,0 +1,5 @@
+NETWORK ID     NAME          DRIVER    SCOPE
+8380e853d3c3   bridge        bridge    local
+fdf2b38d2317   host          host      local
+f8b78b1e459d   none          null      local
+9af71cf21895   vqb-network   bridge    local

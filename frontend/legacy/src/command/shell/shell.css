@@ -1,0 +1,732 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   COMMAND · Phase U.1 — Shell layout & posture rules
+   ---------------------------------------------------------------------------
+   Locks the shell layout per Responsive Doctrine:
+     workstation  → bar 32 · left rail · status rail · inspector
+     tablet       → bar 40 · rail-as-drawer · status rail · inspector-sheet
+     briefing     → bar 44 · sticky module switcher · status pill · sheet
+
+   All rules below resolve only under [data-ui="command"] AND a matching
+   [data-cmd-posture]. Legacy operator surface is never touched.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Phase U-2 fix: load the command CSS bundle (tokens · panels · density ·
+   identity · typography · motion · premium) so that var(--cmd-*) tokens
+   resolve. Without these imports, the shell falls back to 0 px tracks and
+   the LeftRail/StatusRail collide with content (the U-1 audit's G-1/G-2). */
+@import "../tokens.css";
+@import "../panels.css";
+@import "../density.css";
+@import "../identity.css";
+@import "../typography.css";
+@import "../motion.css";
+@import "../premium.css";
+
+/* ── Root shell grid ──
+   3-row layout: bar / body / status. Body is itself a 2-col grid:
+   left-rail / focus-pane. Inspector overlays on body when open. */
+[data-ui="command"] .cmd-shell {
+  display: grid;
+  grid-template-rows: var(--cmd-bar-h) 1fr var(--cmd-status-h);
+  min-height: 100vh;
+  background: var(--cmd-surface-0);
+  color: var(--cmd-ink-0);
+}
+
+[data-ui="command"] .cmd-shell__bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--cmd-bar-h);
+  padding: 0 14px;
+  background: var(--cmd-surface-1);
+  border-bottom: 1px solid var(--cmd-hairline);
+}
+
+[data-ui="command"] .cmd-shell__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--cmd-rail-w) minmax(0, 1fr);
+  min-height: 0;
+}
+
+[data-ui="command"] .cmd-shell__rail {
+  position: sticky;
+  top: var(--cmd-bar-h);
+  align-self: start;
+  height: calc(100vh - var(--cmd-bar-h) - var(--cmd-status-h));
+  width: var(--cmd-rail-w);
+  background: var(--cmd-surface-1);
+  border-right: 1px solid var(--cmd-hairline);
+  overflow: hidden;
+  transition: width var(--cmd-dur) var(--cmd-ease);
+}
+
+[data-ui="command"] .cmd-shell__rail--open { width: var(--cmd-rail-w-open); }
+
+[data-ui="command"] .cmd-shell__main {
+  min-width: 0;
+  padding: 18px 22px;
+  overflow: auto;
+}
+
+/* Phase U.4 — Inspector push behaviour on luxury workstation (≥1600 only).
+   Below that, the inspector overlays the main pane (no push).
+   The shell exposes [data-cmd-inspector-open="1"] on the body grid so we
+   can pad-right the main pane just by inspector width. */
+@media (min-width: 1600px) {
+  [data-ui="command"][data-cmd-posture="workstation"] .cmd-shell__body[data-cmd-inspector-open="1"] .cmd-shell__main {
+    padding-right: calc(var(--cmd-inspector-w) + 22px);
+    transition: padding-right var(--cmd-dur) var(--cmd-ease);
+  }
+}
+
+[data-ui="command"] .cmd-shell__status {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--cmd-status-h);
+  padding: 0 14px;
+  background: var(--cmd-surface-1);
+  border-top: 1px solid var(--cmd-hairline);
+  overflow: hidden;
+}
+
+/* ── Bar bits ── */
+[data-ui="command"] .cmd-bar__wordmark {
+  font: 600 12.5px/1 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--cmd-ink-0);
+  white-space: nowrap;
+}
+
+[data-ui="command"] .cmd-bar__build {
+  font: 500 10px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-ink-2);
+  letter-spacing: 0.06em;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: var(--cmd-surface-3);
+  border: 1px solid var(--cmd-hairline);
+}
+
+[data-ui="command"] .cmd-bar__spacer { flex: 1; }
+
+[data-ui="command"] .cmd-bar__palette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--cmd-radius-btn);
+  background: var(--cmd-surface-0);
+  border: 1px solid var(--cmd-hairline);
+  color: var(--cmd-ink-2);
+  font: 500 11px/1 'Inter', sans-serif;
+  cursor: pointer;
+  transition: border-color var(--cmd-dur-fast) var(--cmd-ease),
+              color var(--cmd-dur-fast) var(--cmd-ease);
+  min-width: 220px;
+}
+
+[data-ui="command"] .cmd-bar__palette:hover {
+  border-color: rgba(0, 212, 255, 0.42);
+  color: var(--cmd-ink-1);
+}
+
+[data-ui="command"] .cmd-bar__env {
+  font: 500 10px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-green);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-ui="command"] .cmd-bar__uptime {
+  font: 500 10px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-ink-2);
+}
+
+[data-ui="command"] .cmd-bar__user {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid var(--cmd-hairline);
+  background: var(--cmd-surface-2);
+  color: var(--cmd-ink-1);
+  font: 500 10px/1 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
+
+/* ── Rail items ── */
+[data-ui="command"] .cmd-rail__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 18px;
+  color: var(--cmd-ink-2);
+  cursor: pointer;
+  transition: color var(--cmd-dur-fast) var(--cmd-ease),
+              background var(--cmd-dur-fast) var(--cmd-ease);
+  user-select: none;
+  white-space: nowrap;
+}
+
+[data-ui="command"] .cmd-rail__item:hover {
+  color: var(--cmd-ink-0);
+  background: var(--cmd-surface-2);
+}
+
+[data-ui="command"] .cmd-rail__item--active {
+  color: var(--cmd-cyan);
+}
+
+[data-ui="command"] .cmd-rail__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 8px; bottom: 8px;
+  width: 2px;
+  background: var(--cmd-cyan);
+  box-shadow: var(--cmd-glow-cyan);
+  border-radius: 0 2px 2px 0;
+}
+
+[data-ui="command"] .cmd-rail__glyph {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-ui="command"] .cmd-rail__label {
+  font: 500 12px/1 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity var(--cmd-dur) var(--cmd-ease);
+}
+
+[data-ui="command"] .cmd-shell__rail--open .cmd-rail__label { opacity: 1; }
+
+/* ── Status rail chips row ── */
+[data-ui="command"] .cmd-status__chips {
+  display: flex; gap: 8px; align-items: center;
+  overflow: hidden;
+}
+
+[data-ui="command"] .cmd-status__spacer { flex: 1; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   POSTURE: TABLET
+   ───────────────────────────────────────────────────────────────────── */
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-shell {
+  grid-template-rows: 40px 1fr var(--cmd-status-h);
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-shell__bar { height: 40px; }
+/* Hide rail; replaced by drawer */
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-shell__body {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-shell__rail {
+  display: none;
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-bar__build,
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-bar__env,
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-bar__uptime {
+  display: none;
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-bar__palette {
+  min-width: 0;
+  padding: 0 8px;
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-bar__palette-label {
+  display: none;
+}
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-shell__main {
+  padding: 14px 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   POSTURE: BRIEFING (mobile)
+   ───────────────────────────────────────────────────────────────────── */
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell {
+  grid-template-rows: 44px 1fr 0;        /* status collapsed to bar pill */
+}
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell__bar { height: 44px; padding: 0 12px; }
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell__rail { display: none; }
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell__body {
+  grid-template-columns: minmax(0, 1fr);
+}
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell__status {
+  display: none;          /* collapsed into a bar pill                 */
+}
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__wordmark,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__build,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__env,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__uptime,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__palette,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__density,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__premium {
+  display: none;
+}
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-shell__main {
+  padding: 12px;
+  font-size: 15px;
+}
+[data-ui="command"][data-cmd-posture="briefing"] .panel {
+  border-radius: 10px;     /* slightly softer on mobile                 */
+  padding: 14px;
+}
+
+/* Mobile pill in CommandBar that opens the Status sheet */
+[data-ui="command"] .cmd-bar__statpill {
+  display: none;
+}
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__statpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-hairline);
+  font: 500 11px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-ink-1);
+  letter-spacing: 0.04em;
+}
+
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-bar__menubtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--cmd-hairline);
+  background: var(--cmd-surface-2);
+  color: var(--cmd-ink-1);
+}
+
+[data-ui="command"]:not([data-cmd-posture="briefing"]) .cmd-bar__menubtn {
+  display: none;
+}
+
+/* Tablet/briefing — never show the workstation desktop ambient flow line
+   regardless of the cmd-flow class application (battery + low-fatigue). */
+[data-ui="command"][data-cmd-posture="tablet"] .cmd-flow-line,
+[data-ui="command"][data-cmd-posture="briefing"] .cmd-flow-line {
+  animation: none;
+  background-image: linear-gradient(90deg, transparent, var(--cmd-hairline-2), transparent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   FOCUS MODE × POSTURE — already partly declared in motion.css.
+   Workstation: collapse rail to 0 width.
+   ───────────────────────────────────────────────────────────────────── */
+[data-ui="command"][data-ui-focus="on"][data-cmd-posture="workstation"] .cmd-shell__rail {
+  width: 0;
+  border-right: none;
+}
+[data-ui="command"][data-ui-focus="on"] .cmd-shell__status { opacity: 0.55; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   LINEAGE WIDGETS (Phase U.1 lightweight, additive)
+   ───────────────────────────────────────────────────────────────────── */
+[data-ui="command"] .lineage-strip {
+  display: block;
+  width: 100%;
+  background: var(--cmd-surface-1);
+  border: 1px solid var(--cmd-hairline);
+  border-radius: var(--cmd-radius-panel);
+  padding: 14px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   TOAST (Phase U.3 — calm institutional confirmation)
+   Used by ⌘⌥C "copy current URL" and any future one-shot operator
+   confirmations. Fixed-position bottom-center, 1.8s lifetime,
+   opacity-only animation.
+   ───────────────────────────────────────────────────────────────────── */
+[data-ui="command"] .cmd-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-hairline-2);
+  color: var(--cmd-ink-0);
+  font: 500 11px/1 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  transition: opacity var(--cmd-dur) var(--cmd-ease);
+  pointer-events: none;
+}
+[data-ui="command"] .cmd-toast[data-tone="cyan"]  { border-color: rgba(0, 212, 255, 0.42); color: var(--cmd-cyan); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), var(--cmd-glow-cyan); }
+[data-ui="command"] .cmd-toast[data-tone="amber"] { border-color: rgba(255, 176, 32, 0.42); color: var(--cmd-amber); }
+[data-ui="command"] .cmd-toast[data-tone="red"]   { border-color: rgba(255, 77, 109, 0.42); color: var(--cmd-red); }
+
+[data-ui="command"] .lineage-strip__hd {
+  display: flex; align-items: center; gap: 8px;
+  font: 500 11px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-ink-2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+[data-ui="command"] .lineage-strip svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Inline 5-dot lineage pill — pure CSS, embeddable anywhere */
+[data-ui="command"] .lineage-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-hairline);
+  font: 500 10px/1 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--cmd-ink-2);
+  letter-spacing: 0.04em;
+}
+[data-ui="command"] .lineage-inline__dots {
+  display: inline-flex; gap: 2px;
+}
+[data-ui="command"] .lineage-inline__dot {
+  width: 4px; height: 4px;
+  border-radius: 999px;
+  background: var(--cmd-hairline-2);
+}
+[data-ui="command"] .lineage-inline__dot--ai { background: var(--cmd-violet); }
+[data-ui="command"] .lineage-inline__dot--active {
+  background: var(--cmd-cyan);
+  box-shadow: 0 0 4px var(--cmd-cyan-glow);
+}
+
+/* =====================================================================
+ * M1 · Top Tab Bar + Lifecycle Rail
+ * Binance/Bybit dark institutional aesthetic.
+ * Spec: /app/memory/visual_approval_package/01_TAB_ROSTER.md
+ *       /app/memory/visual_approval_package/09_OPERATOR_LIFECYCLE.md
+ * ===================================================================== */
+
+/* === Top Tab Bar === */
+.cmd-toptabs {
+  position: sticky;
+  top: 0;
+  z-index: 31;
+  background: linear-gradient(180deg, rgba(11, 14, 17, 0.95) 0%, rgba(11, 14, 17, 0.86) 100%);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--asf-border-default, #2B3139);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.cmd-toptabs__inner {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.cmd-toptabs__inner::-webkit-scrollbar { display: none; }
+
+.cmd-toptab {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--asf-text-secondary, #848E9C);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  padding: 7px 12px;
+  border-radius: 6px;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+.cmd-toptab:hover {
+  color: var(--asf-text-primary, #EAECEF);
+  background: rgba(255,255,255,0.025);
+}
+.cmd-toptab:focus-visible {
+  outline: 2px solid var(--asf-accent-primary, #F0B90B);
+  outline-offset: 2px;
+}
+.cmd-toptab--active {
+  color: var(--asf-accent-primary, #F0B90B);
+  background: rgba(240, 185, 11, 0.10);
+  border-color: rgba(240, 185, 11, 0.32);
+  font-weight: 600;
+}
+
+/* More ▾ menu */
+.cmd-toptabs__more { position: relative; flex-shrink: 0; }
+.cmd-toptab--more { display: inline-flex; align-items: center; gap: 4px; }
+.cmd-toptab__caret { font-size: 10px; opacity: 0.7; }
+.cmd-toptabs__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: #15191E;
+  border: 1px solid var(--asf-border-default, #2B3139);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.03) inset;
+  z-index: 60;
+}
+.cmd-toptabs__menu-item {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--asf-text-primary, #EAECEF);
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 120ms ease;
+  cursor: pointer;
+}
+.cmd-toptabs__menu-item:hover {
+  background: rgba(240, 185, 11, 0.10);
+  color: var(--asf-accent-primary, #F0B90B);
+}
+.cmd-toptabs__menu-item--active {
+  background: rgba(240, 185, 11, 0.10);
+  color: var(--asf-accent-primary, #F0B90B);
+}
+
+/* === Lifecycle Rail === */
+.cmd-lcrail {
+  position: sticky;
+  top: 48px;   /* sits directly under the TopTabBar */
+  z-index: 30;
+  background: linear-gradient(180deg, #060809 0%, #0B0E11 100%);
+  border-bottom: 1px solid var(--asf-border-default, #2B3139);
+  box-shadow: 0 6px 12px -8px rgba(0,0,0,0.5);
+}
+.cmd-lcrail__inner {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 7px 20px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.cmd-lcrail__inner::-webkit-scrollbar { display: none; }
+
+.cmd-lcrail__step {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--asf-text-muted, #5E6673);
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+.cmd-lcrail__step:hover {
+  background: rgba(255,255,255,0.025);
+  color: var(--asf-text-primary, #EAECEF);
+}
+.cmd-lcrail__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #374151;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: #5E6673;
+  flex-shrink: 0;
+}
+.cmd-lcrail__arrow {
+  width: 14px;
+  text-align: center;
+  color: #404750;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.cmd-lcrail__step--done {
+  color: var(--asf-text-secondary, #848E9C);
+}
+.cmd-lcrail__step--done .cmd-lcrail__num {
+  background: rgba(14, 203, 129, 0.12);
+  border-color: rgba(14, 203, 129, 0.4);
+  color: #0ECB81;
+}
+.cmd-lcrail__step--current {
+  color: var(--asf-accent-primary, #F0B90B);
+  background: rgba(240,185,11,0.10);
+  border-color: rgba(240,185,11,0.4);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(240,185,11,0.18), 0 0 12px -4px rgba(240,185,11,0.55);
+}
+.cmd-lcrail__step--current .cmd-lcrail__num {
+  background: var(--asf-accent-primary, #F0B90B);
+  border-color: var(--asf-accent-primary, #F0B90B);
+  color: #0B0E11;
+}
+.cmd-lcrail__step--next {
+  color: #03A9F4;
+  border-color: rgba(3,169,244,0.35);
+  border-style: dashed;
+}
+.cmd-lcrail__step--next .cmd-lcrail__num {
+  background: rgba(3,169,244,0.10);
+  border-color: rgba(3,169,244,0.45);
+  color: #03A9F4;
+}
+.cmd-lcrail__step--future {
+  color: var(--asf-text-faint, #404750);
+}
+.cmd-lcrail__step--future .cmd-lcrail__num {
+  border-color: rgba(255,255,255,0.06);
+  color: var(--asf-text-faint, #404750);
+}
+.cmd-lcrail__step--hub {
+  color: var(--asf-text-secondary, #848E9C);
+  border-color: var(--asf-border-default, #2B3139);
+  border-style: dotted;
+}
+.cmd-lcrail__step--hub .cmd-lcrail__num {
+  border-color: var(--asf-border-default, #2B3139);
+  color: var(--asf-text-secondary, #848E9C);
+}
+
+/* === FACTORY ZONE === Segmented progression spanning steps 2/3/4 when
+ * the operator is on Auto Factory. Reads as ONE unified zone, not three
+ * independent gold pills — operator immediately knows they're inside the
+ * Strategy Factory pipeline. */
+.cmd-lcrail__zone-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  margin-right: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--asf-accent-primary, #F0B90B);
+  white-space: nowrap;
+  opacity: 0.95;
+  text-shadow: 0 0 8px rgba(240,185,11,0.35);
+}
+.cmd-lcrail__zone-bracket {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--asf-accent-primary, #F0B90B);
+  opacity: 0.62;
+  margin: 0 1px;
+}
+.cmd-lcrail__zone-text { opacity: 0.92; }
+
+/* Inside-zone step pills: tighter gap, joined visually via background + border */
+.cmd-lcrail__step--factory-zone {
+  color: var(--asf-accent-primary, #F0B90B);
+  background: linear-gradient(180deg, rgba(240,185,11,0.16) 0%, rgba(240,185,11,0.08) 100%);
+  border-color: rgba(240,185,11,0.40);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(240,185,11,0.14), 0 0 14px -6px rgba(240,185,11,0.6);
+  /* The three pills join into one segmented bar via squared inner corners. */
+  border-radius: 6px;
+}
+.cmd-lcrail__step--factory-zone .cmd-lcrail__num {
+  background: var(--asf-accent-primary, #F0B90B);
+  border-color: var(--asf-accent-primary, #F0B90B);
+  color: #0B0E11;
+}
+/* Squared-corners joining: zonestart only has left rounded, zoneend only right;
+ * middle steps fully square so the trio reads as a Binance segmented bar. */
+.cmd-lcrail__step--zonestart { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0; }
+.cmd-lcrail__step--inzone:not(.cmd-lcrail__step--zonestart):not(.cmd-lcrail__step--zoneend) {
+  border-radius: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+}
+.cmd-lcrail__step--zoneend { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; }
+.cmd-lcrail__arrow--inzone {
+  color: var(--asf-accent-primary, #F0B90B);
+  opacity: 0.85;
+  /* The arrow becomes a connector segment inside the zone — narrower and gold. */
+  width: 10px;
+}
+
+.cmd-lcrail__hub-note {
+  margin-left: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--asf-text-muted, #5E6673);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* === Hide LeftRail when ui.leftrail flag is OFF (M1 default) === */
+/* M1 also adds TopTabBar (48 px) + LifecycleRail (38 px) as 2 new
+ * rows at the top of the cmd-shell grid (was 3 rows: bar / body / status).
+ * M4.5 prepends a DangerRibbon row (auto · 28 px when active, 0 px when null).
+ * Do NOT use `display:none` on the rail — that removes it from grid auto-
+ * placement and main jumps into col 1 (0 px wide). Instead collapse width. */
+[data-ui="command"] .cmd-shell[data-leftrail="off"] {
+  grid-template-rows: auto auto auto var(--cmd-bar-h) 1fr var(--cmd-status-h) !important;
+}
+[data-ui="command"] .cmd-shell[data-leftrail="off"] .cmd-shell__body {
+  grid-template-columns: 0 minmax(0, 1fr) !important;
+}
+[data-ui="command"] .cmd-shell[data-leftrail="off"] .cmd-shell__rail {
+  visibility: hidden !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border-right-width: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.cmd-shell[data-leftrail="off"] .cmd-shell__main {
+  padding-left: 22px !important;
+}
+

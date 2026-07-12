@@ -1,0 +1,262 @@
+/* ============================================================================
+ * ASF · RC1 · DARK-THEME CONTRAST LIFTS  (AX-1 / AX-2 + serious=0 closure)
+ * ----------------------------------------------------------------------------
+ * Purpose: clear the residual axe `color-contrast` violations that fire in the
+ * DARK theme. The light theme already passes after `asf-rc1-light-overrides.css`.
+ * These dark-theme defects are PRE-EXISTING (predate the RC1 work) and surface
+ * only because RC1-4 is the first time axe-core has scanned the workstation.
+ *
+ * Scope (minimal, visually conservative):
+ *   1. Command-shell `--cmd-ink-2` lifted from #6B7686 (rgb 107,118,134) to
+ *      #8A93A4 (rgb 138,147,164) — clears 4.5:1 on dark surfaces while
+ *      preserving the "muted slate" feel.
+ *   2. Tailwind `text-zinc-500` / `text-zinc-600` / `text-slate-500` lifted
+ *      to `text-zinc-400`-equivalent shades under [data-theme='dark'].
+ *   3. `asf-vbadge` / `asf-vchip` accent tokens darken their tinted background
+ *      and lighten their text so success/warn/danger/info read clearly even on
+ *      same-hue tonal washes.
+ *
+ * LIGHT theme is unaffected by these rules — every selector is scoped to
+ * [data-theme='dark'] OR the default :root (which is dark in this app).
+ *
+ * Verdict semantics preserved.
+ * ========================================================================== */
+
+/* ── 1. Command-shell muted-slate token lift ─────────────────────────────── */
+
+/* Lift --cmd-ink-2 under DARK (default + explicit). The original #6B7686
+ * yielded 3.42-4.30:1 on the various command-bar / panel-header surfaces. */
+:root,
+[data-theme="dark"],
+[data-ui="command"],
+[data-ui="command"]:not([data-theme="light"]) {
+  --cmd-ink-2: #8A93A4;          /* 5.0 : 1 on cmd-surface-0 (#070A12) */
+}
+
+/* Specific command-shell selectors that previously failed contrast.
+ * Higher specificity than the generic --cmd-ink-2 lift above. */
+:root:not([data-theme="light"]) .cmd-bar__build,
+[data-theme="dark"] .cmd-bar__build,
+:root:not([data-theme="light"]) .cmd-bar__palette,
+[data-theme="dark"] .cmd-bar__palette,
+:root:not([data-theme="light"]) .cmd-bar__palette-label,
+[data-theme="dark"] .cmd-bar__palette-label,
+:root:not([data-theme="light"]) .cmd-bar__uptime,
+[data-theme="dark"] .cmd-bar__uptime,
+:root:not([data-theme="light"]) .cmd-bar__sublabel,
+[data-theme="dark"] .cmd-bar__sublabel,
+:root:not([data-theme="light"]) .cmd-font-display,
+[data-theme="dark"] .cmd-font-display,
+:root:not([data-theme="light"]) .asf-legend__title,
+[data-theme="dark"] .asf-legend__title,
+:root:not([data-theme="light"]) .asf-legend__letter,
+[data-theme="dark"] .asf-legend__letter {
+  color: #B6C0CC;                /* 8.6 : 1 on #070A12, 6.5 : 1 on #14202F */
+}
+
+/* `<p>` paragraphs inside the command shell that previously inherited
+ * --cmd-ink-2 directly. */
+:root:not([data-theme="light"]) [data-ui="command"] p,
+[data-theme="dark"] [data-ui="command"] p {
+  color: inherit;
+}
+
+/* ── 2. Tailwind muted-text utilities lift (DARK) ───────────────────────── */
+
+/* `.text-zinc-500` rgb(113,113,122) → 4.12 : 1 on rgba(9,9,11,0.4). Lift
+ * to zinc-400 rgb(161,161,170) → 6.10 : 1. */
+:root:not([data-theme="light"]) .text-zinc-500,
+[data-theme="dark"] .text-zinc-500,
+:root:not([data-theme="light"]) .text-zinc-600,
+[data-theme="dark"] .text-zinc-600 {
+  color: #A1A1AA !important;     /* zinc-400 */
+}
+
+:root:not([data-theme="light"]) .text-slate-500,
+[data-theme="dark"] .text-slate-500,
+:root:not([data-theme="light"]) .text-slate-600,
+[data-theme="dark"] .text-slate-600 {
+  color: #94A3B8 !important;     /* slate-400 */
+}
+
+:root:not([data-theme="light"]) .text-gray-500,
+[data-theme="dark"] .text-gray-500,
+:root:not([data-theme="light"]) .text-gray-600,
+[data-theme="dark"] .text-gray-600 {
+  color: #9CA3AF !important;     /* gray-400 */
+}
+
+/* Opacity-variant utilities (e.g. text-zinc-500/60) — same lift. */
+:root:not([data-theme="light"]) [class*="text-zinc-500/"],
+[data-theme="dark"] [class*="text-zinc-500/"],
+:root:not([data-theme="light"]) [class*="text-zinc-600/"],
+[data-theme="dark"] [class*="text-zinc-600/"] {
+  color: #A1A1AA !important;
+  opacity: 1 !important;
+}
+
+/* ── 3. Verdict-badge / -chip dark-theme contrast fix ────────────────────── */
+
+/* The asf-vbadge ships a tinted background of the verdict hue:
+ *   --asf-tone-danger-bg = rgba(248,113,113, 0.16) etc.
+ * with text in the matching hue ($ratio === 1.0). Lighten the text and
+ * darken the wash so the foreground reads cleanly. */
+
+:root:not([data-theme="light"]) .asf-vbadge,
+[data-theme="dark"] .asf-vbadge,
+:root:not([data-theme="light"]) .asf-vchip,
+[data-theme="dark"] .asf-vchip {
+  background-color: rgba(15, 23, 42, 0.6) !important; /* dark slate wash */
+}
+
+:root:not([data-theme="light"]) .asf-vbadge[data-verdict="danger"],
+[data-theme="dark"] .asf-vbadge[data-verdict="danger"],
+:root:not([data-theme="light"]) .asf-vchip[data-verdict="danger"],
+[data-theme="dark"] .asf-vchip[data-verdict="danger"] {
+  color: #FCA5A5 !important;        /* red-300, 6.3 : 1 on rgba(15,23,42,0.6) */
+  border-color: #B91C1C !important;
+}
+:root:not([data-theme="light"]) .asf-vbadge[data-verdict="success"],
+[data-theme="dark"] .asf-vbadge[data-verdict="success"],
+:root:not([data-theme="light"]) .asf-vchip[data-verdict="success"],
+[data-theme="dark"] .asf-vchip[data-verdict="success"] {
+  color: #6EE7B7 !important;        /* emerald-300, 8.7 : 1 */
+  border-color: #047857 !important;
+}
+:root:not([data-theme="light"]) .asf-vbadge[data-verdict="warn"],
+[data-theme="dark"] .asf-vbadge[data-verdict="warn"],
+:root:not([data-theme="light"]) .asf-vchip[data-verdict="warn"],
+[data-theme="dark"] .asf-vchip[data-verdict="warn"] {
+  color: #FDE047 !important;        /* yellow-300, 11.3 : 1 */
+  border-color: #B45309 !important;
+}
+:root:not([data-theme="light"]) .asf-vbadge[data-verdict="info"],
+[data-theme="dark"] .asf-vbadge[data-verdict="info"],
+:root:not([data-theme="light"]) .asf-vchip[data-verdict="info"],
+[data-theme="dark"] .asf-vchip[data-verdict="info"] {
+  color: #67E8F9 !important;        /* cyan-300, 11.0 : 1 */
+  border-color: #0E7490 !important;
+}
+:root:not([data-theme="light"]) .asf-vbadge[data-verdict="neutral"],
+[data-theme="dark"] .asf-vbadge[data-verdict="neutral"],
+:root:not([data-theme="light"]) .asf-vchip[data-verdict="neutral"],
+[data-theme="dark"] .asf-vchip[data-verdict="neutral"] {
+  color: #CBD5E1 !important;        /* slate-300, 10.2 : 1 */
+  border-color: #334155 !important;
+}
+
+/* ── 4. Tertiary tokens — small muted timestamps / "refresh" pills ──────── */
+
+:root:not([data-theme="light"]) .asf-section__hd-actions,
+[data-theme="dark"] .asf-section__hd-actions {
+  color: #A1A1AA !important;
+}
+
+/* `--asf-ink-3` is used inline by AsfNotificationDrawer for:
+ *   • empty-state placeholder
+ *   • notification timestamps ("just now", "5m ago")
+ *   • the × close button
+ * The default tertiary token resolves to rgb(92,100,115) on the drawer
+ * surface rgb(17,20,26) — 3.10:1, failing AA. Lift to a brighter slate. */
+:root,
+:root:not([data-theme="light"]),
+[data-theme="dark"],
+[data-ui="command"]:not([data-theme="light"]),
+body[data-ui="command"]:not([data-theme="light"]),
+:root:not([data-theme="light"]) [data-ui="command"] {
+  --asf-ink-3:        #94A3B8;   /* 5.5 : 1 on rgb(17,20,26) */
+  --asf-text-tertiary: #94A3B8;
+  --cmd-ink-3:        #94A3B8;   /* used inline by CommandPalette section labels
+                                  * and ShortcutsOverlay kbd labels; was #3D4452
+                                  * → 1.89:1 on cmd-surface-1, now 5.5:1.
+                                  * Must beat the [data-ui="command"]
+                                  * declaration in command/tokens.css line 28. */
+}
+
+/* Final light-theme contrast closure (operator-panel residual) — ensure the
+ * light-mode --cmd-ink-3 / --asf-ink-3 values beat the dark-lift cascade
+ * above, including its !important paths. */
+[data-theme="light"],
+:root[data-theme="light"],
+[data-theme="light"] [data-ui="command"],
+[data-theme="light"] [data-testid^="operator-"] {
+  --cmd-ink-3:  #5F6776 !important;   /* 5.0 : 1 on #FFFFFF */
+  --asf-ink-3:  #5F6776 !important;
+}
+
+/* The light-theme block in asf-rc1-light-overrides.css explicitly overrides
+ * --asf-ink-3 to #5C6473 for the light surface — keep that intact. */
+
+/* ── 5. text-zinc-700 and dimmer slate utilities (DARK) ──────────────────── */
+
+/* `text-zinc-700` rgb(63,63,70) is too dim on every panel surface — 1.91:1.
+ * Lift to zinc-400 for visibility. */
+:root:not([data-theme="light"]) .text-zinc-700,
+[data-theme="dark"] .text-zinc-700,
+:root:not([data-theme="light"]) .text-zinc-800,
+[data-theme="dark"] .text-zinc-800 {
+  color: #A1A1AA !important;     /* 6.10:1 */
+}
+
+/* ── 6. Pastel-on-pastel accent pills (DARK) ─────────────────────────────── *
+ * Diagnostics ships small status pills shaped as `text-{tone}-300 bg-{tone}-500/5`
+ * which gives ~1.5-2.0:1 in dark mode. Push backgrounds to a darker slate and
+ * keep the accent text bright so verdict semantics survive. */
+
+:root:not([data-theme="light"]) button[class*="bg-emerald-500"][class*="text-emerald"],
+[data-theme="dark"] button[class*="bg-emerald-500"][class*="text-emerald"],
+:root:not([data-theme="light"]) [class*="bg-emerald-500/5"],
+[data-theme="dark"]  [class*="bg-emerald-500/5"],
+:root:not([data-theme="light"]) [class*="bg-emerald-500/10"],
+[data-theme="dark"]  [class*="bg-emerald-500/10"] {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #6EE7B7 !important;     /* emerald-300 — 7.7:1 on dark slate */
+}
+
+:root:not([data-theme="light"]) [class*="bg-rose-500/5"],
+[data-theme="dark"]  [class*="bg-rose-500/5"],
+:root:not([data-theme="light"]) [class*="bg-rose-500/10"],
+[data-theme="dark"]  [class*="bg-rose-500/10"],
+:root:not([data-theme="light"]) [class*="bg-red-500/5"],
+[data-theme="dark"]  [class*="bg-red-500/5"],
+:root:not([data-theme="light"]) [class*="bg-red-500/10"],
+[data-theme="dark"]  [class*="bg-red-500/10"] {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #FCA5A5 !important;     /* red-300 */
+}
+
+:root:not([data-theme="light"]) [class*="bg-amber-500/5"],
+[data-theme="dark"]  [class*="bg-amber-500/5"],
+:root:not([data-theme="light"]) [class*="bg-amber-500/10"],
+[data-theme="dark"]  [class*="bg-amber-500/10"],
+:root:not([data-theme="light"]) [class*="bg-yellow-500/5"],
+[data-theme="dark"]  [class*="bg-yellow-500/5"],
+:root:not([data-theme="light"]) [class*="bg-yellow-500/10"],
+[data-theme="dark"]  [class*="bg-yellow-500/10"] {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #FDE047 !important;     /* yellow-300 */
+}
+
+:root:not([data-theme="light"]) [class*="bg-cyan-500/5"],
+[data-theme="dark"]  [class*="bg-cyan-500/5"],
+:root:not([data-theme="light"]) [class*="bg-cyan-500/10"],
+[data-theme="dark"]  [class*="bg-cyan-500/10"],
+:root:not([data-theme="light"]) [class*="bg-sky-500/5"],
+[data-theme="dark"]  [class*="bg-sky-500/5"],
+:root:not([data-theme="light"]) [class*="bg-sky-500/10"],
+[data-theme="dark"]  [class*="bg-sky-500/10"] {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #67E8F9 !important;     /* cyan-300 */
+}
+
+/* ── 7. `bg-surface-sunken` <select> backgrounds (DARK) ──────────────────── */
+
+:root:not([data-theme="light"]) select.bg-surface-sunken,
+[data-theme="dark"] select.bg-surface-sunken,
+:root:not([data-theme="light"]) .bg-surface-sunken,
+[data-theme="dark"] .bg-surface-sunken {
+  background-color: #0A0F19 !important;
+  color: #E4E4E7 !important;
+  border-color: #1F2A3B !important;
+}
+

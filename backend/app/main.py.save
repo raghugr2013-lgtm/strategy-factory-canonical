@@ -1,0 +1,66 @@
+"""FastAPI application factory."""
+from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.admin import router as admin_router
+from app.api.dashboard import router as dashboard_router
+from app.api.health import router as health_router
+from app.api.research import router as research_router
+from app.api.strategies import router as strategies_router
+from legacy.api.strategies import router as legacy_strategies_router
+from app.auth.routes import router as auth_router
+from app.auth.seed import seed_admin
+from app.core.config import get_settings
+from app.core.versioning import version_info
+from app.db.mongo import ensure_indexes
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger("strategy_factory")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    logger.info("boot %s", version_info())
+    try:
+        await ensure_indexes()
+    except Exception:  # noqa: BLE001
+        logger.exception("ensure_indexes failed")
+    try:
+        await seed_admin()
+    except Exception:  # noqa: BLE001
+        logger.exception("seed_admin failed")
+    yield
+    logger.info("shutdown")
+
+
+def create_app() -> FastAPI:
+    s = get_settings()
+    app = FastAPI(
+        title="Strategy Factory",
+        version=s.build_version,
+        docs_url="/api/docs",
+        openapi_url="/api/openapi.json",
+        lifespan=lifespan,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=s.cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.include_router(health_router)
+    app.include_router(auth_router)
+    app.include_router(admin_router)
+    app.include_router(strategies_router)
+    app.include_router(research_router)
+    app.include_router(dashboard_router)
+    return app
+
+
+app = create_app()

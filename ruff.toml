@@ -1,0 +1,20 @@
+# Root ruff config
+# Legacy v01 code is preserved verbatim; ignore stylistic rules for legacy tree.
+
+[lint]
+select = ["E", "F", "W"]
+
+[lint.per-file-ignores]
+"backend/legacy/**" = [
+    "E701",  # multiple statements on one line (colon) - legacy compact style
+    "E702",  # multiple statements on one line (semicolon)
+    "E712",  # equality comparisons to True/False - legacy test style
+    "E741",  # ambiguous variable name 'l' - legacy naming preserved
+    "E402",  # module level import not at top - required due to sys.path shims
+    "F811",  # redefinition of unused - legacy re-exports
+    "F821",  # undefined name - legacy dynamic imports / optional test refs
+    "F841",  # local variable assigned but never used - legacy test scaffolding
+    "F401",  # imported but unused - legacy re-exports
+    "E401",  # multiple imports on one line
+    "F541",  # f-string without placeholders
+]

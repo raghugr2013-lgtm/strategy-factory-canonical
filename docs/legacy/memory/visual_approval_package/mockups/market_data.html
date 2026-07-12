@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Market Data · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab">Trade Runner</button>
+    <button class="tab">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab active">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn">⊞</button><button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn">🔔<span class="badge">3</span></button><button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div><button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step current"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">→</span><button class="lc-step next"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">10</span><span>Deployment</span></button></div></div>
+
+<main class="main">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">Market Data Workbench</div>
+      <div class="page-sub">Download · maintain · archive. BID candles + BI5 tick archive + CSV + Server import + Gap fix.</div>
+    </div>
+    <div class="page-actions">
+      <a class="next-cta" href="auto_factory.html" data-testid="next-cta"><span class="next-num">2</span><span>Next: Generate strategies</span><span class="arrow">→</span></a>
+      <button class="btn">Open data dictionary</button>
+      <button class="btn btn-primary">Run gap-fix sweep ▶</button>
+    </div>
+  </div>
+
+  <div class="subtabs">
+    <button class="subtab active">Manual</button>
+    <button class="subtab">Automated</button>
+    <button class="subtab">Archive</button>
+  </div>
+
+  <div class="grid grid-dash">
+
+    <!-- LEFT: download workbench -->
+    <div class="col">
+
+      <!-- Download form -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Download workbench</div><div class="card-sub">BID candles · BI5 ticks · CSV · Server-import</div></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+            <div>
+              <div class="section-label">Source</div>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                <span class="chip warn">● BID candles</span>
+                <span class="chip muted">○ BI5 ticks</span>
+                <span class="chip muted">○ CSV</span>
+                <span class="chip muted">○ Server</span>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Pair</div>
+              <div style="margin-top:6px"><span class="chip ok">EURUSD</span></div>
+            </div>
+            <div>
+              <div class="section-label">Timeframes</div>
+              <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+                <span class="chip ok">M1</span><span class="chip ok">M5</span>
+                <span class="chip ok">M15</span><span class="chip ok">H1</span>
+                <span class="chip ok">H4</span><span class="chip ok">D1</span>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Date range</div>
+              <div class="mono" style="margin-top:6px;font-size:12px">2024-01-01 → 2025-12-31</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px"><button class="btn btn-primary">▶ Start download</button><button class="btn">Cancel</button><button class="btn btn-ghost">Save template</button></div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Current job</div><span class="chip warn">running</span></div>
+        <div class="card-pad">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+            <span class="muted-text">EURUSD H1 · 1 242 / 2 003 bars</span>
+            <span class="mono">62 %</span>
+          </div>
+          <div class="bar" style="height:8px"><div class="fill" style="width:62%"></div></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">
+            <div class="kpi" style="padding:8px"><span class="kpi-label">Speed</span><span class="kpi-value" style="font-size:14px">412 bars/s</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">ETA</span><span class="kpi-value" style="font-size:14px">18 s</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">Persisted</span><span class="kpi-value" style="font-size:14px">1 242</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">Dedupes</span><span class="kpi-value" style="font-size:14px">214</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coverage grid -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Coverage</div><div class="card-sub">per-pair · per-TF · source-aware</div></div>
+        <table class="tbl">
+          <thead><tr>
+            <th>Pair</th><th class="center">M1</th><th class="center">M5</th>
+            <th class="center">M15</th><th class="center">H1</th><th class="center">H4</th><th class="center">D1</th>
+            <th>Coverage</th><th class="right">Last bar</th><th class="right">Rows</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><strong>EURUSD</strong></td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill success" style="width:100%"></div></div></td>
+                <td class="mono muted right">2025-12-31 23:00</td><td class="num">52 184</td></tr>
+            <tr><td><strong>GBPUSD</strong></td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill success" style="width:100%"></div></div></td>
+                <td class="mono muted right">2025-12-31 23:00</td><td class="num">28 142</td></tr>
+            <tr><td><strong>USDJPY</strong></td>
+                <td class="center muted">—</td><td class="center muted">—</td><td class="center muted">—</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill" style="width:60%"></div></div></td>
+                <td class="mono muted right">2025-12-31 23:00</td><td class="num">12 870</td></tr>
+            <tr><td><strong>XAUUSD</strong></td>
+                <td class="center muted">—</td><td class="center muted">—</td><td class="center muted">—</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill" style="width:60%"></div></div></td>
+                <td class="mono muted right">2025-12-31 23:00</td><td class="num">11 193</td></tr>
+            <tr><td><strong>AUDUSD</strong></td>
+                <td class="center muted">—</td><td class="center muted">—</td><td class="center muted">—</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill" style="width:60%"></div></div></td>
+                <td class="mono muted right">2025-12-30 23:00</td><td class="num">10 042</td></tr>
+            <tr><td><strong>USDCAD</strong></td>
+                <td class="center muted">—</td><td class="center muted">—</td><td class="center muted">—</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill" style="width:60%"></div></div></td>
+                <td class="mono muted right">2025-12-30 23:00</td><td class="num">9 814</td></tr>
+            <tr><td><strong>USDCHF</strong></td>
+                <td class="center muted">—</td><td class="center muted">—</td><td class="center muted">—</td>
+                <td class="center pos">✓</td><td class="center pos">✓</td><td class="center pos">✓</td>
+                <td><div class="bar" style="width:160px"><div class="fill" style="width:60%"></div></div></td>
+                <td class="mono muted right">2025-12-30 23:00</td><td class="num">9 122</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT: state, gaps, BI5 -->
+    <div class="col">
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Data store</div><span class="chip ok">healthy</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px">
+            <span>BID rows</span><span class="mono pos">104 389</span>
+            <span>BI5 rows (Mongo)</span><span class="mono neg">0</span>
+            <span>BI5 tick archive (disk)</span><span class="mono">7 462 files · 110 MB</span>
+            <span>Spread rows</span><span class="mono neg">0</span>
+            <span>Symbols loaded</span><span class="mono">7</span>
+            <span>Last full sweep</span><span class="mono muted">02:00 UTC · ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Gap analyser</div><span class="chip warn">14 gaps</span></div>
+        <div class="card-pad">
+          <table class="tbl">
+            <thead><tr><th>Pair</th><th class="right">Gaps</th><th>Latest</th></tr></thead>
+            <tbody>
+              <tr><td>EURUSD</td><td class="num">3</td><td class="mono muted">2025-11-04 gap 47 min</td></tr>
+              <tr><td>GBPUSD</td><td class="num">5</td><td class="mono muted">2025-11-11 gap 32 min</td></tr>
+              <tr><td>USDJPY</td><td class="num">2</td><td class="mono muted">2025-12-01 gap 21 min</td></tr>
+              <tr><td>XAUUSD</td><td class="num">4</td><td class="mono muted">2025-12-08 gap 19 min</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-sm">Re-check</button><button class="btn btn-sm btn-primary">Fix all (14)</button></div>
+        </div>
+      </div>
+
+      <!-- BI5 callout -->
+      <div class="card" style="border-color:rgba(246,70,93,0.3)">
+        <div class="card-head"><div class="card-title" style="color:var(--color-danger)">⚠ BI5 plane not yet wired</div><span class="chip bad">recovery req'd</span></div>
+        <div class="card-pad">
+          <div class="muted-text" style="line-height:1.5">
+            The BI5 download button on this screen currently behaves identically to BID.<br/>
+            <strong style="color:var(--text-primary)">Why:</strong> the UI drops the <code class="mono">source</code> field on the wire,
+            backend defaults to BID, and writes <code class="mono">source="bid_1m"</code>.<br/>
+            <strong style="color:var(--text-primary)">Disk archive:</strong> 7 462 .bi5 hourly files (~110 MB) for 4 symbols sit
+            ingestible but unindexed.<br/>
+            <strong style="color:var(--text-primary)">Path:</strong> see BI5 Architecture mockup &mdash; tick → archive → realism → slippage → certification → deployment.
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="btn btn-sm btn-ghost">Read BI5 audit ▸</button>
+            <button class="btn btn-sm" disabled>Recovery (separate workstream)</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:idle</span>
+    <span class="sr-item"><span class="sr-dot warn"></span>ingest:running</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

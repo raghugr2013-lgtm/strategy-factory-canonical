@@ -1,0 +1,73 @@
+/opt/infrastructure
+├── CHANGELOG.md
+├── README.md
+├── VERSION
+├── backups
+├── cadvisor
+│   └── docker-compose.yml
+├── compose
+├── docs
+├── env
+├── grafana
+│   ├── data
+│   │   ├── csv
+│   │   ├── grafana.db
+│   │   ├── pdf
+│   │   ├── plugins
+│   │   ├── png
+│   │   └── unified-search
+│   └── docker-compose.yml
+├── loki
+│   ├── config
+│   │   └── loki-config.yml
+│   ├── data
+│   │   ├── chunks
+│   │   ├── compactor
+│   │   ├── rules
+│   │   ├── tsdb-shipper-active
+│   │   ├── tsdb-shipper-cache
+│   │   └── wal
+│   └── docker-compose.yml
+├── mongodb
+│   └── docker-compose.yml
+├── monitoring
+├── node-exporter
+│   └── docker-compose.yml
+├── portainer
+│   └── docker-compose.yml
+├── prometheus
+│   ├── data
+│   │   ├── 01KWH7RS3BC92ZJ15H1MYEZWT8
+│   │   ├── 01KWK5JB8WERQ10G4MRYPNHJ71
+│   │   ├── 01KWN3BV71GETAGZ0SSMWGAWAP
+│   │   ├── 01KWQ15CFCPV3XXMR6NWF825E7
+│   │   ├── 01KWRYYYB1HKC0C4NR6G92D883
+│   │   ├── 01KWTNWPKT1JAR0R2G6BBMCHXG
+│   │   ├── 01KWTWREX3TEXAZS519D1D3GDZ
+│   │   ├── 01KWTWRFY5BX6H60MRC07BWVX2
+│   │   ├── 01KWV3M5GMHN0C8KWVJ0WXBBBK
+│   │   ├── 01KWVAFWR8B771NSNJJY7QCFP0
+│   │   ├── chunks_head
+│   │   ├── lock
+│   │   ├── queries.active
+│   │   └── wal
+│   ├── docker-compose.yml
+│   └── prometheus.yml
+├── promtail
+│   ├── docker-compose.yml
+│   └── promtail.yml
+├── redis
+│   └── docker-compose.yml
+├── scripts
+├── templates
+└── traefik
+    ├── docker-compose.yml
+    ├── dynamic
+    │   └── dynamic.yml
+    ├── letsencrypt
+    │   └── acme.json
+    ├── logs
+    │   └── access.log
+    └── traefik.yml
+
+48 directories, 23 files

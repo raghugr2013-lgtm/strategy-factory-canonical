@@ -1,0 +1,65 @@
+/* ============================================================================
+ * Phase U-4.1 — Accessibility utilities
+ * ----------------------------------------------------------------------------
+ *  • `.sr-only` — screen-reader-only utility (mirrors common Bootstrap / Tailwind
+ *    visually-hidden helper). Used on VerdictBadge/Chip letter labels and
+ *    drawer aria-labels.
+ *  • Focus-visible outlines on shell-level interactive elements that previously
+ *    relied on browser defaults only.
+ *  • aria-modal / drawer focus styles.
+ * ========================================================================== */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Tighten the shell's focus rings so they're visible on dark and light. */
+[data-ui="command"] button:focus-visible,
+[data-ui="command"] a:focus-visible,
+[data-ui="command"] [role="button"]:focus-visible,
+[data-ui="command"] input:focus-visible,
+[data-ui="command"] select:focus-visible,
+[data-ui="command"] textarea:focus-visible {
+  outline: var(--asf-focus-width, 2px) solid var(--asf-focus-ring, #7AB8FF);
+  outline-offset: var(--asf-focus-offset, 2px);
+}
+
+/* Drawer / modal containers — focus ring lives on the dialog itself so screen
+ * readers + sighted keyboard users see a clear "this surface is active"
+ * indicator when focus is placed on the container. */
+[role="dialog"][data-asf-modal]:focus,
+[role="dialog"][data-asf-modal]:focus-visible {
+  outline: none; /* the surrounding shadow + border do the work */
+}
+
+/* Reduced-motion: kill the drawer slide-in transform so users with
+ * vestibular sensitivity don't get the 220ms slide. The drawer simply
+ * appears in place. */
+@media (prefers-reduced-motion: reduce) {
+  .asf-notification-drawer,
+  .asf-detail-drawer {
+    transition: none !important;
+  }
+  .cmd-fade-in {
+    animation: none !important;
+  }
+}
+
+/* Mobile / tablet touch target — bump the close button to 32×32 minimum
+ * on touch-capable input pointers (does not affect mouse-pointer styles). */
+@media (pointer: coarse) {
+  [data-testid$="-close"],
+  [data-testid$="-dismiss-all"],
+  [data-testid^="asf-notification-dismiss-"] {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}

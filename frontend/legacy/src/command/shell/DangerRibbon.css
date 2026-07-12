@@ -1,0 +1,127 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   COMMAND · M4.5 — Danger Ribbon styling
+   ---------------------------------------------------------------------------
+   Thin persistent bar at the very top of the shell. 28px tall. Slides
+   into existence only when there's at least one danger/warn event.
+   Click-and-Enter-activated to open the Operator Inbox.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.m45-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 28px;
+  padding: 0 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--asf-border-default, #2B3139);
+  position: relative;
+  z-index: 5;
+  outline: none;
+  animation: m45RibbonSlideIn 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes m45RibbonSlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* DANGER tone — red, animated pulse on the leading icon */
+.m45-ribbon--danger {
+  background: linear-gradient(90deg, rgba(244,65,88,0.16) 0%, rgba(244,65,88,0.06) 100%);
+  border-bottom-color: rgba(244,65,88,0.40);
+  color: #F8959F;
+}
+.m45-ribbon--danger .m45-ribbon__icon {
+  color: #F44158;
+  animation: m45RibbonPulse 1600ms ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(244,65,88,0.55);
+}
+@keyframes m45RibbonPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.92); }
+}
+
+/* WARN tone — gold, no pulse (less urgent) */
+.m45-ribbon--warn {
+  background: linear-gradient(90deg, rgba(240,185,11,0.14) 0%, rgba(240,185,11,0.04) 100%);
+  border-bottom-color: rgba(240,185,11,0.35);
+  color: #F0B90B;
+}
+.m45-ribbon--warn .m45-ribbon__icon {
+  color: var(--asf-accent-primary, #F0B90B);
+  text-shadow: 0 0 6px rgba(240,185,11,0.45);
+}
+
+.m45-ribbon:hover {
+  filter: brightness(1.10);
+}
+.m45-ribbon:focus-visible {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.m45-ribbon__icon {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.m45-ribbon__sev {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  font-size: 9.5px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.18);
+}
+.m45-ribbon__title {
+  color: var(--asf-text-primary, #EAECEF);
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m45-ribbon__sep {
+  color: var(--asf-text-muted, #5E6673);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.m45-ribbon__source {
+  color: var(--asf-text-secondary, #848E9C);
+  text-transform: lowercase;
+  flex-shrink: 0;
+  font-size: 10.5px;
+}
+.m45-ribbon__time {
+  color: var(--asf-text-muted, #5E6673);
+  flex-shrink: 0;
+  font-size: 10.5px;
+}
+.m45-ribbon__spacer {
+  flex: 1;
+}
+.m45-ribbon__cta {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: currentColor;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+/* Briefing posture — narrower padding so the ribbon fits handheld widths */
+[data-cmd-posture="briefing"] .m45-ribbon {
+  padding: 0 10px;
+  font-size: 10.5px;
+  gap: 6px;
+}
+[data-cmd-posture="briefing"] .m45-ribbon__source,
+[data-cmd-posture="briefing"] .m45-ribbon__sep:nth-of-type(2) {
+  display: none;
+}

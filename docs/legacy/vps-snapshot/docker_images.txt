@@ -1,0 +1,16 @@
+IMAGE                             ID             DISK USAGE   CONTENT SIZE   EXTRA
+curlimages/curl:latest            7c12af72ceb3       35.3MB         10.7MB        
+factory-backend:latest            6c0eca379954       1.07GB          255MB   U    
+gcr.io/cadvisor/cadvisor:latest   3de2bd520312        107MB         30.8MB   U    
+grafana/grafana-oss:latest        5dad0df181cb       1.47GB          352MB   U    
+grafana/loki:latest               70b9f699fc9b        207MB         47.7MB   U    
+grafana/promtail:latest           6cfa64ec432b        283MB         67.3MB   U    
+hello-world:latest                96498ffd522e       25.9kB         9.49kB        
+mongo:8                           49f1d7b87c2d        1.3GB          341MB   U    
+nginx:1.27-alpine                 65645c7bb6a0       74.5MB         21.9MB   U    
+portainer/portainer-ce:latest     5f9b4bda5582        187MB         41.9MB   U    
+prom/node-exporter:latest         e9cff4fc67b1       40.7MB         13.3MB   U    
+prom/prometheus:latest            c6b27ea434f8        359MB          107MB   U    
+redis:7-alpine                    6ab0b6e73817       57.8MB         16.8MB   U    
+traefik:v3.5                      16acb89c6db3        235MB         51.5MB        
+traefik:v3.6.2                    aaf0f6185419        240MB         52.6MB   U    

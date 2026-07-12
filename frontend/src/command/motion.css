@@ -1,0 +1,111 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   COMMAND · Phase U.0 — Motion Foundation
+   ---------------------------------------------------------------------------
+   Three ambient motions, opacity-only. NO translate, NO scale, NO rotate.
+   Long-session safe. All gated by prefers-reduced-motion.
+
+     • cmd-pulse — 1.4Hz heartbeat for live telemetry dots
+     • cmd-throb — one-shot 280ms flash when AI runner fires
+     • cmd-flow  — 6s left→right hairline shimmer for telemetry rails
+
+   Focus-mode override declared here too, so when [data-ui-focus="on"]
+   all ambient motion stops and the UI calms further.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Heartbeat — operator's "AI is alive" signal */
+@keyframes cmd-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* One-shot flash — fires when LLM call completes */
+@keyframes cmd-throb {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Hairline shimmer — telemetry "data is flowing" subliminal cue */
+@keyframes cmd-flow {
+  0%   { background-position: -120px 0; }
+  100% { background-position: 240px 0; }
+}
+
+/* Quiet entrance — used by Inspector & Command Palette (opacity only) */
+@keyframes cmd-fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ──────────── Utility classes ──────────── */
+[data-ui="command"] .cmd-dot--live {
+  animation: cmd-pulse 1.4s ease-in-out infinite;
+}
+
+[data-ui="command"] .cmd-throb {
+  display: inline-block;
+  width: 4px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--cmd-cyan);
+  box-shadow: var(--cmd-glow-cyan);
+  opacity: 0;                                  /* idle invisible            */
+}
+[data-ui="command"] .cmd-throb--fire {
+  animation: cmd-throb 0.28s ease-out 1 forwards;
+}
+
+[data-ui="command"] .cmd-flow-line {
+  height: 1px;
+  width: 120px;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.36) 50%,
+    transparent 100%
+  );
+  background-size: 240px 1px;
+  background-repeat: no-repeat;
+  animation: cmd-flow 6s linear infinite;
+}
+
+[data-ui="command"] .cmd-fade-in {
+  animation: cmd-fade-in var(--cmd-dur) var(--cmd-ease) 1;
+}
+
+/* Focus ring — universal, subtle cyan */
+[data-ui="command"] :where(button, a, input, select, textarea):focus-visible {
+  outline: 1.5px solid var(--cmd-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ──────────── Focus Mode foundation ──────────── */
+/* When operator triggers Focus Mode (Phase U.1 will add the toggle), the
+   ambient surfaces calm further so the operator can lock onto a single
+   tactical surface. U.0 declares the CSS so Phase U.1 has zero token work. */
+[data-ui="command"][data-ui-focus="on"] .cmd-flow-line,
+[data-ui="command"][data-ui-focus="on"] .cmd-dot--live {
+  animation: none;
+  opacity: 0.7;
+}
+[data-ui="command"][data-ui-focus="on"] .panel--tactical {
+  box-shadow:
+    inset 0 1px 0 rgba(0, 212, 255, 0.06),
+    inset 0 0 0 1px var(--cmd-hairline);
+}
+[data-ui="command"][data-ui-focus="on"] .panel--tactical::before {
+  opacity: 0.35;
+}
+
+/* ──────────── prefers-reduced-motion discipline ──────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="command"] .cmd-dot--live,
+  [data-ui="command"] .cmd-throb--fire,
+  [data-ui="command"] .cmd-flow-line,
+  [data-ui="command"] .cmd-fade-in {
+    animation: none !important;
+  }
+  [data-ui="command"] .cmd-throb { opacity: 0; }
+  [data-ui="command"] .cmd-dot--live { opacity: 0.9; }
+}

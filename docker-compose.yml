@@ -1,0 +1,138 @@
+# Strategy Factory — LOCAL / DEV overlay compose
+# Purpose: `docker compose up -d` on a developer laptop or lightweight box.
+#
+# What this file provides vs infra/compose/docker-compose.prod.yml:
+#   - Includes a bundled MongoDB (production uses an external SHARED_MONGO_URL)
+#   - No Traefik labels (frontend published directly on host port 3000)
+#   - No Prometheus/Loki labels (external monitoring is not assumed locally)
+#   - No `vqb-network` join (uses a compose-local bridge)
+#   - factory-runner is enabled by default (matches canonical architecture)
+#
+# For VPS production, use infra/compose/docker-compose.prod.yml.
+
+services:
+  factory-mongo:
+    image: mongo:7
+    container_name: factory-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - factory_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  factory-vie:
+    build:
+      context: ./vie
+      dockerfile: Dockerfile
+    container_name: factory-vie
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      DEEPSEEK_API_KEY: "${DEEPSEEK_API_KEY:-}"
+      GROQ_API_KEY: "${GROQ_API_KEY:-}"
+      KIMI_API_KEY: "${KIMI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-}"
+      ANTHROPIC_MODEL: "${ANTHROPIC_MODEL:-}"
+      GEMINI_MODEL: "${GEMINI_MODEL:-}"
+      DEEPSEEK_MODEL: "${DEEPSEEK_MODEL:-}"
+      GROQ_MODEL: "${GROQ_MODEL:-}"
+      KIMI_MODEL: "${KIMI_MODEL:-}"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8100/health').read()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  factory-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: factory-backend
+    restart: unless-stopped
+    depends_on:
+      factory-mongo:
+        condition: service_healthy
+      factory-vie:
+        condition: service_started
+    environment:
+      MONGO_URL: "mongodb://factory-mongo:27017"
+      DB_NAME: "${FACTORY_DB_NAME:-strategy_factory_v1}"
+      JWT_SECRET: "${JWT_SECRET:-dev-only-please-rotate-64-hex-string}"
+      JWT_ACCESS_TTL_MIN: "60"
+      JWT_REFRESH_TTL_DAYS: "7"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@localhost}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
+      CORS_ORIGINS: "*"
+      VIE_URL: "http://factory-vie:8100"
+      VIE_TIMEOUT_S: "60"
+      BUILD_VERSION: "${BUILD_VERSION:-1.1.0}"
+      BUILD_COMMIT: "${BUILD_COMMIT:-local}"
+      BUILD_DATE: "${BUILD_DATE:-2026-02}"
+      ENABLE_LEGACY_ROUTERS: "${ENABLE_LEGACY_ROUTERS:-true}"
+      ENABLE_FACTORY_RUNNER: "${ENABLE_FACTORY_RUNNER:-true}"
+      ENABLE_DYNAMIC_MARKET_UNIVERSE: "${ENABLE_DYNAMIC_MARKET_UNIVERSE:-false}"
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  factory-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: factory-frontend
+    restart: unless-stopped
+    depends_on:
+      factory-backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+  # Canonical scheduler sibling — always on (per approved plan).
+  # Runs legacy/factory_runner.py which owns APScheduler-driven jobs
+  # (auto scheduler, orchestrator, mutation runner, BI5 cert sweep, etc.).
+  # Comes online with useful work once Phase 5 (Factory Supervisor) is
+  # recovered. Boots healthy immediately (heartbeat file only) in Phase 0.
+  factory-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: factory-runner
+    restart: unless-stopped
+    depends_on:
+      factory-backend:
+        condition: service_healthy
+    environment:
+      MONGO_URL: "mongodb://factory-mongo:27017"
+      DB_NAME: "${FACTORY_DB_NAME:-strategy_factory_v1}"
+      VIE_URL: "http://factory-vie:8100"
+      VIE_TIMEOUT_S: "60"
+      ENABLE_LEGACY_ROUTERS: "${ENABLE_LEGACY_ROUTERS:-true}"
+      ENABLE_FACTORY_RUNNER: "${ENABLE_FACTORY_RUNNER:-true}"
+    command: ["python", "-m", "app.runner"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/factory_runner.hb"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - factory_bi5:/app/data/bi5
+
+volumes:
+  factory_mongo_data:
+    driver: local
+  factory_bi5:
+    driver: local

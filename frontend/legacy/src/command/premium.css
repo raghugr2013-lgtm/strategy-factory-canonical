@@ -1,0 +1,137 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   COMMAND · Phase U.5.d — Premium institutional aesthetic (additive layer)
+   ===========================================================================
+   The cinematic frame in which the AI Workforce Live River debuts. Pure
+   ADDITIONS — never overrides existing tokens or rules. All scoped under
+   [data-ui="command"] so legacy is bit-identical when COMMAND mode is off.
+
+   Contents:
+     1. graphite layering tokens + glass/shadow tokens
+     2. .panel--premium opt-in modifier (depth + subtle reflection hairline)
+     3. refined institutional scrollbars
+     4. calm cyan selection
+     5. 1px cyan reflection under the bar (workstation only)
+     6. 6s ambient pulse on status-rail LIVE dots (workstation only)
+   ───────────────────────────────────────────────────────────────────────── */
+
+[data-ui="command"] {
+  /* graphite layering — premium ops-room canvas */
+  --cmd-graphite-0:        #06080c;
+  --cmd-graphite-1:        #0b0e13;
+  --cmd-graphite-2:        #11151c;
+  --cmd-graphite-3:        #1a212b;
+  /* glass + shadow primitives */
+  --cmd-glass-tint:        rgba(11, 14, 19, 0.62);
+  --cmd-glass-blur:        18px;
+  --cmd-shadow-ambient:    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+                           0 12px 36px -16px rgba(0, 0, 0, 0.55);
+  --cmd-shadow-hover:      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+                           0 18px 48px -18px rgba(0, 0, 0, 0.70),
+                           0 0 0 1px rgba(0, 212, 255, 0.06);
+}
+
+/* ── 1. .panel--premium · cinematic depth · opt-in modifier ─────────────── */
+[data-ui="command"] .panel--premium {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+              rgba(17, 21, 28, 0.92) 0%,
+              rgba(11, 14, 19, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--cmd-shadow-ambient);
+  transition: border-color 280ms var(--cmd-ease, ease),
+              box-shadow   280ms var(--cmd-ease, ease);
+}
+/* Top-edge reflection — institutional 1px hairline */
+[data-ui="command"] .panel--premium::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+              transparent 0%,
+              rgba(255, 255, 255, 0.08) 22%,
+              rgba(255, 255, 255, 0.08) 78%,
+              transparent 100%);
+  pointer-events: none;
+}
+/* Hover lift — workstation only (touch postures don't hover) */
+[data-cmd-posture="workstation"] [data-ui="command"] .panel--premium:hover {
+  border-color: rgba(0, 212, 255, 0.14);
+  box-shadow: var(--cmd-shadow-hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="command"] .panel--premium { transition: none; }
+}
+
+/* ── U.6.a · Premium OFF · operator-elective focus mode ──────────────────
+   When the operator chooses premium='off', the cinematic frame collapses
+   into the calm flat U.4-era panel rendering. Layout is IDENTICAL — only
+   depth, gradient, and reflection are removed. Instant CSS-only swap.
+   Used during long deep-focus sessions, accessibility preferences, or
+   simple operator taste. */
+[data-ui="command"][data-cmd-premium="off"] .panel--premium {
+  background: var(--cmd-surface-1);
+  border: 1px solid var(--cmd-hairline);
+  box-shadow: none;
+  transition: none;
+}
+[data-ui="command"][data-cmd-premium="off"] .panel--premium::before { display: none; }
+[data-cmd-posture="workstation"] [data-ui="command"][data-cmd-premium="off"] .panel--premium:hover {
+  border-color: var(--cmd-hairline-2);
+  box-shadow: none;
+}
+/* Disable bar reflection + status ambient pulse in premium-off mode */
+[data-ui="command"][data-cmd-premium="off"] .cmd-shell__bar::after { display: none; }
+[data-ui="command"][data-cmd-premium="off"] .cmd-shell__status .chip__dot.cmd-dot--live {
+  animation: none;
+}
+
+/* ── 2. Refined institutional scrollbars ────────────────────────────────── */
+[data-ui="command"] ::-webkit-scrollbar        { width: 6px; height: 6px; }
+[data-ui="command"] ::-webkit-scrollbar-track  { background: transparent; }
+[data-ui="command"] ::-webkit-scrollbar-thumb  {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  transition: background 200ms ease;
+}
+[data-ui="command"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.30);
+}
+
+/* ── 3. Calm cyan selection ─────────────────────────────────────────────── */
+[data-ui="command"] ::selection {
+  background: rgba(0, 212, 255, 0.22);
+  color: var(--cmd-ink-0);
+}
+
+/* ── 4. Bar institutional reflection · 1px subtle cyan under the bar ────── */
+[data-ui="command"] .cmd-shell__bar { position: relative; }
+[data-ui="command"][data-cmd-posture="workstation"] .cmd-shell__bar::after {
+  content: '';
+  position: absolute;
+  left: 22%; right: 22%;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg,
+              transparent 0%,
+              rgba(0, 212, 255, 0.18) 50%,
+              transparent 100%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ── 5. Status-rail ambient pulse · 6s, opacity-only, workstation only ──── */
+@keyframes cmd-pulse-ambient {
+  0%, 100% { opacity: 0.92; }
+  50%      { opacity: 0.58; }
+}
+[data-ui="command"][data-cmd-posture="workstation"]
+  .cmd-shell__status .chip__dot.cmd-dot--live {
+  animation: cmd-pulse-ambient 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="command"] .cmd-shell__status .chip__dot.cmd-dot--live {
+    animation: none;
+  }
+}

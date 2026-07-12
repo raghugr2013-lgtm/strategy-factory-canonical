@@ -1,0 +1,768 @@
+/opt/strategy-factory
+├── backend
+│   ├── Dockerfile
+│   ├── PHASE1_COMPLETION_REPORT.md
+│   ├── PHASE2_5_SCHEMA_EXTENSION_REPORT.md
+│   ├── PHASE2_COMPLETION_REPORT.md
+│   ├── PHASE3_COMPLETION_REPORT.md
+│   ├── PHASE3_DESIGN.md
+│   ├── api
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── admin_execution_realism.py
+│   │   ├── admin_flag_governance.py
+│   │   ├── admin_market_universe.py
+│   │   ├── asf.py
+│   │   ├── auth.py
+│   │   ├── auto_factory.py
+│   │   ├── auto_mutation.py
+│   │   ├── auto_selection.py
+│   │   ├── bi5_cert_sweep.py
+│   │   ├── bi5_certification.py
+│   │   ├── bi5_ingest.py
+│   │   ├── bi5_realism.py
+│   │   ├── cbot.py
+│   │   ├── cbot_parity.py
+│   │   ├── challenge.py
+│   │   ├── challenge_matching.py
+│   │   ├── cpu_pool_state.py
+│   │   ├── dashboard.py
+│   │   ├── dashboard_route.py
+│   │   ├── data.py
+│   │   ├── data_health.py
+│   │   ├── data_maintenance.py
+│   │   ├── deployment.py
+│   │   ├── diag_bi5_health.py
+│   │   ├── execution.py
+│   │   ├── factory_supervisor.py
+│   │   ├── gem_factory.py
+│   │   ├── governance.py
+│   │   ├── incremental_run_alias.py
+│   │   ├── ingestion.py
+│   │   ├── latent
+│   │   ├── lifecycle.py
+│   │   ├── live_tracking.py
+│   │   ├── llm_diagnostics.py
+│   │   ├── llm_health.py
+│   │   ├── market_intelligence.py
+│   │   ├── master_bot.py
+│   │   ├── monitoring.py
+│   │   ├── multi_cycle.py
+│   │   ├── mutation.py
+│   │   ├── optimization.py
+│   │   ├── orchestrator.py
+│   │   ├── orchestrator_heartbeat.py
+│   │   ├── phase12_tuning.py
+│   │   ├── phase4_matching.py
+│   │   ├── phase4_route.py
+│   │   ├── pipeline.py
+│   │   ├── pipeline_logs.py
+│   │   ├── portfolio.py
+│   │   ├── portfolio_builder.py
+│   │   ├── portfolio_intelligence.py
+│   │   ├── prop_firm_analysis.py
+│   │   ├── prop_firm_intelligence.py
+│   │   ├── prop_firm_rules_review.py
+│   │   ├── prop_firms.py
+│   │   ├── readiness.py
+│   │   ├── regime.py
+│   │   ├── research_lineage.py
+│   │   ├── runner.py
+│   │   ├── scaling.py
+│   │   ├── soak_diagnostics.py
+│   │   ├── strategies.py
+│   │   ├── strategy_memory.py
+│   │   └── trade_runner.py
+│   ├── auth_middleware.py
+│   ├── auth_utils.py
+│   ├── cbot_engine
+│   │   ├── __init__.py
+│   │   ├── generator.py
+│   │   ├── ir_emitter.py
+│   │   ├── ir_parity_simulator.py
+│   │   ├── ir_templates.py
+│   │   └── ir_transpiler.py
+│   ├── config
+│   │   ├── __init__.py
+│   │   ├── bi5_symbols.py
+│   │   └── symbols.py
+│   ├── conftest.py
+│   ├── data_engine
+│   │   ├── __init__.py
+│   │   ├── adapters
+│   │   ├── auto_data_maintainer.py
+│   │   ├── bi5_ingest_runner.py
+│   │   ├── csv_ingester.py
+│   │   ├── data_backup.py
+│   │   ├── data_maintenance.py
+│   │   ├── data_manager.py
+│   │   ├── dukascopy_downloader.py
+│   │   ├── gap_analyzer.py
+│   │   ├── incremental_updater.py
+│   │   ├── market_calendar.py
+│   │   ├── tick_aggregator.py
+│   │   └── tick_archive.py
+│   ├── engines
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── activation_governance.py
+│   │   ├── activation_journal.py
+│   │   ├── adaptive_concurrency.py
+│   │   ├── adaptive_cooldown.py
+│   │   ├── adaptive_pool_sizer.py
+│   │   ├── admission_controller.py
+│   │   ├── admission_wrapper.py
+│   │   ├── advisory_lock.py
+│   │   ├── agent_advisor.py
+│   │   ├── ai_orchestrator.py
+│   │   ├── alert_engine.py
+│   │   ├── analysis_engine.py
+│   │   ├── architect_scaling_view.py
+│   │   ├── asf
+│   │   ├── audit_log_writer.py
+│   │   ├── auto_factory.py
+│   │   ├── auto_factory_engine.py
+│   │   ├── auto_factory_phase55.py
+│   │   ├── auto_mutation_runner.py
+│   │   ├── auto_scheduler.py
+│   │   ├── auto_selection_engine.py
+│   │   ├── backtest_engine.py
+│   │   ├── backtest_pool.py
+│   │   ├── backtest_report.py
+│   │   ├── bi5_cert_sweep.py
+│   │   ├── bi5_cert_sweep_scheduler.py
+│   │   ├── bi5_certification.py
+│   │   ├── bi5_maturity.py
+│   │   ├── bi5_realism.py
+│   │   ├── cadence_scheduler.py
+│   │   ├── calibration_framework.py
+│   │   ├── cbot_autofix.py
+│   │   ├── cbot_log_diagnostic.py
+│   │   ├── cbot_parity.py
+│   │   ├── cbot_pipeline.py
+│   │   ├── cbot_trade_parity.py
+│   │   ├── challenge_manager.py
+│   │   ├── challenge_matching_engine.py
+│   │   ├── challenge_portfolio.py
+│   │   ├── challenge_simulator.py
+│   │   ├── code_generator.py
+│   │   ├── compile_engine.py
+│   │   ├── compute_probe.py
+│   │   ├── cpu_pool.py
+│   │   ├── data_access.py
+│   │   ├── db.py
+│   │   ├── db_indexes.py
+│   │   ├── decision_engine.py
+│   │   ├── deployment_extras.py
+│   │   ├── ecosystem_maturity.py
+│   │   ├── ecosystem_observability.py
+│   │   ├── env_priority.py
+│   │   ├── event_continuation.py
+│   │   ├── evolution_engine.py
+│   │   ├── execution_engine.py
+│   │   ├── execution_manager.py
+│   │   ├── execution_realism_defaults.py
+│   │   ├── execution_simulator.py
+│   │   ├── expected_value.py
+│   │   ├── extract_jobs.py
+│   │   ├── factory_runner_heartbeat.py
+│   │   ├── factory_supervisor
+│   │   ├── feature_flags.py
+│   │   ├── flag_overrides.py
+│   │   ├── ga_optimizer.py
+│   │   ├── gem_factory_engine.py
+│   │   ├── governance_universe.py
+│   │   ├── history_prior.py
+│   │   ├── host_capability.py
+│   │   ├── htf_parity.py
+│   │   ├── ingestion_health_aggregate.py
+│   │   ├── ir_interpreter.py
+│   │   ├── ir_telemetry.py
+│   │   ├── lifecycle_decay.py
+│   │   ├── live_tracking_engine.py
+│   │   ├── llm_adapter.py
+│   │   ├── llm_config.py
+│   │   ├── llm_runner.py
+│   │   ├── market_intelligence.py
+│   │   ├── market_universe.py
+│   │   ├── market_universe_adapter.py
+│   │   ├── market_universe_audit.py
+│   │   ├── master_bot_definition.py
+│   │   ├── master_bot_deployment.py
+│   │   ├── master_bot_diff.py
+│   │   ├── master_bot_engine.py
+│   │   ├── master_bot_export.py
+│   │   ├── master_bot_pack.py
+│   │   ├── master_bot_ranker.py
+│   │   ├── match_input_validator.py
+│   │   ├── matching_engine.py
+│   │   ├── monitoring_alert_bridge.py
+│   │   ├── monitoring_engine.py
+│   │   ├── monte_carlo_engine.py
+│   │   ├── multi_account_envelope.py
+│   │   ├── multi_asset_portfolio.py
+│   │   ├── multi_cycle_runner.py
+│   │   ├── mutation_engine.py
+│   │   ├── mutation_pool.py
+│   │   ├── oos_holdout.py
+│   │   ├── optimization_engine.py
+│   │   ├── optimization_portfolio_bridge.py
+│   │   ├── orchestrator_scheduler.py
+│   │   ├── paper_execution_alert_bridge.py
+│   │   ├── paper_execution_engine.py
+│   │   ├── param_extractor.py
+│   │   ├── parity_certification.py
+│   │   ├── parity_drift_view.py
+│   │   ├── pass_probability.py
+│   │   ├── persistence_adapters
+│   │   ├── phase12_tuning.py
+│   │   ├── phase4_matcher.py
+│   │   ├── pipeline_logs.py
+│   │   ├── portfolio_builder_engine.py
+│   │   ├── portfolio_combiner.py
+│   │   ├── portfolio_engine.py
+│   │   ├── portfolio_intelligence_engine.py
+│   │   ├── portfolio_store.py
+│   │   ├── prop_firm_config_engine.py
+│   │   ├── prop_firm_intelligence.py
+│   │   ├── prop_firm_panel.py
+│   │   ├── prop_firm_rule_engine.py
+│   │   ├── queue_pressure.py
+│   │   ├── r5_shadow_comparator.py
+│   │   ├── random_search_optimizer.py
+│   │   ├── ranking_engine.py
+│   │   ├── readiness_engine.py
+│   │   ├── refinement_engine.py
+│   │   ├── regime_classifier.py
+│   │   ├── regime_performance.py
+│   │   ├── replacement_engine.py
+│   │   ├── replay_priority.py
+│   │   ├── research_lineage.py
+│   │   ├── risk_of_ruin.py
+│   │   ├── rotational_orchestrator.py
+│   │   ├── rule_enforcement.py
+│   │   ├── rule_engine.py
+│   │   ├── runner_account_migration.py
+│   │   ├── runner_registry.py
+│   │   ├── runner_router.py
+│   │   ├── runner_token_rotator.py
+│   │   ├── safe_to_widen.py
+│   │   ├── safety_engine.py
+│   │   ├── safety_injector.py
+│   │   ├── scaling_events.py
+│   │   ├── scaling_registry.py
+│   │   ├── scaling_router.py
+│   │   ├── seed
+│   │   ├── signal_quality.py
+│   │   ├── slippage_model.py
+│   │   ├── soak_stability.py
+│   │   ├── spread_analyzer.py
+│   │   ├── strategy_description.py
+│   │   ├── strategy_engine.py
+│   │   ├── strategy_ingestion
+│   │   ├── strategy_ir.py
+│   │   ├── strategy_ir_backfill.py
+│   │   ├── strategy_ir_builders.py
+│   │   ├── strategy_ir_renderer.py
+│   │   ├── strategy_library.py
+│   │   ├── strategy_lifecycle.py
+│   │   ├── strategy_memory.py
+│   │   ├── strategy_mutation.py
+│   │   ├── strategy_profiler.py
+│   │   ├── strategy_ranking_engine.py
+│   │   ├── strategy_refinement_engine.py
+│   │   ├── survivor_registry.py
+│   │   ├── tick_validator.py
+│   │   ├── trade_runner_engine.py
+│   │   ├── validation_engine.py
+│   │   ├── validation_report.py
+│   │   ├── walk_forward_engine.py
+│   │   ├── widening_history.py
+│   │   ├── widening_proposal.py
+│   │   └── workload_classes.py
+│   ├── factory_runner.py
+│   ├── prop_firm_configs_example.json
+│   ├── prop_firm_intelligence_example.json
+│   ├── prop_firm_pdfs
+│   │   ├── acme_audit_20260419T154741.pdf
+│   │   ├── acme_prop_u_20260418T171857.pdf
+│   │   ├── demo_propfirm_20260418T155323.pdf
+│   │   ├── demo_propfirm_ui_20260418T155739.pdf
+│   │   ├── ftmo_demo_20260419T162156.pdf
+│   │   ├── myfundedfx_live_test_20260429T100638.pdf
+│   │   ├── phase2_test_20260418T164731.pdf
+│   │   ├── regression_firm_20260418T160027.pdf
+│   │   ├── regression_firm_20260418T160045.pdf
+│   │   ├── regression_firm_20260429T100130.pdf
+│   │   ├── regression_firm_20260429T100140.pdf
+│   │   ├── regression_firm_20260429T100535.pdf
+│   │   ├── regression_firm_20260429T100622.pdf
+│   │   ├── regression_firm_20260503T093714.pdf
+│   │   ├── regression_firm_20260503T095212.pdf
+│   │   ├── regression_firm_20260503T103039.pdf
+│   │   ├── regression_firm_20260503T104618.pdf
+│   │   ├── regression_firm_20260503T112123.pdf
+│   │   ├── regression_firm_20260503T155151.pdf
+│   │   ├── regression_firm_20260504T111140.pdf
+│   │   ├── regression_firm_20260520T064503.pdf
+│   │   ├── regression_firm_20260604T163559.pdf
+│   │   ├── regression_firm_20260607T075300.pdf
+│   │   ├── regression_firm_20260607T080309.pdf
+│   │   ├── regression_firm_20260607T095403.pdf
+│   │   ├── regression_ui_firm_20260418T160154.pdf
+│   │   ├── test_firm_20260418T160029.pdf
+│   │   ├── test_firm_20260418T160046.pdf
+│   │   ├── test_firm_20260429T100130.pdf
+│   │   ├── test_firm_20260429T100140.pdf
+│   │   ├── test_firm_20260429T100535.pdf
+│   │   ├── test_firm_20260429T100622.pdf
+│   │   ├── test_firm_20260503T093714.pdf
+│   │   ├── test_firm_20260503T095212.pdf
+│   │   ├── test_firm_20260503T103039.pdf
+│   │   ├── test_firm_20260503T104618.pdf
+│   │   ├── test_firm_20260503T112123.pdf
+│   │   ├── test_firm_20260503T155151.pdf
+│   │   ├── test_firm_20260504T111140.pdf
+│   │   ├── test_firm_20260520T064503.pdf
+│   │   ├── test_firm_20260604T163603.pdf
+│   │   ├── test_firm_20260607T075300.pdf
+│   │   ├── test_firm_20260607T080309.pdf
+│   │   ├── test_firm_20260607T095403.pdf
+│   │   ├── test_phase2_extract_20260418T164903.pdf
+│   │   ├── test_phase2_extract_20260503T095212.pdf
+│   │   ├── test_phase2_extract_20260503T112123.pdf
+│   │   ├── test_phase2_extract_20260503T155151.pdf
+│   │   ├── test_phase2_extract_20260504T111140.pdf
+│   │   ├── test_phase2_extract_20260520T064503.pdf
+│   │   ├── test_phase2_extract_20260604T163628.pdf
+│   │   ├── test_phase2_extract_20260607T075300.pdf
+│   │   ├── test_phase2_extract_20260607T080309.pdf
+│   │   └── test_phase2_extract_20260607T095403.pdf
+│   ├── requirements.txt
+│   ├── scripts
+│   │   ├── __init__.py
+│   │   ├── bi5_archive_cert_pass.py
+│   │   ├── bi5_archive_health_wrap.py
+│   │   ├── bi5_archive_recert_step0_a.py
+│   │   ├── bi5_archive_recert_step0_a_fast.py
+│   │   ├── bi5_one_shot_backfill.py
+│   │   ├── mb9_phase2_soak_helper.py
+│   │   ├── mb9_phase2_soak_seed.py
+│   │   ├── rebuild_higher_tf.py
+│   │   ├── soak_poll.sh
+│   │   ├── validate_multi_asset_portfolio.py
+│   │   ├── validate_mutation_stability.py
+│   │   └── validate_per_asset_stability.py
+│   ├── server.py
+│   ├── startup_validator.py
+│   ├── tests
+│   │   ├── conftest.py
+│   │   ├── latent
+│   │   ├── test_activation_timeline.py
+│   │   ├── test_ai_orchestrator.py
+│   │   ├── test_alert_engine_unit.py
+│   │   ├── test_api_endpoints.py
+│   │   ├── test_asf_dedup_policy.py
+│   │   ├── test_asf_migration_adapter.py
+│   │   ├── test_asf_schema.py
+│   │   ├── test_auth_admin_system.py
+│   │   ├── test_auto_factory_engine.py
+│   │   ├── test_auto_factory_phase55.py
+│   │   ├── test_auto_factory_phase55_alerts.py
+│   │   ├── test_auto_factory_v2.py
+│   │   ├── test_auto_maintenance_coverage_fix.py
+│   │   ├── test_auto_run_cycle.py
+│   │   ├── test_auto_scheduler.py
+│   │   ├── test_backtest_correctness.py
+│   │   ├── test_bi5_adapter_interface.py
+│   │   ├── test_bi5_certification_api.py
+│   │   ├── test_bi5_certification_orchestrator.py
+│   │   ├── test_bi5_certification_store.py
+│   │   ├── test_bi5_data_certification_store.py
+│   │   ├── test_bi5_ingest_runner_calendar_wiring.py
+│   │   ├── test_bi5_ingest_runner_data_cert.py
+│   │   ├── test_bi5_ingest_runner_e2e.py
+│   │   ├── test_bi5_ingest_spread_wiring.py
+│   │   ├── test_bi5_maturity.py
+│   │   ├── test_bi5_metal_holiday_calendar.py
+│   │   ├── test_bi5_r1.py
+│   │   ├── test_bi5_realism_27_3.py
+│   │   ├── test_bi5_realism_multi_tf_consistency.py
+│   │   ├── test_bi5_resample_alignment.py
+│   │   ├── test_bi5_session_calendar.py
+│   │   ├── test_boot_audit_emitter.py
+│   │   ├── test_cbot_ir_transpiler.py
+│   │   ├── test_cbot_log_diagnostic.py
+│   │   ├── test_cbot_parity_htf_wiring.py
+│   │   ├── test_cbot_parity_trade_integration.py
+│   │   ├── test_cbot_trade_parity.py
+│   │   ├── test_challenge_matching_api.py
+│   │   ├── test_challenge_phase10.py
+│   │   ├── test_challenge_phase10_5.py
+│   │   ├── test_challenge_simulator.py
+│   │   ├── test_challenge_simulator_phase1_upgrade.py
+│   │   ├── test_challenge_simulator_refinements.py
+│   │   ├── test_code_reliability.py
+│   │   ├── test_composer_chain_preserves_prior_overlay.py
+│   │   ├── test_composer_mutation_ir_parity.py
+│   │   ├── test_dashboard_datasets.py
+│   │   ├── test_data_access_recovery.py
+│   │   ├── test_data_backfill_phase22_2.py
+│   │   ├── test_data_integrity_phase6.py
+│   │   ├── test_data_load_endpoint.py
+│   │   ├── test_data_maintenance_phase52.py
+│   │   ├── test_data_pipeline_regression.py
+│   │   ├── test_data_upload_merge.py
+│   │   ├── test_decision_engine.py
+│   │   ├── test_deployment_extras.py
+│   │   ├── test_dsr1_schema.py
+│   │   ├── test_dsr2_scheduler.py
+│   │   ├── test_ecosystem_maturity.py
+│   │   ├── test_engine_imports_regression.py
+│   │   ├── test_evolution_telemetry.py
+│   │   ├── test_execution_engine.py
+│   │   ├── test_execution_phase8.py
+│   │   ├── test_execution_realism_defaults.py
+│   │   ├── test_execution_simulator.py
+│   │   ├── test_expected_value_engine.py
+│   │   ├── test_factory_runner_heartbeat.py
+│   │   ├── test_factory_supervisor_p1_0.py
+│   │   ├── test_factory_supervisor_p1_1.py
+│   │   ├── test_factory_supervisor_p1_2.py
+│   │   ├── test_factory_supervisor_p1_3.py
+│   │   ├── test_factory_supervisor_p1_4.py
+│   │   ├── test_factory_supervisor_p1_4_auto_learning.py
+│   │   ├── test_feature_flags_mb9_phase2.py
+│   │   ├── test_g2_scheduler_subordination.py
+│   │   ├── test_g6_lifecycle_progression.py
+│   │   ├── test_gem_factory_phase11.py
+│   │   ├── test_htf_parity.py
+│   │   ├── test_ingestion_health_aggregate.py
+│   │   ├── test_ir_interpreter_trust_gate.py
+│   │   ├── test_ir_telemetry.py
+│   │   ├── test_llm_config.py
+│   │   ├── test_llm_routing_migration.py
+│   │   ├── test_market_intelligence_api.py
+│   │   ├── test_market_spread_store.py
+│   │   ├── test_market_universe.py
+│   │   ├── test_market_universe_adapter.py
+│   │   ├── test_market_universe_audit.py
+│   │   ├── test_market_universe_certification_parity.py
+│   │   ├── test_market_universe_eligibility_parity.py
+│   │   ├── test_market_universe_seed.py
+│   │   ├── test_master_bot_api.py
+│   │   ├── test_master_bot_definition_export.py
+│   │   ├── test_master_bot_mb9_phase2_api.py
+│   │   ├── test_master_bot_pack_diff.py
+│   │   ├── test_master_bot_ranker_bi5_signals.py
+│   │   ├── test_match_input_validator.py
+│   │   ├── test_matching_engine.py
+│   │   ├── test_mb71_mb10.py
+│   │   ├── test_mb72_strategy_ir.py
+│   │   ├── test_mb9_phase1.py
+│   │   ├── test_mb9_phase2_flag_off_byte_identical.py
+│   │   ├── test_mb9_phase2_indexes.py
+│   │   ├── test_mb9_phase2c_consumer_wiring.py
+│   │   ├── test_mb9_phase2d_e2e.py
+│   │   ├── test_monitoring_alert_bridge.py
+│   │   ├── test_monitoring_phase6.py
+│   │   ├── test_multi_account_envelope.py
+│   │   ├── test_multi_asset_endpoint.py
+│   │   ├── test_multi_asset_portfolio.py
+│   │   ├── test_multi_cycle_e2e.py
+│   │   ├── test_mutation_emits_ir.py
+│   │   ├── test_mutation_engine_ir_persistence.py
+│   │   ├── test_oos_holdout.py
+│   │   ├── test_optimization_bridge.py
+│   │   ├── test_optimization_phase8.py
+│   │   ├── test_orchestrator_scheduler.py
+│   │   ├── test_p0_stability.py
+│   │   ├── test_p0b_phase4_audit_trail.py
+│   │   ├── test_p0b_phase4_e2e.py
+│   │   ├── test_p0b_phase4_firewall.py
+│   │   ├── test_p0b_phase4_index_explain.py
+│   │   ├── test_p2_ga_integration.py
+│   │   ├── test_p2_ga_stability.py
+│   │   ├── test_p2_quality_aware_opt_live_api.py
+│   │   ├── test_p2_signal_quality_api.py
+│   │   ├── test_paper_backtest_alignment.py
+│   │   ├── test_paper_deviation_alerts.py
+│   │   ├── test_paper_execution.py
+│   │   ├── test_parity_certification.py
+│   │   ├── test_parity_drift_view.py
+│   │   ├── test_pass_probability.py
+│   │   ├── test_phase12_tuning.py
+│   │   ├── test_phase14_mutation.py
+│   │   ├── test_phase2_enforcement.py
+│   │   ├── test_phase2_pf_improvements.py
+│   │   ├── test_phase30_1_convergence.py
+│   │   ├── test_phase30_survivor_governance.py
+│   │   ├── test_phase3_ga.py
+│   │   ├── test_phase3_multitf.py
+│   │   ├── test_phase3_portfolio.py
+│   │   ├── test_phase4_matcher.py
+│   │   ├── test_phase4_quality_aware_optimization.py
+│   │   ├── test_phase4_quality_calibration.py
+│   │   ├── test_phase4_signal_quality.py
+│   │   ├── test_phase5_block_monte_carlo.py
+│   │   ├── test_phase5_risk_calibration.py
+│   │   ├── test_phase5_structural_robustness.py
+│   │   ├── test_phase6_mutation_guard.py
+│   │   ├── test_phase7_risk_adjusted_ev.py
+│   │   ├── test_phase8_challenge_portfolio.py
+│   │   ├── test_phase_AB_additive.py
+│   │   ├── test_pipeline_logs.py
+│   │   ├── test_portfolio_builder_phase4.py
+│   │   ├── test_portfolio_intelligence.py
+│   │   ├── test_portfolio_phase7.py
+│   │   ├── test_portfolio_store.py
+│   │   ├── test_portfolio_store_endpoint.py
+│   │   ├── test_prop_firm_analysis_api.py
+│   │   ├── test_prop_firm_api.py
+│   │   ├── test_prop_firm_audit_fixes.py
+│   │   ├── test_prop_firm_config.py
+│   │   ├── test_prop_firm_extraction_robustness.py
+│   │   ├── test_prop_firm_intelligence.py
+│   │   ├── test_prop_firm_intelligence_api.py
+│   │   ├── test_prop_firm_optional_rules.py
+│   │   ├── test_prop_firm_panel.py
+│   │   ├── test_prop_firm_rules_review.py
+│   │   ├── test_r4_empty_state.py
+│   │   ├── test_r4_flag_state.py
+│   │   ├── test_r4_frontend_parity.py
+│   │   ├── test_r4_rollback.py
+│   │   ├── test_r4_symbol_growth.py
+│   │   ├── test_r5_shadow_audit.py
+│   │   ├── test_random_search_optimizer.py
+│   │   ├── test_refinement_engine.py
+│   │   ├── test_regime_layer.py
+│   │   ├── test_regime_oos_stratified.py
+│   │   ├── test_research_lineage_g1.py
+│   │   ├── test_rule_engine_phase2.py
+│   │   ├── test_runner_account_migration.py
+│   │   ├── test_runner_router.py
+│   │   ├── test_runner_token_rotator.py
+│   │   ├── test_scaling_p1a.py
+│   │   ├── test_scaling_p1b.py
+│   │   ├── test_scaling_p1c.py
+│   │   ├── test_scaling_p1d.py
+│   │   ├── test_slippage_model.py
+│   │   ├── test_soak_seed_flag_guard.py
+│   │   ├── test_soak_seed_idempotent.py
+│   │   ├── test_soak_seed_marker_safety.py
+│   │   ├── test_soak_seed_unseed.py
+│   │   ├── test_spread_analyzer.py
+│   │   ├── test_strategy_engine_llm_path.py
+│   │   ├── test_strategy_ir_schema.py
+│   │   ├── test_strategy_library.py
+│   │   ├── test_strategy_lifecycle_phase26_5.py
+│   │   ├── test_strategy_lifecycle_phase26_5_edge_cases.py
+│   │   ├── test_strategy_memory_api.py
+│   │   ├── test_strategy_mutation.py
+│   │   ├── test_strategy_profiler.py
+│   │   ├── test_strategy_ranking_engine.py
+│   │   ├── test_tick_aggregator.py
+│   │   ├── test_tick_archive.py
+│   │   ├── test_tick_validator.py
+│   │   ├── test_trade_runner_phase5.py
+│   │   ├── test_universe_governance.py
+│   │   ├── test_validation_modes.py
+│   │   ├── test_walk_forward_engine.py
+│   │   └── test_walk_forward_regime_coverage.py
+│   └── vie
+│       ├── __init__.py
+│       ├── __pycache__
+│       ├── config
+│       ├── core
+│       ├── gateway
+│       ├── manager.py
+│       ├── memory
+│       ├── models
+│       ├── providers
+│       ├── registry
+│       ├── router
+│       └── utils
+├── config
+├── data
+├── deployment
+│   ├── frontend-build
+│   │   ├── ASF_UI_Handoff.zip
+│   │   ├── asset-manifest.json
+│   │   ├── index.html
+│   │   └── static
+│   ├── prod
+│   │   └── prod
+│   ├── prod_before_v04_20260702_190230
+│   │   ├── =
+│   │   ├── CACHED
+│   │   ├── README.md
+│   │   ├── [internal]
+│   │   ├── backend.dockerignore
+│   │   ├── docker-compose.prod.yml
+│   │   ├── env
+│   │   ├── exporting
+│   │   ├── frontend-build
+│   │   ├── naming
+│   │   ├── nginx
+│   │   ├── prod-smoke-test.sh
+│   │   ├── reading
+│   │   ├── resolve
+│   │   ├── transferring
+│   │   └── unpacking
+│   ├── prod_before_v05_20260702_205407
+│   │   └── prod
+│   ├── prod_before_v06_20260702_212136
+│   │   └── prod
+│   └── prod_old
+│       ├── README.md
+│       ├── docker-compose.prod.yml
+│       ├── env
+│       ├── frontend-build
+│       ├── nginx
+│       └── prod-smoke-test.sh
+├── frontend
+├── frontend-build
+│   ├── ASF_UI_Handoff.zip
+│   ├── asset-manifest.json
+│   ├── index.html
+│   └── static
+│       ├── css
+│       └── js
+├── logs
+├── releases
+│   ├── factory-handoff-bundle-20260614.tar.gz
+│   ├── factory-prod-bundle-20260615_prod.tar.gz
+│   ├── v03factory-prod-bundle-20260615_prod.tar.gz
+│   ├── v04factory-prod-bundle-20260615_prod.tar.gz
+│   ├── v05factory-prod-bundle-20260615_prod.tar.gz
+│   └── v06factory-prod-bundle-20260615_prod.tar.gz
+├── source
+│   └── factory-handoff-bundle-20260614
+│       ├── HANDOFF_VERIFICATION_REPORT.md
+│       ├── MANIFEST_SHA256SUMS
+│       ├── SHA256SUMS
+│       ├── deploy-inspect
+│       ├── factory-deploy-bundle.tgz
+│       ├── factory-docs-20260614_151752.tar.gz
+│       ├── factory-frontend-build-20260614_151752.tar.gz
+│       ├── factory-source-20260614_151752.tar.gz
+│       ├── migration.zip
+│       ├── mongodb-dump-20260614_151752.archive.gz
+│       └── source-inspect
+├── test_llm_adapter.py
+└── tmp
+    ├── BI5_R2_STEP0_COMPLETION_REPORT.md
+    ├── DEPLOYMENT_READINESS_REPORT.md
+    ├── DRY_RUN_REPORT.md
+    ├── GATE3_BUILD_COMPLETION_REPORT.md
+    ├── GATE3_IMPLEMENTATION_PLAN.md
+    ├── IMPORTED_COHORT_CERTIFICATION_REPORT.md
+    ├── M1_TO_M5_COMPLETION_REPORT.md
+    ├── MIGRATION_VALIDATION_REPORT.md
+    ├── PACKAGE_INSPECTION_REPORT.md
+    ├── POST_IMPORT_COHORT_VALIDATION_REPORT.md
+    ├── R2_COMPLETION_REPORT.md
+    ├── README.md
+    ├── ROADMAP_READINESS_AUDIT.md
+    ├── WET_RUN_COMPLETION_REPORT.md
+    ├── _inventory
+    │   ├── asf_ui_handoff
+    │   ├── old1vcpu
+    │   └── retired_frontend_2026-06
+    ├── _r2_bi5_cert_focused.png
+    ├── _recert_fast.log
+    ├── _recert_output.log
+    ├── data
+    │   └── host_id
+    ├── deploy
+    │   ├── README.md
+    │   ├── docker-compose.yml
+    │   ├── env
+    │   ├── factory-deploy-bundle.tgz
+    │   ├── nginx
+    │   └── scripts
+    ├── frontend
+    │   ├── README.md
+    │   ├── build
+    │   ├── components.json
+    │   ├── craco.config.js
+    │   ├── jsconfig.json
+    │   ├── node_modules
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   ├── plugins
+    │   ├── postcss.config.js
+    │   ├── public
+    │   ├── scripts
+    │   ├── src
+    │   ├── tailwind.config.js
+    │   └── yarn.lock
+    ├── memory
+    │   ├── ACTIVATION_MATRIX.md
+    │   ├── ASF_BACKEND_ARCHITECTURE.md
+    │   ├── ASF_PACKAGE_V1_SPEC.md
+    │   ├── BI5_CONSOLIDATED_COMPLETION_REPORT.md
+    │   ├── BI5_R2_IMPLEMENTATION_PLAN.md
+    │   ├── BI5_R2_STEP0_DATA_CERT_CALIBRATION.md
+    │   ├── BI5_RESTORE_PLAN.md
+    │   ├── CAPABILITY_CATALOG.md
+    │   ├── CAPABILITY_PLACEMENT_MATRIX.md
+    │   ├── CODEBASE_RECONCILIATION.md
+    │   ├── DOWNLOAD_MANIFEST.md
+    │   ├── FEATURE_EXPOSURE_AUDIT.md
+    │   ├── FEATURE_MAP.md
+    │   ├── FINAL_CAPABILITY_MAP.md
+    │   ├── FINAL_NAVIGATION_MAP.md
+    │   ├── FINAL_UI_RESTORATION_DECISION_REPORT.md
+    │   ├── HYDRATION_IMPACT_REPORT.md
+    │   ├── HYDRATION_PLAN.md
+    │   ├── IMPLEMENTATION_SEQUENCE.md
+    │   ├── IMPORT_DRYRUN_VALUE_REPORT.md
+    │   ├── IMPORT_READINESS_REPORT.md
+    │   ├── LEGACY_TO_NEW_MAPPING.md
+    │   ├── LEGACY_UI_RECONCILIATION_AUDIT.md
+    │   ├── MIGRATION_COMPATIBILITY_AUDIT.md
+    │   ├── MIGRATION_EXPORT_PLAN.md
+    │   ├── MIGRATION_PRIORITY.md
+    │   ├── MISSING_FROM_UI.md
+    │   ├── MISSING_OR_HIDDEN_FEATURES.md
+    │   ├── NAVIGATION_RECONSTRUCTION.md
+    │   ├── OPERATOR_MANUAL.md
+    │   ├── OPERATOR_WORKFLOW_ALIGNMENT.md
+    │   ├── P1_RECOVERY_REPORT.md
+    │   ├── PILOT_RESTORATION_REPORT.md
+    │   ├── POST_HYDRATION_UI_RECOVERY.md
+    │   ├── POST_HYDRATION_VALIDATION_REPORT.md
+    │   ├── POST_IMPORT_FEATURE_DEPENDENCY.md
+    │   ├── POST_IMPORT_PIPELINE.md
+    │   ├── PRD.md
+    │   ├── PROJECT_CONTINUITY_REPORT.md
+    │   ├── RESTORATION_COMPLETION_REPORT.md
+    │   ├── RESTORATION_STEPS_4_5_REPORT.md
+    │   ├── ROADMAP_PARITY_REPORT.md
+    │   ├── ROADMAP_RECONCILIATION.md
+    │   ├── ROADMAP_SEQUENCE_DECISION.md
+    │   ├── SYSTEM_READINESS_REPORT.md
+    │   ├── UI_RESTORATION_MASTERPLAN.md
+    │   ├── test_credentials.md
+    │   ├── visual_approval_package
+    │   └── visual_signoff_pack
+    ├── scripts
+    │   └── run_post_import_pipeline.py
+    ├── test_reports
+    │   ├── iteration_1.json
+    │   ├── iteration_2.json
+    │   ├── iteration_3.json
+    │   ├── iteration_4.json
+    │   ├── iteration_5.json
+    │   ├── iteration_6.json
+    │   ├── iteration_7.json
+    │   ├── iteration_8.json
+    │   ├── iteration_9.json
+    │   └── pytest
+    ├── test_result.md
+    ├── tests
+    │   └── __init__.py
+    └── yarn.lock
+
+84 directories, 682 files

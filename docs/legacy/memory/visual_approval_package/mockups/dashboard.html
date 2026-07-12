@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab active">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab">Trade Runner</button>
+    <button class="tab">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn" title="Trader Mode">⊞</button>
+    <button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn" title="Notifications">🔔<span class="badge">3</span></button>
+    <button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div>
+    <button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step hub"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">·</span><button class="lc-step hub"><span class="lc-num">10</span><span>Deployment</span></button><span class="lc-hub-note">Mission Control · all steps surfaced below</span></div></div>
+
+<main class="main">
+
+  <!-- Top ticker strip (Bybit-style live pair prices) -->
+  <div class="ticker">
+    <span class="ticker-item"><span class="ticker-sym">EUR/USD</span><span class="ticker-px">1.04472</span><span class="ticker-chg pos">+0.18 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">GBP/USD</span><span class="ticker-px">1.26072</span><span class="ticker-chg neg">−0.04 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">USD/JPY</span><span class="ticker-px">157.412</span><span class="ticker-chg pos">+0.22 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">XAU/USD</span><span class="ticker-px">2020.10</span><span class="ticker-chg pos">+0.31 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">AUD/USD</span><span class="ticker-px">0.66718</span><span class="ticker-chg neg">−0.12 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">USD/CAD</span><span class="ticker-px">1.34218</span><span class="ticker-chg pos">+0.08 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item"><span class="ticker-sym">USD/CHF</span><span class="ticker-px">0.86547</span><span class="ticker-chg neg">−0.06 %</span></span>
+    <span class="ticker-sep"></span>
+    <span class="ticker-item" style="margin-left:auto;color:var(--text-muted)"><span>Quotes · Dukascopy mid · last 03:42:11 UTC</span></span>
+  </div>
+
+  <!-- Page head -->
+  <div class="page-head">
+    <div>
+      <div class="page-title">Mission Briefing</div>
+      <div class="page-sub">2026-01-11 · 03:42 UTC · Backend healthy · Composite readiness <span style="color:var(--accent-primary)">92 %</span></div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost">Export brief</button>
+      <button class="btn">View raw status</button>
+      <button class="btn btn-primary">Run sweep ▶</button>
+    </div>
+  </div>
+
+  <!-- Hero KPI strip (8-up) -->
+  <div class="kpi-grid cols-8">
+    <div class="kpi"><span class="kpi-label">Strategies</span><span class="kpi-value">142</span><span class="kpi-foot">+12 today</span></div>
+    <div class="kpi kpi-accent"><span class="kpi-label">Deployment-ready</span><span class="kpi-value gold">23</span><span class="kpi-foot pos">+4 / 24h</span></div>
+    <div class="kpi"><span class="kpi-label">Open positions</span><span class="kpi-value">3</span><span class="kpi-foot">across 2 master bots</span></div>
+    <div class="kpi kpi-pos"><span class="kpi-label">Today P&L</span><span class="kpi-value pos">+47.20</span><span class="kpi-foot pos">+0.47 %</span></div>
+    <div class="kpi"><span class="kpi-label">Win rate (30d)</span><span class="kpi-value">58.3 %</span><span class="kpi-foot pos">+1.2 pp</span></div>
+    <div class="kpi"><span class="kpi-label">Backend uptime</span><span class="kpi-value">14:22 h</span><span class="kpi-foot">no restart needed</span></div>
+    <div class="kpi"><span class="kpi-label">CPU pool</span><span class="kpi-value">4 / 4</span><span class="kpi-foot">queue 0</span></div>
+    <div class="kpi"><span class="kpi-label">Alerts (24h)</span><span class="kpi-value">2</span><span class="kpi-foot">1 warn · 0 err</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- 2-column layout -->
+  <div class="grid grid-dash">
+
+    <!-- LEFT: operator stack -->
+    <div class="col">
+
+      <!-- Governance / Universe -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Universe & Governance</div>
+          <div class="card-sub">routing: round-robin · widening: 0 pending</div>
+        </div>
+        <div class="card-pad" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <div class="section-label">Active universe</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+              <span class="chip ok">EURUSD</span><span class="chip ok">GBPUSD</span>
+              <span class="chip ok">USDJPY</span><span class="chip ok">XAUUSD</span>
+              <span class="chip ok">AUDUSD</span><span class="chip ok">USDCAD</span>
+              <span class="chip ok">USDCHF</span>
+            </div>
+            <div class="muted-text" style="margin-top:10px">Last sweep: 03:00 UTC · ✓ healthy</div>
+          </div>
+          <div>
+            <div class="section-label">Governance</div>
+            <div style="display:grid;grid-template-columns:1fr auto;row-gap:4px;column-gap:12px;margin-top:8px;font-size:12px;">
+              <span>Realism gate</span><span class="mono pos">PASS</span>
+              <span>HTF parity</span><span class="mono pos">PASS</span>
+              <span>Trade parity</span><span class="mono pos">PASS</span>
+              <span>Auto-widening</span><span class="mono">enabled</span>
+              <span>Approved this month</span><span class="mono">12</span>
+              <span>Pending review</span><span class="mono" style="color:var(--text-muted)">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheduler + Orchestrator side-by-side -->
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Auto Scheduler</div><span class="chip ok">● ON</span></div>
+          <div class="card-pad">
+            <div class="section-label">Next run</div>
+            <div class="mono" style="font-size:18px;font-weight:700;color:var(--text-primary);margin:6px 0">03:47:00 UTC</div>
+            <div class="muted-text">Cadence 15 m · 4 jobs queued · last 12 runs all OK</div>
+            <div style="display:flex;gap:6px;margin-top:12px"><button class="btn btn-sm">Pause</button><button class="btn btn-sm">Run now</button><button class="btn btn-sm btn-ghost">Logs ▸</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Orchestrator</div><span class="chip ok">● HEALTHY</span></div>
+          <div class="card-pad">
+            <div class="section-label">Last heartbeat</div>
+            <div class="mono" style="font-size:18px;font-weight:700;color:var(--text-primary);margin:6px 0">02s ago</div>
+            <div class="muted-text">Leader · <span class="mono">factory-runner-A</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+              <span class="chip ok">Generation ●</span><span class="chip ok">Validation ●</span><span class="chip ok">Selection ●</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-cycle + Auto mutation -->
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Multi-Cycle Runner</div><span class="card-sub">cycle 4 / 12</span></div>
+          <div class="card-pad">
+            <div class="bar"><div class="fill" style="width:33%"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-secondary)">
+              <span>Survivors <span class="mono" style="color:var(--text-primary)">18</span></span>
+              <span>Promoted <span class="mono pos">3</span></span>
+              <span>Rejected <span class="mono neg">31</span></span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:12px"><button class="btn btn-sm">Promote selected</button><button class="btn btn-sm btn-ghost">Reset</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Auto Mutation</div><span class="card-sub">EURUSD H1 · pool 64</span></div>
+          <div class="card-pad">
+            <div class="section-label">Live generation</div>
+            <div style="display:grid;grid-template-columns:1fr auto;row-gap:4px;column-gap:12px;margin-top:8px;font-size:12px">
+              <span>In flight</span><span class="mono">12</span>
+              <span>Avg PF (cohort)</span><span class="mono pos">1.34</span>
+              <span>Best so far</span><span class="mono gold" style="color:var(--accent-primary)">s_021α · 1.41</span>
+              <span>Generation</span><span class="mono">3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy roster table -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Strategy roster <span class="chip muted">last 30 d</span></div>
+          <div style="display:flex;gap:8px"><input class="btn" style="background:var(--surface-sunken);font-weight:400;color:var(--text-secondary);width:200px" placeholder="🔍 Search by ID, pair, status" /><button class="btn">Filter</button></div>
+        </div>
+        <table class="tbl">
+          <thead><tr>
+            <th>Status</th><th>ID</th><th>Pair</th><th>TF</th>
+            <th class="right">PF</th><th class="right">Win %</th><th class="right">Trades</th>
+            <th class="right">Sharpe</th><th class="right">Max DD</th><th>Lineage</th><th class="right">Age</th><th></th>
+          </tr></thead>
+          <tbody>
+            <tr><td><span class="chip ok">deployment-ready</span></td><td class="mono">s_021α</td><td>EURUSD</td><td class="muted">H1</td><td class="num gold" style="color:var(--accent-primary)">1.41</td><td class="num">58.2 %</td><td class="num">742</td><td class="num">1.32</td><td class="num neg">−4.7 %</td><td class="muted mono">←s_018</td><td class="num">3 d</td><td><button class="btn btn-sm">Open</button></td></tr>
+            <tr><td><span class="chip ok">deployment-ready</span></td><td class="mono">s_032α</td><td>XAUUSD</td><td class="muted">M15</td><td class="num gold" style="color:var(--accent-primary)">1.55</td><td class="num">61.4 %</td><td class="num">418</td><td class="num">1.48</td><td class="num neg">−3.1 %</td><td class="muted mono">←s_029</td><td class="num">4 h</td><td><button class="btn btn-sm">Open</button></td></tr>
+            <tr><td><span class="chip warn">portfolio-worthy</span></td><td class="mono">s_011</td><td>GBPUSD</td><td class="muted">M15</td><td class="num">1.28</td><td class="num">55.4 %</td><td class="num">1 188</td><td class="num">1.07</td><td class="num neg">−6.2 %</td><td class="muted mono">←s_009</td><td class="num">1 d</td><td><button class="btn btn-sm">Open</button></td></tr>
+            <tr><td><span class="chip warn">portfolio-worthy</span></td><td class="mono">s_044</td><td>USDJPY</td><td class="muted">H4</td><td class="num">1.18</td><td class="num">53.7 %</td><td class="num">312</td><td class="num">0.94</td><td class="num neg">−5.4 %</td><td class="muted mono">←s_038</td><td class="num">8 h</td><td><button class="btn btn-sm">Open</button></td></tr>
+            <tr><td><span class="chip info">validated</span></td><td class="mono">s_063β</td><td>AUDUSD</td><td class="muted">M30</td><td class="num">1.22</td><td class="num">54.1 %</td><td class="num">228</td><td class="num">0.98</td><td class="num neg">−4.9 %</td><td class="muted mono">new</td><td class="num">52 m</td><td><button class="btn btn-sm">Open</button></td></tr>
+            <tr><td><span class="chip muted">rejected</span></td><td class="mono">s_017</td><td>AUDUSD</td><td class="muted">H1</td><td class="num neg">0.98</td><td class="num">49.2 %</td><td class="num">472</td><td class="num neg">−0.21</td><td class="num neg">−9.4 %</td><td class="muted mono">←s_015</td><td class="num">2 d</td><td><button class="btn btn-sm">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live pipeline log -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Live pipeline activity</div>
+          <div class="card-sub">tail · 6 lines · auto-scroll <span class="chip ok">● live</span></div>
+        </div>
+        <div class="card-pad">
+          <div class="log-line ok"><span class="log-ts">03:42:11</span><span class="log-tag">ingest_runner</span><span class="log-msg">GBPUSD M15 → 144 new bars persisted</span></div>
+          <div class="log-line ok"><span class="log-ts">03:42:09</span><span class="log-tag">scheduler</span><span class="log-msg">bi5_track tick · 4 symbols queued</span></div>
+          <div class="log-line ok"><span class="log-ts">03:41:58</span><span class="log-tag">validator</span><span class="log-msg">s_021α · htf_parity PASS (drift 0.012)</span></div>
+          <div class="log-line ok"><span class="log-ts">03:41:42</span><span class="log-tag">selection</span><span class="log-msg">s_032α promoted to portfolio_worthy</span></div>
+          <div class="log-line warn"><span class="log-ts">03:40:14</span><span class="log-tag">queue_pressure</span><span class="log-msg">p95 1.8 s (threshold 2.0 s) · no action</span></div>
+          <div class="log-line ok"><span class="log-ts">03:38:01</span><span class="log-tag">orchestrator</span><span class="log-msg">leader heartbeat OK · lease renewed</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: status rail (NEW capability surface) -->
+    <div class="col">
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Deployment Readiness</div><span class="chip ok">PASS</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px;">
+            <span>R6.6 · realism gate</span><span class="mono pos">✓ PASS</span>
+            <span>R6.7 · HTF parity</span><span class="mono pos">✓ PASS</span>
+            <span>R6.9 · trade parity</span><span class="mono pos">✓ PASS</span>
+            <span>Calibration arc</span><span class="mono muted">parked</span>
+            <span>Last check</span><span class="mono muted">12 m ago</span>
+          </div>
+          <div class="divider"></div>
+          <div class="muted-text">Composite score: <span class="mono gold" style="color:var(--accent-primary);font-weight:700">1.000 / 1.000</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Ingestion Health</div><span class="chip warn">2 SOURCES</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px;">
+            <span>BID rows in DB</span><span class="mono pos">104 389 ✓</span>
+            <span>BI5 rows in DB</span><span class="mono neg">0 ✗</span>
+            <span>Spread rows</span><span class="mono neg">0 ✗</span>
+            <span>Disk archive (BI5)</span><span class="mono">7 462 files · 110 MB</span>
+            <span>Last gap-fix</span><span class="mono muted">10 m ago · 14 gaps</span>
+          </div>
+          <div class="divider"></div>
+          <div class="muted-text"><span class="chip warn">BI5 not yet wired</span> · see BI5 Recovery</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Parity Certification</div><span class="chip ok">CURRENT</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px;">
+            <span>HTF parity (last 7d)</span><span class="mono pos">12 / 12 PASS</span>
+            <span>Trade parity (last 7d)</span><span class="mono pos">8 / 8 PASS</span>
+            <span>Realism drift</span><span class="mono">0.014 (≤ 0.05)</span>
+            <span>Cert window</span><span class="mono muted">2026-01-04 → 11</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Fleet & Compute</div><span class="card-sub">factory supervisor</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px;">
+            <span>Leader lease</span><span class="mono pos">✓ factory-runner-A</span>
+            <span>Workers (active)</span><span class="mono">4 / 4</span>
+            <span>Queue depth</span><span class="mono">0</span>
+            <span>Master bots</span><span class="mono">2 deployed</span>
+            <span>Runners (Windows VPS)</span><span class="mono">3 online</span>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;gap:6px"><button class="btn btn-sm btn-ghost">Open Monitoring ▸</button><button class="btn btn-sm btn-ghost">Cluster view ▸</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Today's alerts</div><span class="chip ok">2</span></div>
+        <div class="card-pad">
+          <div class="log-line warn"><span class="log-ts">03:40</span><span class="log-tag">queue_pressure</span><span class="log-msg">p95 1.8 s</span></div>
+          <div class="log-line ok"><span class="log-ts">02:13</span><span class="log-tag">scheduler</span><span class="log-msg">cadence resumed</span></div>
+          <button class="btn btn-sm btn-ghost" style="margin-top:8px">Open Notification Drawer ▸</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:idle</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>ingest:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trade Runner · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab active">Trade Runner</button>
+    <button class="tab">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn">⊞</button><button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn">🔔<span class="badge">3</span></button><button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div><button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step done"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">→</span><button class="lc-step current"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">→</span><button class="lc-step next"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">→</span><button class="lc-step future"><span class="lc-num">10</span><span>Deployment</span></button></div></div>
+
+<main class="main">
+
+  <!-- Account bar -->
+  <div class="card card-elev" style="margin-bottom:16px">
+    <div class="card-pad" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div>
+          <div class="section-label">Account</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span class="mono" style="font-size:16px;font-weight:700">paper-001</span>
+            <span class="chip ok">● running</span>
+            <span class="chip muted">PAPER</span>
+          </div>
+        </div>
+        <div style="height:42px;width:1px;background:var(--border-subtle)"></div>
+        <div>
+          <div class="section-label">Execution backend</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span class="broker-chip active">● PAPER</span>
+            <span class="broker-chip future">cTrader Live · coming</span>
+            <span class="broker-chip future">cTrader Demo · coming</span>
+          </div>
+        </div>
+        <div style="height:42px;width:1px;background:var(--border-subtle)"></div>
+        <div>
+          <div class="section-label">Equity</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+            <span class="mono" style="font-size:22px;font-weight:700;color:var(--text-display)">10 247.31</span>
+            <span class="mono pos">+247.31 (+2.5 %)</span>
+          </div>
+        </div>
+        <div style="height:42px;width:1px;background:var(--border-subtle)"></div>
+        <div>
+          <div class="section-label">Today P&amp;L</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+            <span class="mono pos" style="font-size:22px;font-weight:700">+47.20</span>
+            <span class="mono pos">+0.47 %</span>
+          </div>
+        </div>
+        <div style="height:42px;width:1px;background:var(--border-subtle)"></div>
+        <div>
+          <div class="section-label">Master Bot</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span class="mono" style="font-size:14px">mb_eurusd_trend</span>
+            <span class="chip ok">runner-vps-3</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn">⏸ Pause</button>
+        <button class="btn btn-danger">⏹ Stop</button>
+        <button class="btn btn-primary">▶ Resume</button>
+        <button class="btn btn-danger">⚠ Flatten all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6-up KPI -->
+  <div class="kpi-grid">
+    <div class="kpi kpi-pos"><span class="kpi-label">Today P&amp;L</span><span class="kpi-value pos">+47.20</span><span class="kpi-foot pos">+0.47 %</span></div>
+    <div class="kpi kpi-pos"><span class="kpi-label">Week P&amp;L</span><span class="kpi-value pos">+312.50</span><span class="kpi-foot pos">+3.1 %</span></div>
+    <div class="kpi kpi-pos"><span class="kpi-label">Month P&amp;L</span><span class="kpi-value pos">+812.40</span><span class="kpi-foot pos">+8.4 %</span></div>
+    <div class="kpi"><span class="kpi-label">Win rate (30d)</span><span class="kpi-value">58.3 %</span><span class="kpi-foot pos">▲ 1.2 pp</span></div>
+    <div class="kpi kpi-neg"><span class="kpi-label">Max DD (30d)</span><span class="kpi-value neg">−4.71 %</span><span class="kpi-foot">healthy</span></div>
+    <div class="kpi"><span class="kpi-label">Sharpe (30d)</span><span class="kpi-value">1.32</span><span class="kpi-foot pos">▲ 0.05</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Open positions table -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Open positions <span class="chip muted">3</span></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm">Refresh</button><button class="btn btn-sm btn-ghost">Export CSV</button></div>
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th>#</th><th>Symbol</th><th>Side</th><th class="right">Size</th>
+        <th class="right">Entry</th><th class="right">Current</th><th class="right">Unreal P&amp;L</th>
+        <th class="right">Δ price</th><th>Opened</th><th>Duration</th><th>Strategy</th><th></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="num muted">1</td><td><strong>EURUSD</strong></td>
+          <td><span class="chip ok">LONG</span></td>
+          <td class="num">0.10</td><td class="num">1.04320</td><td class="num">1.04472</td>
+          <td class="num pos">+15.20</td><td class="num pos">+0.15 %</td>
+          <td class="muted mono">14:01 UTC</td><td class="num">14 m</td>
+          <td class="mono muted">s_021α</td>
+          <td><button class="btn btn-sm btn-danger">Close</button></td>
+        </tr>
+        <tr>
+          <td class="num muted">2</td><td><strong>GBPUSD</strong></td>
+          <td><span class="chip bad">SHORT</span></td>
+          <td class="num">0.10</td><td class="num">1.26110</td><td class="num">1.26072</td>
+          <td class="num pos">+3.80</td><td class="num pos">+0.03 %</td>
+          <td class="muted mono">14:13 UTC</td><td class="num">2 m</td>
+          <td class="mono muted">s_055α</td>
+          <td><button class="btn btn-sm btn-danger">Close</button></td>
+        </tr>
+        <tr>
+          <td class="num muted">3</td><td><strong>XAUUSD</strong></td>
+          <td><span class="chip ok">LONG</span></td>
+          <td class="num">0.01</td><td class="num">2018.41</td><td class="num">2020.10</td>
+          <td class="num pos">+16.90</td><td class="num pos">+0.08 %</td>
+          <td class="muted mono">13:43 UTC</td><td class="num">32 m</td>
+          <td class="mono muted">s_032α</td>
+          <td><button class="btn btn-sm btn-danger">Close</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Today's activity ledger -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Today&rsquo;s activity</div>
+      <div class="card-sub">12 trades · win 8 · loss 4 · win-rate 66.7 %</div>
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th>#</th><th>Closed</th><th>Symbol</th><th>Side</th>
+        <th class="right">Size</th><th class="right">Entry</th><th class="right">Exit</th>
+        <th class="right">P&amp;L</th><th class="right">Slippage bps</th><th class="right">Latency ms</th><th>Broker</th><th>Duration</th><th>Reason</th><th>Strategy</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="num muted">12</td><td class="mono muted">14:01</td><td><strong>EURUSD</strong></td><td><span class="chip ok">long</span></td><td class="num">0.10</td><td class="num">1.04211</td><td class="num">1.04401</td><td class="num pos">+19.00</td><td class="num">4.1</td><td class="num">38</td><td><span class="broker-chip">paper</span></td><td class="num">1h 22m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_021α</td></tr>
+        <tr><td class="num muted">11</td><td class="mono muted">13:08</td><td><strong>GBPUSD</strong></td><td><span class="chip bad">short</span></td><td class="num">0.10</td><td class="num">1.26554</td><td class="num">1.26384</td><td class="num pos">+17.00</td><td class="num">5.4</td><td class="num">42</td><td><span class="broker-chip">paper</span></td><td class="num">38m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_055α</td></tr>
+        <tr><td class="num muted">10</td><td class="mono muted">12:24</td><td><strong>XAUUSD</strong></td><td><span class="chip ok">long</span></td><td class="num">0.01</td><td class="num">2014.20</td><td class="num">2015.84</td><td class="num pos">+16.40</td><td class="num">7.2</td><td class="num">51</td><td><span class="broker-chip">paper</span></td><td class="num">14m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_032α</td></tr>
+        <tr><td class="num muted">9</td><td class="mono muted">11:51</td><td><strong>EURUSD</strong></td><td><span class="chip bad">short</span></td><td class="num">0.10</td><td class="num">1.04518</td><td class="num">1.04562</td><td class="num neg">−4.40</td><td class="num">4.1</td><td class="num">41</td><td><span class="broker-chip">paper</span></td><td class="num">12m</td><td><span class="chip bad">SL</span></td><td class="mono muted">s_021α</td></tr>
+        <tr><td class="num muted">8</td><td class="mono muted">10:48</td><td><strong>GBPUSD</strong></td><td><span class="chip bad">short</span></td><td class="num">0.10</td><td class="num">1.26721</td><td class="num">1.26551</td><td class="num pos">+17.00</td><td class="num">5.4</td><td class="num">39</td><td><span class="broker-chip">paper</span></td><td class="num">42m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_055α</td></tr>
+        <tr><td class="num muted">7</td><td class="mono muted">09:32</td><td><strong>EURUSD</strong></td><td><span class="chip ok">long</span></td><td class="num">0.10</td><td class="num">1.04188</td><td class="num">1.04132</td><td class="num neg">−5.60</td><td class="num">4.1</td><td class="num">37</td><td><span class="broker-chip">paper</span></td><td class="num">18m</td><td><span class="chip bad">SL</span></td><td class="mono muted">s_021α</td></tr>
+        <tr><td class="num muted">6</td><td class="mono muted">08:14</td><td><strong>XAUUSD</strong></td><td><span class="chip ok">long</span></td><td class="num">0.01</td><td class="num">2011.04</td><td class="num">2012.62</td><td class="num pos">+15.80</td><td class="num">7.2</td><td class="num">48</td><td><span class="broker-chip">paper</span></td><td class="num">28m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_032α</td></tr>
+        <tr><td class="num muted">5</td><td class="mono muted">07:48</td><td><strong>EURUSD</strong></td><td><span class="chip ok">long</span></td><td class="num">0.10</td><td class="num">1.04102</td><td class="num">1.04298</td><td class="num pos">+19.60</td><td class="num">4.1</td><td class="num">35</td><td><span class="broker-chip">paper</span></td><td class="num">1h 14m</td><td><span class="chip ok">TP</span></td><td class="mono muted">s_021α</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Future cTrader live execution -->
+  <div class="future-slot" style="margin-top:16px">
+    <span class="future-tag">RESERVED</span>
+    <span>cTrader live execution telemetry — broker fills, real spread, depth-of-market, cTrader account balance, margin used, free margin. This area is reserved in the layout so live cTrader data drops in without re-flow.</span>
+  </div>
+
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:idle</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>ingest:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

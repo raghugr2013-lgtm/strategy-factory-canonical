@@ -1,0 +1,10 @@
+DRIVER    VOLUME NAME
+local     dbad45fe0b6c2bc7894b9f5cf8312f520da1df473c4fa59bfff6e69fa630f27e
+local     f6efe41c5abab938fc2c973a3c2747a880655d595eeb4cfd0b1f41d07b874405
+local     factory_bi5
+local     factory_imports
+local     factory_inbox
+local     factory_misc
+local     mongodb_data
+local     portainer_data
+local     redis_data

@@ -1,0 +1,36 @@
+→ Strategy Factory v1.1 deployment verification
+  BASE=https://strategy-unified.preview.emergentagent.com  EMAIL=admin@strategyfactory.dev
+
+  ✓ Login (JWT obtained)
+  ✓ Fetch current user                       GET /api/auth/me
+  ✓ Backend version                          GET /api/version
+  ✓ System health                            GET /api/health
+  ✓ Dashboard summary                        GET /api/dashboard/summary
+  ✓ Strategy library                         GET /api/legacy/strategies
+  ✓ Auto Factory saved                       GET /api/auto-factory/saved
+  ✓ Auto Selection recent                    GET /api/auto-select/recent
+  ✓ Portfolio Builder recent                 GET /api/portfolio-builder/recent
+  ✓ Portfolio status                         GET /api/portfolio/status
+  ✓ Prop firms list                          GET /api/prop-firms/list
+  ✓ Prop firm rules                          GET /api/prop-firm-rules
+  ✓ Monitoring status                        GET /api/monitoring/status
+  ✓ Live strategies                          GET /api/live/strategies
+  ✓ Orchestrator state                       GET /api/orchestrator/state
+  ✓ Execution status                         GET /api/execution/status
+  ✓ Readiness                                GET /api/readiness
+  ✓ Data coverage (BI5)                      GET /api/data-coverage?symbol=ETHUSD&tf=H1
+  ✓ BI5 health                               GET /api/diag/bi5/health
+  ✓ Latent parity certification              GET /api/latent/parity-certification
+  ✓ Latent ingestion health                  GET /api/latent/ingestion-health
+  ✓ Governance promotion ledger              GET /api/governance/promotion-ledger
+  ✓ Scaling nodes                            GET /api/scaling/nodes
+  ✓ CPU pool state                           GET /api/cpu-pool/state
+  ✓ Mutation events                          GET /api/mutation/events
+  ✓ Regime cohort distribution               GET /api/regime/cohort-distribution
+  ✓ Optimization history                     GET /api/optimization/history
+  ✓ Master Bot list                          GET /api/master-bot
+  ✓ Challenge status                         GET /api/challenge/status
+  ✓ VIE LLM diagnostics                      GET /api/llm/diagnostics
+  ✓ Logout                                   POST /api/auth/logout
+
+→ Summary: 31 / 31 PASS · 0 FAIL

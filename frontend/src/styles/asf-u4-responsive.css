@@ -1,0 +1,151 @@
+/* ============================================================================
+ * Phase U-4.2 — Responsive workstation
+ * ----------------------------------------------------------------------------
+ * Operator surface is desktop-first (≥1280px primary target). Tablet (≥768px,
+ * ≤1279px) is supported for ad-hoc review. Phone (<768px) is intentionally
+ * EMERGENCY ACCESS ONLY — the shell collapses to a single-column read-mostly
+ * surface so an on-call operator can triage status; full controls require
+ * a desktop session.
+ *
+ * Breakpoints (chosen to match the existing `MobileSurfaces.jsx` conventions):
+ *   --asf-bp-tablet:    1024px
+ *   --asf-bp-handheld:   768px
+ *   --asf-bp-pocket:     480px  (emergency-only marker)
+ * ========================================================================== */
+
+:root {
+  --asf-bp-tablet: 1024px;
+  --asf-bp-handheld: 768px;
+  --asf-bp-pocket: 480px;
+
+  /* Drawer / palette width tokens — clamp on small viewports. */
+  --asf-drawer-w-notifications: min(420px, 92vw);
+  --asf-drawer-w-detail-default: min(480px, 92vw);
+  --asf-palette-w-default: min(640px, 92vw);
+  --asf-shortcuts-w-default: min(520px, 92vw);
+}
+
+/* ---------------------------------------------------------------------------
+ * 1024px and below — tablet posture
+ *   • KPI grid keeps auto-fit but tightens min column to 200px
+ *   • LeftRail collapses to icon-only width unless hovered/open
+ *   • MissionBriefing stacks its split columns
+ *   • Detail drawer width clamps to 92vw
+ *   • Inspector slides over content instead of pushing it
+ * ------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .asf-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--asf-space-2, 8px);
+  }
+
+  /* MissionBriefing columns stack below 1024px. */
+  [data-testid="mission-briefing"] {
+    --mission-stack: 1;
+  }
+  [data-testid="mission-briefing"] [data-mission-cols] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Notification drawer + detail drawer hard-clamp to viewport. */
+  .asf-notification-drawer { width: var(--asf-drawer-w-notifications) !important; }
+  .asf-detail-drawer       { width: var(--asf-drawer-w-detail-default) !important; }
+
+  /* Inspector pane: don't take horizontal real estate from the main column. */
+  [data-testid="cmd-inspector"] {
+    box-shadow: -12px 0 32px rgba(0,0,0,0.4);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 768px and below — handheld posture (tablet portrait, large phones)
+ *   • LeftRail hides; ModuleDrawer (already implemented in MobileSurfaces)
+ *     provides nav access on tap
+ *   • CommandBar reduces glyph cluster
+ *   • Panel paddings tighten
+ *   • KPI grid: 2-column max
+ *   • Status pills wrap
+ * ------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .cmd-shell__rail { display: none !important; }
+  .cmd-shell__main { margin-left: 0 !important; }
+
+  .asf-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Panel header CTAs wrap. */
+  .asf-section__hd-actions {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  /* Hide the user-email pill on narrow screens. */
+  [data-testid="cmd-bar-user"] { display: none !important; }
+
+  /* Inspector pane becomes a bottom-sheet on touch. */
+  [data-testid="cmd-inspector"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 480px and below — pocket posture (emergency access only)
+ *   • Single-column KPI grid
+ *   • Tables become horizontally scrollable cards
+ *   • Visible banner indicating the operator is in emergency-access mode
+ *     (rendered by the shell when window.matchMedia('(max-width: 480px)') )
+ * ------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .asf-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Shortcuts overlay: card eats the whole viewport. */
+  .asf-shortcuts-card {
+    width: var(--asf-shortcuts-w-default) !important;
+    max-height: 80vh !important;
+  }
+
+  /* Banner is mounted by the shell; styling lives here. */
+  [data-testid="cmd-emergency-banner"] {
+    position: sticky;
+    top: 0;
+    z-index: 95;
+    background: var(--asf-amber, #f59e0b);
+    color: #1a1a1a;
+    padding: 6px 12px;
+    font-family: var(--asf-font-mono, JetBrains Mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced-motion: drawer transitions become instantaneous (U-4.1 also adds
+ * this rule — duplicated here for self-contained responsive sheet so the
+ * file can be reasoned about in isolation).
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .asf-notification-drawer,
+  .asf-detail-drawer,
+  .cmd-shell__rail {
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Touch-pointer affordance — bump primary action targets to 36×36 minimum
+ * on coarse pointers. Mouse users keep the tight 24×24 chrome.
+ * ------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .cmd-btn,
+  .cmd-rail__item,
+  .asf-vchip[role="button"],
+  .asf-kpi-tile[role="button"] {
+    min-height: 36px;
+  }
+}

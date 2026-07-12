@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monitoring · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab active">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab">Trade Runner</button>
+    <button class="tab">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn">⊞</button><button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn">🔔<span class="badge">3</span></button><button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div><button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step done"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">→</span><button class="lc-step current"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">→</span><button class="lc-step next"><span class="lc-num">10</span><span>Deployment</span></button></div></div>
+
+<main class="main">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">Fleet Health & Control</div>
+      <div class="page-sub">Runtime · Soak · Compute · Cluster — operator console for all backend infrastructure</div>
+    </div>
+    <div class="page-actions">
+      <a class="next-cta" href="market_data.html" data-testid="next-cta"><span class="next-num">1</span><span>Next: Loop · refresh Market Data</span><span class="arrow">→</span></a>
+      <button class="btn">Drain queue</button>
+      <button class="btn">Restart scheduler</button>
+      <button class="btn btn-danger">Kill switch</button>
+    </div>
+  </div>
+
+  <div class="subtabs">
+    <button class="subtab active">Runtime</button>
+    <button class="subtab">Soak</button>
+    <button class="subtab">Compute</button>
+    <button class="subtab">Cluster &amp; Fleet</button>
+  </div>
+
+  <!-- 8-up KPI strip -->
+  <div class="kpi-grid cols-8">
+    <div class="kpi kpi-pos"><span class="kpi-label">Uptime</span><span class="kpi-value">14 h 22 m</span><span class="kpi-foot pos">healthy</span></div>
+    <div class="kpi"><span class="kpi-label">CPU</span><span class="kpi-value">47 %</span><span class="kpi-foot">4 cores</span></div>
+    <div class="kpi"><span class="kpi-label">RSS</span><span class="kpi-value">1.8 GB</span><span class="kpi-foot">of 8 GB</span></div>
+    <div class="kpi"><span class="kpi-label">Throughput</span><span class="kpi-value">12.4 /s</span><span class="kpi-foot">in · 11.7 out</span></div>
+    <div class="kpi"><span class="kpi-label">Queue depth</span><span class="kpi-value">3</span><span class="kpi-foot">p95 1.8 s</span></div>
+    <div class="kpi kpi-pos"><span class="kpi-label">Errors (1h)</span><span class="kpi-value pos">0</span><span class="kpi-foot">5xx 0</span></div>
+    <div class="kpi"><span class="kpi-label">Alerts (24h)</span><span class="kpi-value">2</span><span class="kpi-foot">1 warn</span></div>
+    <div class="kpi kpi-accent"><span class="kpi-label">DB docs</span><span class="kpi-value">104 389</span><span class="kpi-foot">market_data</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="grid grid-dash">
+
+    <!-- LEFT: subsystem state -->
+    <div class="col">
+
+      <!-- Subsystem dashboard -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Subsystem state</div><div class="card-sub">live · refresh 2 s</div></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Orchestrator</div><div class="mono" style="font-size:14px;color:var(--color-success)">● HEALTHY</div><div class="muted-text">heartbeat 02 s · leader-A</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Scheduler</div><div class="mono" style="font-size:14px;color:var(--color-success)">● ON</div><div class="muted-text">next 03:47 UTC</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Ingest</div><div class="mono" style="font-size:14px;color:var(--color-success)">● OK</div><div class="muted-text">last 17 s</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Validator</div><div class="mono" style="font-size:14px;color:var(--color-success)">● OK</div><div class="muted-text">queue 0</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Selector</div><div class="mono" style="font-size:14px;color:var(--color-success)">● OK</div><div class="muted-text">last sweep 12 m</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">LLM gen.</div><div class="mono" style="font-size:14px;color:var(--text-muted)">○ OFF</div><div class="muted-text">operator-disabled</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Auto Learning</div><div class="mono" style="font-size:14px;color:var(--text-muted)">○ DORMANT</div><div class="muted-text">awaiting opt-in</div></div></div>
+            <div class="card" style="background:var(--surface-elevated)"><div class="card-pad-sm"><div class="section-label">Kill switch</div><div class="mono" style="font-size:14px;color:var(--color-success)">● ARMED</div><div class="muted-text">no trips today</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Throughput sparkline -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Throughput · last 60 minutes</div><div class="card-sub">in / out per second</div></div>
+        <div class="card-pad">
+          <div class="spark" style="height:64px;width:100%;align-items:flex-end;gap:3px">
+            <span class="bar-tick" style="height:42%"></span><span class="bar-tick" style="height:38%"></span>
+            <span class="bar-tick" style="height:51%"></span><span class="bar-tick" style="height:48%"></span>
+            <span class="bar-tick" style="height:62%"></span><span class="bar-tick" style="height:67%"></span>
+            <span class="bar-tick" style="height:54%"></span><span class="bar-tick" style="height:58%"></span>
+            <span class="bar-tick" style="height:71%"></span><span class="bar-tick" style="height:74%"></span>
+            <span class="bar-tick" style="height:69%"></span><span class="bar-tick" style="height:78%"></span>
+            <span class="bar-tick" style="height:82%"></span><span class="bar-tick" style="height:76%"></span>
+            <span class="bar-tick" style="height:71%"></span><span class="bar-tick" style="height:68%"></span>
+            <span class="bar-tick" style="height:64%"></span><span class="bar-tick" style="height:74%"></span>
+            <span class="bar-tick" style="height:82%"></span><span class="bar-tick" style="height:87%"></span>
+            <span class="bar-tick" style="height:91%"></span><span class="bar-tick" style="height:94%"></span>
+            <span class="bar-tick" style="height:88%"></span><span class="bar-tick" style="height:79%"></span>
+            <span class="bar-tick" style="height:71%"></span><span class="bar-tick" style="height:68%"></span>
+            <span class="bar-tick" style="height:62%"></span><span class="bar-tick" style="height:58%"></span>
+            <span class="bar-tick" style="height:54%"></span><span class="bar-tick" style="height:51%"></span>
+            <span class="bar-tick" style="height:48%"></span><span class="bar-tick" style="height:54%"></span>
+            <span class="bar-tick" style="height:62%"></span><span class="bar-tick" style="height:71%"></span>
+            <span class="bar-tick" style="height:74%"></span><span class="bar-tick" style="height:78%"></span>
+            <span class="bar-tick" style="height:82%"></span><span class="bar-tick" style="height:79%"></span>
+            <span class="bar-tick" style="height:74%"></span><span class="bar-tick" style="height:69%"></span>
+            <span class="bar-tick" style="height:64%"></span><span class="bar-tick" style="height:71%"></span>
+            <span class="bar-tick" style="height:74%"></span><span class="bar-tick" style="height:78%"></span>
+            <span class="bar-tick" style="height:82%"></span><span class="bar-tick" style="height:78%"></span>
+            <span class="bar-tick" style="height:74%"></span><span class="bar-tick" style="height:71%"></span>
+            <span class="bar-tick" style="height:68%"></span><span class="bar-tick" style="height:74%"></span>
+            <span class="bar-tick" style="height:82%"></span><span class="bar-tick" style="height:87%"></span>
+            <span class="bar-tick" style="height:91%"></span><span class="bar-tick" style="height:88%"></span>
+            <span class="bar-tick" style="height:79%"></span><span class="bar-tick" style="height:71%"></span>
+            <span class="bar-tick" style="height:64%"></span><span class="bar-tick" style="height:58%"></span>
+            <span class="bar-tick" style="height:54%"></span><span class="bar-tick" style="height:62%"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert stream -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Alert stream</div><span class="chip ok">live</span></div>
+        <div class="card-pad" style="max-height:300px;overflow-y:auto">
+          <div class="log-line ok"><span class="log-ts">03:42:11</span><span class="log-tag">ingest_runner</span><span class="log-msg">GBPUSD M15 → 144 new bars persisted</span></div>
+          <div class="log-line ok"><span class="log-ts">03:42:09</span><span class="log-tag">scheduler</span><span class="log-msg">bi5_track tick · 4 symbols queued</span></div>
+          <div class="log-line ok"><span class="log-ts">03:41:58</span><span class="log-tag">validator</span><span class="log-msg">s_021α · htf_parity PASS (drift 0.012)</span></div>
+          <div class="log-line ok"><span class="log-ts">03:41:42</span><span class="log-tag">selection</span><span class="log-msg">s_032α promoted to portfolio_worthy</span></div>
+          <div class="log-line warn"><span class="log-ts">03:40:14</span><span class="log-tag">queue_pressure</span><span class="log-msg">p95 1.8 s (threshold 2.0 s)</span></div>
+          <div class="log-line ok"><span class="log-ts">03:38:01</span><span class="log-tag">orchestrator</span><span class="log-msg">leader heartbeat OK · lease renewed</span></div>
+          <div class="log-line ok"><span class="log-ts">03:32:55</span><span class="log-tag">runner_registry</span><span class="log-msg">runner-vps-3 ACK pack s_032α.cbotpack</span></div>
+          <div class="log-line ok"><span class="log-ts">03:28:12</span><span class="log-tag">factory_supervisor</span><span class="log-msg">worker-2 picked submission q-1187</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Master Bot Fleet + Cluster -->
+    <div class="col">
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Master Bot Fleet</div><span class="chip ok">2 deployed</span></div>
+        <table class="tbl">
+          <thead><tr><th>Bot</th><th>Pair</th><th class="right">Equity</th><th class="right">PnL today</th><th>Runner</th><th>Broker</th><th>State</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">mb_eurusd_trend</td><td>EURUSD</td><td class="num">10 247.31</td><td class="num pos">+47.20</td><td class="muted mono">vps-3</td><td><span class="broker-chip">paper</span></td><td><span class="chip ok">running</span></td></tr>
+            <tr><td class="mono">mb_xauusd_range</td><td>XAUUSD</td><td class="num">5 124.80</td><td class="num pos">+18.60</td><td class="muted mono">vps-4</td><td><span class="broker-chip">paper</span></td><td><span class="chip ok">running</span></td></tr>
+          </tbody>
+        </table>
+        <div class="card-pad" style="border-top:1px solid var(--border-subtle)">
+          <div class="future-slot">
+            <span class="future-tag">RESERVED</span>
+            <span>Future cTrader-connected bots will render here with broker chip = <span style="color:var(--accent-cyan)" class="mono">ctrader-live</span> + account ID + margin used + free margin columns.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Execution Backends</div><span class="chip muted">2 future</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto auto;row-gap:8px;column-gap:12px;font-size:12px;align-items:center">
+            <div>
+              <div class="mono" style="font-weight:600">PAPER (in-process replay)</div>
+              <div class="muted-text">paper_execution_engine · BID 1m bars</div>
+            </div>
+            <span class="chip ok">● ACTIVE</span>
+            <button class="btn btn-sm">Config</button>
+
+            <div>
+              <div class="mono" style="font-weight:600">cTrader Live</div>
+              <div class="muted-text">Windows VPS agent · FIX / Open API · per-master-bot</div>
+            </div>
+            <span class="broker-chip future">FUTURE</span>
+            <button class="btn btn-sm" disabled>Connect (post-RC1)</button>
+
+            <div>
+              <div class="mono" style="font-weight:600">cTrader Demo</div>
+              <div class="muted-text">For pre-deployment validation</div>
+            </div>
+            <span class="broker-chip future">FUTURE</span>
+            <button class="btn btn-sm" disabled>Connect (post-RC1)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Factory Supervisor</div><span class="chip ok">leader healthy</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px">
+            <span>Leader lease</span><span class="mono pos">factory-runner-A · 9 m</span>
+            <span>Workers active</span><span class="mono">4 / 4</span>
+            <span>Submissions dispatched (1h)</span><span class="mono">38</span>
+            <span>Defer queue</span><span class="mono">0</span>
+            <span>Notification Center</span><span class="mono muted">dormant</span>
+            <span>Auto-learning loop</span><span class="mono muted">dormant</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">CPU Pool</div><span class="card-sub">4 workers</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+            <div class="kpi" style="padding:8px"><span class="kpi-label">w-0</span><span class="kpi-value" style="font-size:14px;color:var(--color-success)">RUN</span><span class="kpi-foot">backtest</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">w-1</span><span class="kpi-value" style="font-size:14px;color:var(--color-success)">RUN</span><span class="kpi-foot">validate</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">w-2</span><span class="kpi-value" style="font-size:14px;color:var(--color-success)">RUN</span><span class="kpi-foot">mutate</span></div>
+            <div class="kpi" style="padding:8px"><span class="kpi-label">w-3</span><span class="kpi-value" style="font-size:14px;color:var(--text-muted)">IDLE</span><span class="kpi-foot">—</span></div>
+          </div>
+          <div class="muted-text">Adaptive sizer · target util 70 % · current 67 %</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Scaling</div><span class="chip muted">single-host</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px">
+            <span>Cluster mode</span><span class="mono">single host</span>
+            <span>Host capability</span><span class="mono">4 vCPU · 8 GB</span>
+            <span>Probed concurrency</span><span class="mono">4</span>
+            <span>Admission gate</span><span class="mono pos">open</span>
+            <span>Scale-out target</span><span class="mono muted">12 vCPU (post-RC1)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Soak window</div><span class="chip warn">compressed only</span></div>
+        <div class="card-pad">
+          <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12px">
+            <span>Compressed soak</span><span class="mono pos">8 / 8 checkpoints</span>
+            <span>Wall-clock 24h soak</span><span class="mono muted">NOT STARTED</span>
+            <span>Last evidence</span><span class="mono">R5_PHASE2_SOAK_REPORT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:running</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>ingest:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

@@ -1,0 +1,390 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   COMMAND · M4 — Operator Inbox Drawer styling
+   ---------------------------------------------------------------------------
+   Right-side slide-out drawer. Binance/Bybit institutional dark aesthetic.
+   Width 420px on workstation, full-width on briefing. Overlay scrim 56%.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.m4-inbox__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11,14,17,0.56);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 1300;
+  animation: m4InboxFadeIn 140ms ease-out;
+}
+@keyframes m4InboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.m4-inbox {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  background: linear-gradient(180deg, #11151B 0%, #0B0E11 100%);
+  border-left: 1px solid var(--asf-border-default, #2B3139);
+  box-shadow: -12px 0 24px -8px rgba(0,0,0,0.55);
+  z-index: 1310;
+  display: flex;
+  flex-direction: column;
+  color: var(--asf-text-primary, #EAECEF);
+  font-family: 'Inter', sans-serif;
+  transform: translateX(100%);
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.m4-inbox--open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Header */
+.m4-inbox__hd {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--asf-border-default, #2B3139);
+  background: linear-gradient(180deg, rgba(240,185,11,0.025) 0%, transparent 100%);
+}
+.m4-inbox__hd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.m4-inbox__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(240,185,11,0.14);
+  border: 1px solid rgba(240,185,11,0.42);
+  color: var(--asf-accent-primary, #F0B90B);
+}
+.m4-inbox__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--asf-text-primary, #EAECEF);
+  flex: 1;
+}
+.m4-inbox__close {
+  background: transparent;
+  border: 1px solid var(--asf-border-default, #2B3139);
+  color: var(--asf-text-secondary, #848E9C);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+.m4-inbox__close:hover {
+  border-color: var(--asf-accent-primary, #F0B90B);
+  color: var(--asf-text-primary, #EAECEF);
+}
+.m4-inbox__sub {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--asf-text-muted, #5E6673);
+}
+
+.m4-inbox__counters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.m4-inbox__counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--asf-text-secondary, #848E9C);
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.m4-inbox__counter strong { color: var(--asf-text-primary, #EAECEF); margin-right: 3px; font-weight: 700; }
+.m4-inbox__counter--danger { border-color: rgba(244,65,88,0.40); color: #F8959F; }
+.m4-inbox__counter--warn   { border-color: rgba(240,185,11,0.40); color: #F0B90B; }
+
+.m4-inbox__filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.m4-inbox__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  color: var(--asf-text-secondary, #848E9C);
+  font-size: 10.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+.m4-inbox__filter:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--asf-text-primary, #EAECEF);
+  border-color: rgba(240,185,11,0.30);
+}
+.m4-inbox__filter--active {
+  background: rgba(240,185,11,0.12);
+  border-color: rgba(240,185,11,0.45);
+  color: var(--asf-accent-primary, #F0B90B);
+}
+.m4-inbox__filter--future {
+  border-style: dashed;
+  opacity: 0.65;
+}
+.m4-inbox__filter-glyph {
+  font-size: 10px;
+  opacity: 0.85;
+  color: var(--cat-accent, var(--asf-accent-primary, #F0B90B));
+}
+.m4-inbox__filter--active .m4-inbox__filter-glyph { color: inherit; }
+.m4-inbox__filter-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--asf-text-muted, #5E6673);
+  padding-left: 4px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+}
+.m4-inbox__filter--active .m4-inbox__filter-n { color: var(--asf-accent-primary, #F0B90B); border-color: rgba(240,185,11,0.30); }
+
+/* Body / category sections */
+.m4-inbox__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.m4-inbox__body::-webkit-scrollbar { width: 6px; }
+.m4-inbox__body::-webkit-scrollbar-track { background: transparent; }
+.m4-inbox__body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+}
+
+.m4-inbox__cat {
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.m4-inbox__cat:last-child { border-bottom: none; }
+.m4-inbox__cat--future {
+  opacity: 0.75;
+  background: rgba(0,0,0,0.20);
+}
+
+.m4-inbox__cat-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.m4-inbox__cat-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--cat-accent, rgba(255,255,255,0.10));
+  color: var(--cat-accent, var(--asf-accent-primary, #F0B90B));
+  font-size: 10px;
+  font-weight: 700;
+}
+.m4-inbox__cat-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--asf-text-primary, #EAECEF);
+  flex: 1;
+}
+.m4-inbox__cat-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--cat-accent, var(--asf-text-muted, #5E6673));
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.m4-inbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m4-inbox__evt {
+  display: flex;
+  gap: 9px;
+  padding: 9px 10px;
+  background: rgba(255,255,255,0.012);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+.m4-inbox__evt:hover {
+  border-color: rgba(240,185,11,0.30);
+  background: rgba(240,185,11,0.025);
+}
+.m4-inbox__evt--danger { border-left: 2px solid #F44158; }
+.m4-inbox__evt--warn   { border-left: 2px solid #F0B90B; }
+.m4-inbox__evt--success{ border-left: 2px solid #0ECB81; }
+.m4-inbox__evt--info   { border-left: 2px solid #03A9F4; }
+
+.m4-inbox__evt-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+}
+.m4-inbox__evt-body { flex: 1; min-width: 0; }
+.m4-inbox__evt-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.m4-inbox__evt-source {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: var(--asf-text-muted, #5E6673);
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m4-inbox__evt-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--asf-text-muted, #5E6673);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.m4-inbox__evt-title {
+  margin: 0 0 3px 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--asf-text-primary, #EAECEF);
+  letter-spacing: -0.005em;
+}
+.m4-inbox__evt-sub {
+  margin: 0 0 6px 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--asf-text-secondary, #848E9C);
+}
+.m4-inbox__evt-action {
+  background: transparent;
+  border: 1px solid rgba(240,185,11,0.40);
+  color: var(--asf-accent-primary, #F0B90B);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.m4-inbox__evt-action:hover {
+  background: rgba(240,185,11,0.14);
+  color: #FFCD32;
+}
+
+.m4-inbox__empty {
+  font-size: 11px;
+  color: var(--asf-text-muted, #5E6673);
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.012);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.m4-inbox__future {
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.012);
+  border: 1px dashed rgba(240,185,11,0.25);
+  border-radius: 6px;
+}
+.m4-inbox__future-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(240,185,11,0.12);
+  border: 1px solid rgba(240,185,11,0.40);
+  color: var(--asf-accent-primary, #F0B90B);
+  margin-bottom: 6px;
+}
+.m4-inbox__future-copy {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--asf-text-secondary, #848E9C);
+}
+
+.m4-inbox__ft {
+  padding: 10px 18px;
+  border-top: 1px solid var(--asf-border-default, #2B3139);
+  background: rgba(0,0,0,0.18);
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.m4-inbox__ft-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--asf-text-muted, #5E6673);
+  flex-shrink: 0;
+}
+.m4-inbox__ft-val {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--asf-text-secondary, #848E9C);
+}
+.m4-inbox__ft-val code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255,255,255,0.04);
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: var(--asf-accent-primary, #F0B90B);
+}
+
+/* Briefing posture — full-width drawer */
+[data-cmd-posture="briefing"] .m4-inbox {
+  width: 100%;
+  max-width: 100%;
+}

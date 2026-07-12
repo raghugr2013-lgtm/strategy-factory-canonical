@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BI5 Architecture · ASF Workstation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><span class="brand-mark">⚡</span><span class="brand-name">AI Strategy Factory</span><span class="brand-ver">v10</span></div>
+  <nav class="navbar">
+    <button class="tab">Dashboard</button><button class="tab">Execution</button>
+    <button class="tab">Auto Factory</button><button class="tab">Monitoring</button>
+    <button class="tab">Paper Exec</button><button class="tab">Trade Runner</button>
+    <button class="tab">Portfolio</button><button class="tab">Explorer</button>
+    <button class="tab">Market Data</button><button class="tab">Auto Select</button>
+    <button class="tab">Admin</button><button class="tab more">More ▾</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn">⊞</button><button class="icon-btn">☾</button><button class="icon-btn">↕</button>
+    <button class="icon-btn">🔔<span class="badge">3</span></button><button class="icon-btn">💬</button>
+    <div class="user-badge">● admin@strategy…</div><button class="icon-btn">⎋</button>
+    <div class="online"><span class="dot-online"></span><span>ONLINE</span></div>
+  </div>
+</div></header>
+<div class="lifecycle-rail" data-testid="lifecycle-rail"><div class="lc-track"><button class="lc-step done"><span class="lc-num">1</span><span>Market Data</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">2</span><span>Generate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">3</span><span>Mutate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">4</span><span>Validate</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">5</span><span>Select</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">6</span><span>Portfolio</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">7</span><span>Master Bot</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">8</span><span>Trade Runner</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">9</span><span>Monitoring</span></button><span class="lc-arrow">→</span><button class="lc-step done"><span class="lc-num">10</span><span>Deployment</span></button></div></div>
+
+<main class="main">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">BI5 — Architecture &amp; Intent</div>
+      <div class="page-sub">Mockup of the BI5 console restored to its proper purpose: raw ticks → archive → execution realism → slippage → certification → deployment influence. <strong style="color:var(--color-danger)">Not another BID workflow.</strong></div>
+    </div>
+    <div class="page-actions">
+      <button class="btn">Read BI5_RECOVERY_AUDIT.md ▸</button>
+      <button class="btn btn-primary">Open BI5 Recovery Roadmap</button>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-grid">
+    <div class="kpi"><span class="kpi-label">Disk archive</span><span class="kpi-value">7 462</span><span class="kpi-foot">.bi5 hourly files · 110 MB</span></div>
+    <div class="kpi"><span class="kpi-label">Mongo rows</span><span class="kpi-value neg">0</span><span class="kpi-foot neg">writer dead</span></div>
+    <div class="kpi"><span class="kpi-label">Spread rows</span><span class="kpi-value neg">0</span><span class="kpi-foot neg">empty</span></div>
+    <div class="kpi"><span class="kpi-label">Cert rows</span><span class="kpi-value neg">0</span><span class="kpi-foot neg">no sweeps</span></div>
+    <div class="kpi"><span class="kpi-label">Broken links</span><span class="kpi-value gold">9</span><span class="kpi-foot">B-1 → B-9</span></div>
+    <div class="kpi"><span class="kpi-label">Recovery effort</span><span class="kpi-value gold">11–15 d</span><span class="kpi-foot">3 ship-ready phases</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- BI5 pipeline diagram (7 stages — operator-mandated separation of Spread + Slippage + Realism) -->
+  <div class="card card-elev">
+    <div class="card-head"><div class="card-title">Intended BI5 pipeline · 7 stages</div><div class="card-sub">tick → archive → spread → slippage → realism → certification → deployment</div></div>
+    <div class="card-pad">
+      <div class="flow">
+
+        <div class="flow-stage">
+          <h4>1 · Raw Ticks</h4>
+          <p>Hourly <code class="mono">.bi5</code> archives from Dukascopy. Bid + Ask sides preserved.</p>
+          <div class="status"><span class="chip ok">disk archive present</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>2 · Tick Archive</h4>
+          <p>Decoded ticks persisted to <code class="mono">market_data{source:"bi5"}</code>. Time-indexed per symbol.</p>
+          <div class="status"><span class="chip bad">B-1 · B-2 · B-9</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>3 · Spread</h4>
+          <p>Per-timestamp bid/ask spread harvested to <code class="mono">market_spread</code>. Source data for realism &amp; slippage.</p>
+          <div class="status"><span class="chip bad">empty: 0 rows</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>4 · Slippage</h4>
+          <p>Modelled per-fill <code class="mono">slippage_bps</code> + <code class="mono">latency_ms</code> derived from the spread + venue profile.</p>
+          <div class="status"><span class="chip bad">B-6 · B-7</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>5 · Execution Realism</h4>
+          <p>Replay strategy through tick stream, attaching spread + slippage + latency per trade. Output: realised PnL distribution.</p>
+          <div class="status"><span class="chip bad">B-3 · B-6</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>6 · Certification</h4>
+          <p>Sunday 03:00 UTC sweep writes <code class="mono">bi5_certification</code>. Verdict per strategy.</p>
+          <div class="status"><span class="chip bad">B-4 · B-8</span></div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-stage broken">
+          <h4>7 · Deployment Influence</h4>
+          <p>Master Bot ranker reads <code class="mono">bi5_cert.verdict</code> + slippage. BI5-certified strategies are deployed first.</p>
+          <div class="status"><span class="chip bad">B-5</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- BI5 vs BID side-by-side -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-head"><div class="card-title">BID workflow</div><span class="chip ok">working</span></div>
+      <div class="card-pad">
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.8;padding-left:18px">
+          <li>1m OHLCV candles from Dukascopy</li>
+          <li>Single mid-price stream — no bid/ask</li>
+          <li>No spread, no slippage, no latency</li>
+          <li>Suited for: strategy backtest, signal validation</li>
+          <li>Backtest PF distribution is <strong>binomial-tight</strong> (unrealistic)</li>
+        </ul>
+        <div class="divider"></div>
+        <div class="muted-text"><strong style="color:var(--text-primary)">BID gives strategy backtests.</strong> Nothing about real fills.</div>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--accent-primary)">
+      <div class="card-head"><div class="card-title" style="color:var(--accent-primary)">BI5 workflow (intent)</div><span class="chip warn">not yet wired</span></div>
+      <div class="card-pad">
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.8;padding-left:18px">
+          <li>Raw tick stream (bid + ask)</li>
+          <li>Real spread per timestamp</li>
+          <li>Real latency per fill (simulate_fills)</li>
+          <li>Suited for: <strong style="color:var(--text-primary)">execution-realism certification</strong></li>
+          <li>Backtest PF distribution has <strong>realistic slippage tails</strong></li>
+        </ul>
+        <div class="divider"></div>
+        <div class="muted-text"><strong style="color:var(--text-primary)">BI5 tells you whether a strategy survives real fills</strong> — and downstream ranker weights amplify the BI5-certified strategies in deployment.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Recovery roadmap -->
+  <div class="card">
+    <div class="card-head"><div class="card-title">Recovery roadmap (3 phases · independently shippable)</div><div class="card-sub">11–15 dev-days total · backend-heavy · UI minimal</div></div>
+    <table class="tbl">
+      <thead><tr>
+        <th>Phase</th><th>Goal</th><th>Issues</th><th class="right">Days</th><th>Operator-visible outcome</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--accent-primary)">R1 · Foundation</strong></td>
+          <td>BI5 ticks live in Mongo, scheduler dispatches BI5 ingest</td>
+          <td><span class="chip bad">B-1</span> <span class="chip bad">B-2</span> <span class="chip bad">B-9</span></td>
+          <td class="num">3–4 d</td>
+          <td>Market Data &gt; BI5 button writes <code class="mono">source="bi5"</code> rows. Coverage grid shows tick-level rows.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--accent-primary)">R2 · Realism</strong></td>
+          <td>Per-strategy cert sweep, ranker weight, lifecycle gate</td>
+          <td><span class="chip bad">B-4</span> <span class="chip bad">B-5</span> <span class="chip bad">B-8</span></td>
+          <td class="num">3–4 d</td>
+          <td>Dashboard <em>Parity Certification</em> card shows <code class="mono">bi5_cert</code> verdicts. Auto Factory promotes BI5-certified strategies first.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--accent-primary)">R3 · Execution</strong></td>
+          <td>Tick replay drives paper-execution + trade runner</td>
+          <td><span class="chip bad">B-3</span> <span class="chip bad">B-6</span> <span class="chip bad">B-7</span></td>
+          <td class="num">5–7 d</td>
+          <td>Trade Runner ledger shows real <code class="mono">slippage_bps</code> + <code class="mono">latency_ms</code> per trade. PnL distributions stop looking binomial.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card-pad" style="border-top:1px solid var(--border-subtle);background:var(--surface-elevated);font-size:11px;color:var(--text-secondary)">
+      <strong style="color:var(--text-primary)">Sequencing:</strong> R1 ships first (zero dependency). R2 depends on R1. R3 depends on R1 only (R2 is independent of R3 if BI5-cert ranker weight is left at default). With two engineers, R1+R3 ship in parallel.
+    </div>
+  </div>
+
+</main>
+
+<footer class="statusrail">
+  <div class="sr-cluster">
+    <span class="sr-item"><span class="sr-dot ok"></span>orch:idle</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>ingest:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>sched:on</span>
+    <span class="sr-item"><span class="sr-dot off"></span>llm:off</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>gov:ok</span>
+    <span class="sr-item"><span class="sr-dot ok"></span>kill:armed</span>
+  </div>
+  <div class="sr-cluster">
+    <span class="sr-shortcut"><kbd>⌘K</kbd>command</span>
+    <span class="sr-shortcut"><kbd>⌘J</kbd>copilot</span>
+    <span class="sr-shortcut"><kbd>⌘⌥N</kbd>alerts</span>
+    <span class="sr-shortcut"><kbd>⌘.</kbd>inspector</span>
+    <span class="sr-shortcut"><kbd>?</kbd>shortcuts</span>
+  </div>
+</footer>
+</body></html>

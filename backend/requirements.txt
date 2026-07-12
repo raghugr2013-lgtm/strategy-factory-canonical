@@ -1,0 +1,45 @@
+# Strategy Factory canonical backend — merged requirements
+# (recovery bundle base + preview extras + legacy runtime deps that will be
+# needed as Phase 1..6 modules are recovered)
+
+# --- Web framework / server
+fastapi>=0.115.0,<0.120.0
+uvicorn[standard]>=0.32.0
+
+# --- MongoDB
+motor>=3.6.0,<4.0
+pymongo>=4.9.0,<5.0
+
+# --- Auth
+bcrypt>=4.2.0,<5.0
+PyJWT>=2.10.0,<3.0
+python-multipart>=0.0.19
+
+# --- Config / models
+pydantic>=2.10,<3.0
+email-validator>=2.2.0
+python-dotenv>=1.0.1
+
+# --- HTTP clients (for VIE + integrations)
+httpx>=0.28.0,<0.29
+requests>=2.32.0
+
+# --- Optional runtime (skipped gracefully if unset)
+redis>=5.2.0,<6.0
+
+# --- Legacy engine runtime deps (loaded lazily as modules come online)
+pandas>=2.2.0
+numpy>=1.26.0
+APScheduler>=3.11.0
+psutil>=6.0.0
+
+# --- Legacy prop-firm PDF extractor (Phase 6 module)
+pdfplumber>=0.11.0
+pypdf>=6.0.0
+reportlab>=4.0.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# --- Dev / test
+pytest>=8.0.0
+pytest-asyncio>=0.24.0
