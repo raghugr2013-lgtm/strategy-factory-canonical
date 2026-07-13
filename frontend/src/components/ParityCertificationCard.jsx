@@ -9,6 +9,7 @@ import {
   Lock,
 } from '@phosphor-icons/react';
 import { AsfKpiTile, AsfEmptyState, VerdictBadge } from './ui-asf';
+import { API_URL } from '../services/api';
 
 const VERDICT_VARIANT = {
   PROMOTABLE:          'success',
@@ -37,13 +38,6 @@ const VERDICT_VARIANT = {
 //       ?window_days=&require_trade_parity=&require_htf_parity=
 //       &min_samples=&min_pass_rate=&limit=
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 const VERDICT_TONE = {
   PROMOTABLE:           { dot: 'bg-emerald-400', text: 'text-emerald-300',

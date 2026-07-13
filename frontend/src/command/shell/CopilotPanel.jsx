@@ -9,8 +9,8 @@
  * authority" required by Handoff Screen 39. No new backend, no mock data.
  */
 import React, { useEffect, useState } from 'react';
+import { API_URL as API } from '../../services/api';
 
-const API = process.env.REACT_APP_BACKEND_URL;
 
 function getToken() {
   try { return localStorage.getItem('asf_auth_token'); } catch (_) { return null; }

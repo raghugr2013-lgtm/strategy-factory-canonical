@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDatasetAvailability } from '../hooks/useDatasetAvailability';
 import { DataAvailabilityBanner, DataLoadStatus, PairOptions, TimeframeOptions } from './DataAvailability';
 import { AsfKpiTile, AsfEmptyState, VerdictChip } from './ui-asf';
+import { API_URL } from '../services/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Single-read safe JSON parser — avoids "body stream already read".
 async function _safeJson(res) {

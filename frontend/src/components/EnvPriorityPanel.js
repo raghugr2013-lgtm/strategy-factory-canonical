@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AsfEmptyState } from './ui-asf';
+import { API_URL } from '../services/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const TIER_TONE = {
   core:        { dot: 'bg-emerald-400', text: 'text-emerald-300', border: 'border-emerald-500/40' },

@@ -14,8 +14,8 @@
  * than crashing. Operator visibility is the goal.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { API_URL as BACKEND } from '../../services/api';
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL || '';
 
 const INITIAL = {
   orch:   { tone: 'amber',  label: 'orch',     hint: 'init…' },

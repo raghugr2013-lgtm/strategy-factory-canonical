@@ -17,12 +17,12 @@
  *  - Archive import/export (Archive sub-tab — via OperatorEndpointPanel wrapper)
  */
 import React, { Suspense, useEffect, useState } from 'react';
+import { API_URL } from '../services/api';
 
 const DataUpload         = React.lazy(() => import('./DataUpload'));
 const DataMaintenance    = React.lazy(() => import('./DataMaintenancePanel'));
 const { DataBackupPanel } = require('./OperatorParityPanels');
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 /**
  * Restoration Step 4c — BI5 readiness strip. One-line answer to the

@@ -6,13 +6,7 @@
 // back to res.text() in a catch — which throws
 // "Failed to execute 'json' on 'Response': body stream already read"
 // because the body stream is already consumed by the first read.
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8001`
-  : process.env.REACT_APP_BACKEND_URL;
+import { API_URL } from './api';
 
 async function _jsonOrThrow(res, label) {
   // Read body ONCE as text; parse once.

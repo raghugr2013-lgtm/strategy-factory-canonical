@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AsfEmptyState } from './ui-asf';
+import { API_URL } from '../services/api';
 
 // ════════════════════════════════════════════════════════════════════
 // Phase 6 — Monitoring & Control Layer.
@@ -8,12 +9,6 @@ import { AsfEmptyState } from './ui-asf';
 // lets the operator pause / resume / reset via /api/monitoring/*.
 // ════════════════════════════════════════════════════════════════════
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8001`
-  : process.env.REACT_APP_BACKEND_URL;
 
 const M = `${API_URL}/api/monitoring`;
 

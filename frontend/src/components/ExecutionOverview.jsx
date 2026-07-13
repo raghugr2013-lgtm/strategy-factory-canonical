@@ -17,8 +17,8 @@
  * No backend changes. No new endpoints. No mutations.
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import { API_URL } from '../services/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 async function getJson(path) {
   const res = await fetch(`${API_URL}${path}`);

@@ -16,8 +16,8 @@
  * briefing must always render something calm.
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { API_URL as BACKEND } from '../../../services/api';
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL || '';
 
 function authHeaders() {
   try {

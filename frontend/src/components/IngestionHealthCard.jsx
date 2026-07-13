@@ -10,6 +10,7 @@ import {
   CaretDown,
 } from '@phosphor-icons/react';
 import { AsfKpiTile, AsfEmptyState, VerdictBadge } from './ui-asf';
+import { API_URL } from '../services/api';
 
 const VERDICT_VARIANT = {
   HEALTHY:    'success',
@@ -39,13 +40,6 @@ const VERDICT_VARIANT = {
 //     ingestion runner / supervisor / .env — this card is purely a
 //     diagnostic window into the existing state.
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 const VERDICT_TONE = {
   HEALTHY:    { dot: 'bg-emerald-400', text: 'text-emerald-300', label: 'HEALTHY' },

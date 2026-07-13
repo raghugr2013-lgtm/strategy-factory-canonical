@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Globe, CircleNotch, FloppyDisk, ArrowClockwise } from '@phosphor-icons/react';
 import { useMarketUniverse } from '../hooks/useMarketUniverse';
 import { AsfEmptyState } from './ui-asf';
+import { API_URL } from '../services/api';
 
 // Phase 30.2 · Universe Governance Panel.
 //
@@ -17,13 +18,6 @@ import { AsfEmptyState } from './ui-asf';
 //   GET  /api/governance/universe/preview  (effective-intersection diagnostic)
 //   GET  /api/market-data                  (dataset inventory for pair list)
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 const CANON_TFS = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
 const STYLE_OPTIONS = ['trend-following', 'mean-reversion', 'breakout', 'scalping'];

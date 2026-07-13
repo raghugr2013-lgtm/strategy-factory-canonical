@@ -14,14 +14,8 @@
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import './BI5HealthPanel.css';
+import { API_URL } from '../services/api';
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 function fmtTs(ts) {
   if (!ts) return '—';

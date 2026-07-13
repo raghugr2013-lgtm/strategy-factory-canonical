@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useMarketUniverse } from '../hooks/useMarketUniverse';
+import { API_URL } from '../services/api';
 
 // ════════════════════════════════════════════════════════════════════
 // Auto Factory — Phase 5.5
@@ -15,12 +16,6 @@ import { useMarketUniverse } from '../hooks/useMarketUniverse';
 //   • POST /api/auto-factory/saved      { phase:"5.5", op:"update_config", patch }
 // ════════════════════════════════════════════════════════════════════
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8001`
-  : process.env.REACT_APP_BACKEND_URL;
 
 const AF = `${API_URL}/api/auto-factory`;
 

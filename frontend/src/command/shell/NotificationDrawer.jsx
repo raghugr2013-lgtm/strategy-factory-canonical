@@ -10,8 +10,8 @@
  * drawer shows a labelled empty-state. Severity tabs filter the merged list.
  */
 import React, { useEffect, useMemo, useState } from 'react';
+import { API_URL as API } from '../../services/api';
 
-const API = process.env.REACT_APP_BACKEND_URL;
 
 function getToken() {
   try { return localStorage.getItem('asf_auth_token'); } catch (_) { return null; }

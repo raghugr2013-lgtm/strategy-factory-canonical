@@ -23,6 +23,7 @@ import AuthGate, { getStoredUser } from "@/components/AuthGate";
 import { bootstrapThemeStore } from "@/stores/themeStore";
 import { bootstrapLocaleStore } from "@/stores/localeStore";
 import IntlProvider from "@/i18n/providers/IntlProvider";
+import { API_URL as BACKEND_URL } from './services/api';
 
 // Bootstrap the theme SSOT exactly once, before React mounts. Writes
 // `<html data-theme="dark" class="dark">` deterministically. U-4.3 — light
@@ -31,7 +32,6 @@ bootstrapThemeStore();
 // U-4.4 — bootstrap the locale SSOT. Writes `<html lang="en">` deterministically.
 bootstrapLocaleStore();
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Legacy placeholder Home — preserved at /legacy for parity testing during

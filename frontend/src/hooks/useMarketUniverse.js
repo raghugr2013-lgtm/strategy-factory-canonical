@@ -42,6 +42,7 @@
  * GET endpoint regardless of the backend flag state.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { API_URL } from '../services/api';
 
 // ─── Legacy fallback — mirrors the backend authority ───────────────
 // Kept here so the hook can render dropdowns even when the API is
@@ -72,7 +73,7 @@ function _notify() {
 
 function _baseURL() {
   // Same source of truth used by services/api.js across this codebase.
-  return process.env.REACT_APP_BACKEND_URL || '';
+  return API_URL;
 }
 
 async function _refresh() {

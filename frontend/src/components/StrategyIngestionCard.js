@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { AsfEmptyState } from './ui-asf';
+import { API_URL } from '../services/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Single-read safe JSON parser — avoids "body stream already read".
 async function _safeJson(res) {

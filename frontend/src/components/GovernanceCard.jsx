@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, ChartLineUp, CircleNotch } from '@phosphor-icons/react';
 import { AsfKpiTile, AsfEmptyState, AsfDetailDrawer } from './ui-asf';
+import { API_URL } from '../services/api';
 
 // Phase 30.1 · Δ5 — Governance Card (read-only institutional visibility).
 //
@@ -21,13 +22,6 @@ import { AsfKpiTile, AsfEmptyState, AsfDetailDrawer } from './ui-asf';
 //   • /api/deployment/registry
 //   • /api/governance/universe              ← Phase 30.2 summary
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 async function fetchJson(path) {
   const res = await fetch(`${API_URL}${path}`, {

@@ -17,6 +17,7 @@ import {
   CaretDown,
 } from '@phosphor-icons/react';
 import { VerdictBadge, AsfEmptyState } from './ui-asf';
+import { API_URL } from '../services/api';
 
 // Pass 15 — Deployment Readiness Card (read-only, advisory-only).
 //
@@ -45,13 +46,6 @@ import { VerdictBadge, AsfEmptyState } from './ui-asf';
 // IngestionHealthCard — zinc-on-black, monospaced labels, pill grid,
 // drill-down collapsibles for the long lists.
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 async function fetchJson(path) {
   const res = await fetch(`${API_URL}${path}`, {

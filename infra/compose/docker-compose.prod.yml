@@ -108,8 +108,6 @@ services:
     build:
       context: ../../frontend
       dockerfile: Dockerfile
-      args:
-        REACT_APP_BACKEND_URL: https://${FACTORY_DOMAIN}
     image: ${FACTORY_IMAGE_REPO:-strategy-factory}/frontend:${FACTORY_IMAGE_TAG:-1.0.0}
     container_name: factory-frontend
     restart: unless-stopped

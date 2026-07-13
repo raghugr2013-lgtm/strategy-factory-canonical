@@ -1,3 +1,4 @@
+import { API_URL } from '../../services/api';
 /**
  * COMMAND · Phase U.5.c — Event Ring Store (posture-aware live-stream)
  * ============================================================================
@@ -201,7 +202,7 @@ class EventRingStore {
   }
 
   async _tick() {
-    const BACKEND = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL) || '';
+    const BACKEND = API_URL;
     let token = null;
     try { token = localStorage.getItem('asf_auth_token'); } catch (_) { /* noop */ }
     try {

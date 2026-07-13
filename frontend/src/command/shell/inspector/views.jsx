@@ -12,8 +12,8 @@
  *   AttentionInspector  ·  "why is this issue surfaced + where to fix it?"
  */
 import React, { useEffect, useState } from 'react';
+import { API_URL as BACKEND } from '../../../services/api';
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL || '';
 
 function authHeaders() {
   try {
