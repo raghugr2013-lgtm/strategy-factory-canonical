@@ -28,6 +28,7 @@ services:
       factory-vie:
         condition: service_healthy
     environment:
+      CONFIG_VERSION: ${CONFIG_VERSION:-1}
       MONGO_URL: ${SHARED_MONGO_URL}
       DB_NAME: ${FACTORY_DB_NAME:-strategy_factory_v1}
       REDIS_URL: ${SHARED_REDIS_URL:-}
@@ -158,6 +159,7 @@ services:
       factory-backend:
         condition: service_healthy
     environment:
+      CONFIG_VERSION: ${CONFIG_VERSION:-1}
       MONGO_URL: ${SHARED_MONGO_URL}
       DB_NAME: ${FACTORY_DB_NAME:-strategy_factory_v1}
       VIE_URL: http://factory-vie:8100

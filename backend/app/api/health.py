@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
+from app.core.config import get_settings
 from app.core.versioning import version_info
 from app.db.mongo import get_db
 from app.vie.client import VIEUnavailable, get_vie
@@ -17,6 +18,12 @@ logger = logging.getLogger(__name__)
 @router.get("/health")
 async def health():
     return {"status": "ok", "ts": datetime.now(timezone.utc).isoformat(), **version_info()}
+
+
+@router.get("/health/config")
+async def health_config():
+    """Secret-free configuration diagnostics (A-1). Presence/booleans only."""
+    return get_settings().status()
 
 
 async def _check_redis() -> dict:

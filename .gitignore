@@ -108,3 +108,11 @@ frontend/node_modules/.cache/default-development/4.pack
 frontend/node_modules/.cache/default-development/4.pack
 frontend/node_modules/.cache/default-development/7.pack
 frontend/node_modules/.cache/default-development/7.pack
+*.env
+credentials.json
+*.key
+.credentials
+
+# Emergent platform workspace files — never part of the canonical repo
+.emergent/
+.gitconfig
