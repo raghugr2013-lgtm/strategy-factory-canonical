@@ -2,6 +2,8 @@
 // Stores JWT in localStorage (key: asf_auth_token) and exposes helpers
 // used by the AuthGate modal and the Admin Users tab.
 
+import { API_URL } from './api';
+
 const TOKEN_KEY = 'asf_auth_token';
 const USER_KEY = 'asf_auth_user';
 
@@ -37,14 +39,6 @@ function formatErr(detail) {
   if (detail && typeof detail.msg === 'string') return detail.msg;
   return String(detail);
 }
-
-// Backend URL resolver mirroring services/api.js
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 // Global fetch interceptor — injects Authorization: Bearer <token>
 // on every call to the backend API, so existing services/api.js code

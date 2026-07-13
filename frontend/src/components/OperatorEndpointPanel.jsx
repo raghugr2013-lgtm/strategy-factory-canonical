@@ -31,8 +31,8 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { API_URL as API_BASE } from '../services/api';
 
-const API_BASE = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
 
 const METHOD_TONE = {
   GET:    { tone: 'info',    label: 'GET'    },

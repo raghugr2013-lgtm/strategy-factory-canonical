@@ -24,14 +24,8 @@
  * MUST honour that flag before consuming this data.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { API_URL } from '../services/api';
 
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
 
 function authHeaders() {
   const token = (typeof window !== 'undefined'

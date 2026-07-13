@@ -106,6 +106,28 @@ Production reuses the exact same `.env` names. Before `docker compose
 6. `SHARED_REDIS_URL` — set if the shared Redis is in use, else leave blank
 7. `FACTORY_IMAGE_TAG` / `BUILD_*` — pin to the release being deployed
 
+## Frontend backend-URL resolution (A-2)
+
+The SPA resolves the backend with **one rule**, implemented once in
+`frontend/src/services/api.js` and exported as `API_URL` (helper:
+`resolveBackendUrl()`). Every frontend API request resolves through it:
+
+1. `REACT_APP_BACKEND_URL` — if baked into the bundle at build time
+   (`docker build --build-arg REACT_APP_BACKEND_URL=https://…` or a CRA
+   `.env` file), it wins. Trailing slashes are stripped.
+2. Hostname `localhost` / `127.0.0.1` → `http://<hostname>:8001`
+   (the canonical backend port: uvicorn, `EXPOSE 8001`, dev compose
+   `8001:8001`, Traefik `server.port=8001`).
+3. Otherwise `''` → **same-origin relative `/api`**. This is the
+   production path and depends on Traefik routing
+   `Host(FACTORY_DOMAIN) && PathPrefix(/api)` (priority 100) to
+   `factory-backend:8001` — the frontend image needs no baked URL.
+
+The default production build intentionally bakes **no** host
+(`ARG REACT_APP_BACKEND_URL=""` in `frontend/Dockerfile`); the prod
+compose file passes no build-arg. Do not reintroduce per-file URL
+logic in `frontend/src` — import `API_URL` from `services/api` instead.
+
 ## `CONFIG_VERSION` semantics
 
 - `1` — this contract (A-1).

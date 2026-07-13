@@ -4,7 +4,7 @@ import {
   ArrowsClockwise, Spinner, Plus, MagnifyingGlass,
 } from '@phosphor-icons/react';
 import RulesReviewPanel, { StatusBadge } from './RulesReviewPanel';
-import { listPropFirmReviewRules } from '../services/api';
+import { API_URL, listPropFirmReviewRules } from '../services/api';
 import { AsfKpiTile, AsfEmptyState } from './ui-asf';
 
 /**
@@ -37,7 +37,7 @@ export default function PropFirmsAdmin({ onOpenAddFirm }) {
   const fetchJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
-      const API = process.env.REACT_APP_BACKEND_URL;
+      const API = API_URL;
       const res = await fetch(`${API}/api/prop-firms/extract-jobs?limit=10`);
       const raw = await res.text().catch(() => '');
       let d = {};

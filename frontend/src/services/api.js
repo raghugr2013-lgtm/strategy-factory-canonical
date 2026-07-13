@@ -2,16 +2,24 @@
 // See services/throttledPost.js for semantics.
 import { throttledPost } from './throttledPost';
 
-// When running the UI on localhost talk to the backend on port 8000
-// (docker-compose maps host:8000 → container:8001).
-// In production the SPA calls /api/* on the same origin — nginx proxies it.
-const IS_LOCAL = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-);
-const API_URL = IS_LOCAL
-  ? `http://${window.location.hostname}:8000`
-  : (process.env.REACT_APP_BACKEND_URL || '');
+// ── Canonical backend URL resolution (A-2) — single source of truth ──
+// Every frontend API request must resolve through this exported helper.
+// Order (see docs/CONFIGURATION.md → "Frontend backend-URL resolution"):
+//   1. REACT_APP_BACKEND_URL baked at build time, if set;
+//   2. localhost / 127.0.0.1 → http://<hostname>:8001 (canonical dev port);
+//   3. '' → same-origin relative /api (production behind Traefik).
+export function resolveBackendUrl() {
+  const fromEnv = (process.env.REACT_APP_BACKEND_URL || '').trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, '');
+  if (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  )) {
+    return `http://${window.location.hostname}:8001`;
+  }
+  return '';
+}
+export const API_URL = resolveBackendUrl();
 
 // ── Timeout-aware fetch ───────────────────────────────────────────────
 // Every API call goes through here so a slow/hung backend can never

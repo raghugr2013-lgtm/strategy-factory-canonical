@@ -10,6 +10,7 @@
  * Backend wiring untouched; this is a pure composition.
  */
 import React, { Suspense, useEffect, useState } from 'react';
+import { API_URL } from '../services/api';
 
 const AdminUsers = React.lazy(() => import('./AdminUsers'));
 const {
@@ -18,7 +19,6 @@ const {
   Phase12TuningPanel,
 } = require('./OperatorParityPanels');
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 /**
  * Restoration Step 4d — readiness one-liner. Mirrors the old 1-vCPU Admin

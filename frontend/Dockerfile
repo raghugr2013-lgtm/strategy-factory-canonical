@@ -3,6 +3,10 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile --ignore-optional --network-timeout 600000
 COPY . .
+# A-2 — bake the backend URL at build time when provided. Default is empty:
+# production resolves same-origin /api; local dev resolves localhost:8001.
+ARG REACT_APP_BACKEND_URL=""
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 ENV DISABLE_ESLINT_PLUGIN=true
 ENV ENABLE_HEALTH_CHECK=false
 ENV CI=false
