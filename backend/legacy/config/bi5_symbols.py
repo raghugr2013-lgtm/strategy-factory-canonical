@@ -1,18 +1,25 @@
-"""v01 config.bi5_symbols compatibility shim (v1.1.1 corrected).
+"""v01 config.bi5_symbols compatibility (v1.1.1-fixed).
 
-`bi5_ingest_runner.py` accesses `spec.symbol`, `spec.market_type`,
-`spec.digits`, etc. via ATTRIBUTES (dataclass semantics). The pre-1.1.1
-version of this file returned a plain dict, which crashed the BI5
-scheduler track with:
+Every consumer that formerly used the pre-1.1.1 dict-returning shim now
+uses a proper dataclass, but the field surface is a strict SUPERSET of
+the old dict so no caller ever loses a key.
 
-    AttributeError: 'dict' object has no attribute 'symbol'
+Consumers (as of Feb 2026):
+  * data_engine/adapters/dukascopy_bi5.py         → spec.url_slug
+  * data_engine/bi5_ingest_runner.py              → spec.symbol, spec.market_type
+  * engines/r5_shadow_comparator.py               → spec.{url_slug, price_multiplier, quote_decimals, market_type}
+  * engines/market_universe_adapter.py            → _BI5_SYMBOL_SPECS (dict), spec.url_slug, spec.quote_decimals
+  * engines/seed/market_universe_seed.py          → spec.url_slug, spec.quote_decimals, spec.price_multiplier
+  * tests/test_market_universe_seed.py            → spec.{url_slug, price_multiplier, quote_decimals}
+  * tests/test_market_universe_adapter.py         → _BI5_SYMBOL_SPECS
 
-Now `get_bi5_symbol_spec` returns a proper `BI5SymbolSpec` dataclass
-with every field the runner reads. The old dict-returning callers
-(`is_bi5_supported`, `list_bi5_symbols`) are unchanged.
+The prior v1.1.1 attempt to convert to a dataclass silently dropped
+`url_slug`, `price_multiplier`, and `quote_decimals` — every hourly BI5
+fetch then crashed with AttributeError. This module restores those
+fields AND publishes the `_BI5_SYMBOL_SPECS` module-level dict every
+legacy consumer imports.
 """
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 from legacy.config.symbols import FOREX_SYMBOLS, METAL_SYMBOLS
 
@@ -21,28 +28,26 @@ from legacy.config.symbols import FOREX_SYMBOLS, METAL_SYMBOLS
 class BI5SymbolSpec:
     symbol: str
     dukascopy_instrument: str
+    url_slug: str
     digits: int
+    quote_decimals: int
+    price_multiplier: float
     market_type: str  # "forex" | "metal"
+    pip_size: float
+    point_size: float
+    contract_size: float
     supported: bool = True
-    # extras occasionally read by legacy engines — safe defaults
-    pip_size: float = 0.0
-    point_size: float = 0.0
-    contract_size: float = 100_000.0
 
 
 BI5_SYMBOLS = FOREX_SYMBOLS + METAL_SYMBOLS
 
+# Dukascopy datafeed uses uppercase concatenated symbols in the URL path
+# (e.g. `.../EURUSD/2025/00/01/00h_ticks.bi5`).
 DUKASCOPY_INSTRUMENT_MAP = {
     "EURUSD": "EURUSD", "GBPUSD": "GBPUSD", "USDJPY": "USDJPY",
     "AUDUSD": "AUDUSD", "USDCAD": "USDCAD", "NZDUSD": "NZDUSD",
     "XAUUSD": "XAUUSD", "XAGUSD": "XAGUSD",
 }
-
-
-def _market_type(sym: str) -> str:
-    if sym in METAL_SYMBOLS:
-        return "metal"
-    return "forex"
 
 
 def _digits(sym: str) -> int:
@@ -53,8 +58,46 @@ def _digits(sym: str) -> int:
     return 5
 
 
+def _market_type(sym: str) -> str:
+    return "metal" if sym in METAL_SYMBOLS else "forex"
+
+
+def _pip_size(sym: str) -> float:
+    if sym in METAL_SYMBOLS:
+        return 0.01 if sym.startswith("XAU") else 0.001
+    return 0.01 if sym.endswith("JPY") else 0.0001
+
+
+def _contract_size(sym: str) -> float:
+    if sym in METAL_SYMBOLS:
+        return 100.0 if sym.startswith("XAU") else 5000.0
+    return 100_000.0
+
+
+def _build_spec(sym: str, supported: bool = True) -> BI5SymbolSpec:
+    digits = _digits(sym)
+    inst = DUKASCOPY_INSTRUMENT_MAP.get(sym, sym)
+    return BI5SymbolSpec(
+        symbol=sym,
+        dukascopy_instrument=inst,
+        url_slug=inst,                     # same as instrument for FX/metals
+        digits=digits,
+        quote_decimals=digits,             # canonical quote decimal count
+        price_multiplier=10 ** digits,     # BI5 stores ticks as ints
+        market_type=_market_type(sym),
+        pip_size=_pip_size(sym),
+        point_size=10 ** (-digits),
+        contract_size=_contract_size(sym),
+        supported=supported,
+    )
+
+
+# Module-level dict every legacy engine imports directly.
+_BI5_SYMBOL_SPECS = {sym: _build_spec(sym) for sym in BI5_SYMBOLS}
+
+
 def is_bi5_supported(symbol: str) -> bool:
-    return symbol.upper() in BI5_SYMBOLS
+    return (symbol or "").upper() in BI5_SYMBOLS
 
 
 def list_bi5_symbols() -> list:
@@ -63,23 +106,9 @@ def list_bi5_symbols() -> list:
 
 def get_bi5_symbol_spec(symbol: str) -> BI5SymbolSpec:
     s = (symbol or "").upper()
-    if s not in BI5_SYMBOLS:
-        # Still return a dataclass — legacy code checks `.supported`.
-        return BI5SymbolSpec(
-            symbol=s,
-            dukascopy_instrument=DUKASCOPY_INSTRUMENT_MAP.get(s, s),
-            digits=_digits(s),
-            market_type=_market_type(s),
-            supported=False,
-        )
-    digits = _digits(s)
-    return BI5SymbolSpec(
-        symbol=s,
-        dukascopy_instrument=DUKASCOPY_INSTRUMENT_MAP.get(s, s),
-        digits=digits,
-        market_type=_market_type(s),
-        supported=True,
-        pip_size=(0.01 if s.endswith("JPY") else 0.0001) if s not in METAL_SYMBOLS else (0.01 if s.startswith("XAU") else 0.001),
-        point_size=10 ** (-digits),
-        contract_size=(100.0 if s.startswith("XAU") else 5000.0) if s in METAL_SYMBOLS else 100_000.0,
-    )
+    cached = _BI5_SYMBOL_SPECS.get(s)
+    if cached is not None:
+        return cached
+    # Unsupported symbol — return a dataclass with supported=False so
+    # callers can attribute-access every field safely.
+    return _build_spec(s, supported=False)
