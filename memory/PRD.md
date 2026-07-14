@@ -1,105 +1,91 @@
-# Strategy Factory — Canonical Repository PRD (v1.1 recovery)
+# Strategy Factory Canonical v1.1 — API Compatibility Recovery
 
 ## Original Problem Statement
-Rebuild and consolidate the fragmented Strategy Factory codebase (original handoff bundle + VPS additions + Phase-1 recovery bundle) into a single, clean, production-ready canonical repository at `/app`. The final deliverable **must use the original v01 React frontend as the primary UI**; no page may be replaced by a new design unless technically impossible.
 
-## Non-Negotiable Requirements
-1. **100% legacy functional recovery** — preserve all v01 engines, routers, and React components verbatim.
-2. **Original v01 UI (Command OS) as the primary landing** — the CommandShell/CommandModuleApp/AuthGate/LeftRail/CommandBar/StatusRail/LifecycleRail architecture from Phase U-1 must be the operator experience.
-3. **No redesign** — no page may be replaced.
-4. **Zero dependency on `EMERGENT_LLM_KEY`** — all AI calls routed through the Vendor Independent Engine (VIE).
-5. **Original v01 MongoDB dump restored** (313k market bars, 14 strategies).
-6. **Docker deployment** working both in Emergent Preview and on VPS.
+Production stack at `strategy.coinnike.com` is healthy at the container / HTTP layer, but the frontend reports multiple 404s (`/api/challenge-firms`, `/api/strategies/explorer`, `/api/readiness`, `/api/library/list`, `/api/dashboard/generate`, `/api/rank-strategies`, `/api/monte-carlo`, etc.) even though the backend claims 82 legacy routers are mounted. Deliver a complete audit and code fix restoring full frontend/backend compatibility WITHOUT redesigning the app or removing legacy modules. Preserve the canonical v1.1 architecture.
 
-## Users / Personas
-- **Admin operator** — seeded on every backend boot (see `/app/memory/test_credentials.md`).
-- Additional roles: `analyst`, `viewer`, defined via JWT RBAC.
+## Architecture
 
-## Architecture Snapshot
+- **Frontend**: React 19 + v01 Command OS (CommandShell, TopTabBar, LifecycleRail, StatusRail, AuthGate).
+- **Backend**: FastAPI 0.116 + MongoDB 6. Phase-1 core (auth + admin + strategies CRUD + research + dashboard/summary + health) + 83 legacy v01 routers.
+- **VIE (Vendor Independent Engine)**: Standalone gateway (6 providers: OpenAI, Anthropic, Gemini, DeepSeek, Groq, Kimi).
+- **Auth**: JWT + refresh-token rotation + 5-role RBAC + admin-approve signup.
+- **Deploy**: Docker Compose (local + VPS overlay with Traefik).
+
+## User Personas
+
+- **Admin** — approves signups, manages users, monitors readiness, runs factory supervisor.
+- **Developer / Operator / Researcher / Viewer** — 5-role RBAC on all endpoints.
+
+## Core Requirements (static)
+
+1. Preserve the canonical v1.1 architecture.
+2. Do NOT redesign or remove any legacy module.
+3. Every frontend `/api/*` call must reach a backend handler (no router-level 404s).
+4. Backend must expose `/api/auth/signup` (v01-compatible pending-account flow).
+5. Backend startup must not fail when optional dependencies (dukascopy_python) are absent.
+
+## What's Been Implemented — 2026-02-15
+
+### Routing surgery in `backend/app/main.py`
+- Removed the `conflict_map` that stranded ~40 endpoints under `/api/legacy/*`.
+- Introduced `_PRIORITY_STRATEGY_SCOPE_MODULES` (strategy_memory, market_intelligence, prop_firm_analysis, challenge_matching) mounted first so `/api/strategies/*` specific paths beat the Phase-1 core `/{strategy_id}` catch-all.
+- Moved `_mount_legacy_routers()` to run BEFORE `include_router(strategies_router)` in `create_app()`.
+- Fixed the `dashboard_route` / `phase4_route` side-effect timing AND module-identity bugs — side-effects now run immediately before strategies is mounted, and strategies is imported via the same `api.strategies` shim path the side-effects mutate.
+
+### Signup added to Phase-1 core auth
+- New `POST /api/auth/signup` — creates user with `status="pending"` and returns v01-shape `{message, email, status}`.
+- Login endpoint hardened to reject `pending` / `rejected` accounts with 403 (v01 admin-approve-signup contract).
+
+### Optional-dependency guardrail
+- `legacy/data_engine/dukascopy_downloader.py` wraps the `dukascopy_python` import in try/except. The module imports cleanly without the SDK; `download_and_store()` raises a clean `RuntimeError` only when actually invoked. Startup log no longer prints the mount failure.
+
+### Verification
+- 35/35 backend regression tests pass (`/app/backend/tests/test_api_compatibility.py`).
+- 89 legacy routers/attachers online (was 82 pre-fix).
+- Every one of the 25 originally-404 GET endpoints returns 200 with a fresh JWT.
+- Every previously-stranded POST endpoint returns 422/validation (route mounted) instead of 404.
+
+## Files Changed
+
+| File | Purpose |
+|---|---|
+| `backend/app/main.py` | Removed conflict_map, added _PRIORITY_STRATEGY_SCOPE_MODULES, reordered create_app, fixed dashboard_route/phase4_route mount |
+| `backend/app/auth/routes.py` | Added POST /api/auth/signup; hardened login to reject pending accounts |
+| `backend/legacy/data_engine/dukascopy_downloader.py` | Optional dukascopy_python import; RuntimeError only when actually invoked |
+| `audit/*` | Full RCA, mismatch report, scanner scripts, backend & frontend route dumps, verification log |
+| `backend/tests/test_api_compatibility.py` | 35 regression tests covering the full API-compat contract |
+| `memory/test_credentials.md` | Admin credential reference for testing agent |
+
+## Backlog / Next Priorities
+
+- **P0 (done)**: Restore all previously-404 canonical `/api/*` paths.
+- **P0 (done)**: Fix Phase-1 core `/api/strategies/{strategy_id}` shadow of Strategy Memory `/explorer`.
+- **P0 (done)**: Restore `dashboard_route` + `phase4_route` side-effect endpoints.
+- **P0 (done)**: Add `/api/auth/signup`.
+- **P1**: Make `dukascopy_python` truly optional (done — startup clean).
+- **P2**: Delete stale `/app/backend/tests/backend_test.py` which uses obsolete admin password.
+- **P2**: Add pytest-based nightly regression run in CI targeting the same 35-test file.
+- **P3**: Consider a periodic cleanup job for `TEST_signup_*` users created by the compat test-suite.
+- **P3**: Frontend UI smoke test (Playwright) covering Dashboard → Explorer → Prop Firm → Challenge Firms → Library → Portfolio Builder → Trade Runner navigation with the seeded admin.
+
+## VPS Deployment Recovery Steps (for the user)
+
+The GitHub repository has NOT been pushed automatically (per user request — "I will review and push"). To ship this fix to strategy.coinnike.com:
+
+```bash
+# 1. On your workstation
+git fetch origin
+git checkout main
+git merge --ff-only <this branch's commit sha>
+git push origin main
+
+# 2. On the VPS
+cd /opt/strategy-factory   # or wherever the checkout lives
+git pull
+docker compose --env-file .env -f infra/compose/docker-compose.prod.yml build factory-backend
+docker compose --env-file .env -f infra/compose/docker-compose.prod.yml up -d factory-backend
+./infra/scripts/health.sh
 ```
-/app
-├── backend
-│   ├── app/                       # Phase-1 FastAPI core (auth, DB, VIE router, main)
-│   │   └── auth/routes.py         # Emits BOTH Phase-1 {access_token,...} AND v01 {token,user}
-│   ├── legacy/                    # v01 verbatim (engines, api, config, tests)
-│   └── requirements.txt
-├── frontend/src                   # 100 % v01 tree — byte-identical to bundle
-│   ├── App.js                     # v01 GatedCommandModuleApp router
-│   ├── index.js                   # bootstraps a11yPatcher + installAuthFetchInterceptor
-│   ├── command/                   # Command OS shell (CommandShell, TopTabBar, Rails, etc.)
-│   ├── components/                # 66 v01 operator components + shadcn ui/
-│   ├── services/, hooks/, stores/, styles/, i18n/, routes/, pages/Welcome/
-│   └── a11y/, assets/, constants/, lib/
-├── vie/                           # Vendor Independent Engine (OpenAI/Anthropic/Gemini/DeepSeek/Groq/Kimi)
-├── docs
-│   └── acceptance_v1_1/           # FRONTEND_RESTORATION_REPORT.md + screenshots pack
-├── ruff.toml                      # Per-file ignores for backend/legacy/**
-└── memory/PRD.md                  # This file
-```
 
-## Key Technical Concepts
-- FastAPI + React + MongoDB
-- v01 **Command OS** (Phase U-1) — the primary UI shell
-- VIE (Vendor Independent Engine) for LLM calls
-- JWT-based auth issued by Phase-1 backend, dual-shaped for v01 client
-- Docker Compose for both preview and VPS
-
-## Key DB Collections
-- `market_data` — 313k OHLCV bars from v01 dump
-- `strategy_library` — 14 saved strategies
-- `strategy_library_archive`, `mutation_events` (10k), `strategy_lifecycle_history` (892), `strategy_performance_history` (1,047), `asf_import_actions` (27k)
-- `users` — auth + roles
-
-## Key API Endpoints
-- **470 total endpoints** mounted across Phase-1 core + 83 legacy routers
-- `POST /api/auth/login` → returns Phase-1 flat + v01 nested `{token, user}` shape
-- `POST /api/auth/refresh`, `POST /api/auth/logout`
-- `GET  /api/auth/me` → returns v01-shaped `{user: {...}, ...flat}`
-- `GET  /api/health`, `/api/version`, `/api/openapi.json`
-- `/api/strategies/*`, `/api/auto-factory/*`, `/api/portfolio/*`, `/api/prop-firms/*`, `/api/execution/*`, `/api/monitoring/*`, `/api/orchestrator/*`, `/api/governance/*`, `/api/latent/*`, `/api/llm/*`, `/api/vie/*` — all legacy routers active
-
-## Completed (Feb 2026)
-- **Full v1.1 acceptance pack produced** (Feb 15) — Backend Acceptance Report (21 modules), Complete API Inventory (497 endpoints), Engine Inventory (169 engines), Frontend Restoration Report, E2E Workflow evidence (31/31 pass), one-click Deploy Verify script (31/31 pass live), Deployment Guide, Architecture Diagram, Release Notes, and Release Package manifest — all under `/app/docs/acceptance_v1_1/`.
-- **`ENABLE_LEGACY_ROUTERS` default flipped to `true`** in both compose files and `.env.example` (was `false`, which would have hidden 470/497 endpoints).
-- **Frontend Dockerfile hardened** — added `/healthz` endpoint + docker HEALTHCHECK.
-- **`scripts/deploy_verify.sh`** added — runs 31-step E2E workflow, exits non-zero on failure (CI-ready).
-- **Full v01 frontend restoration** (Feb 15) — root `App.js` reverted to `GatedCommandModuleApp`; `services/auth.js`, `stores/`, `i18n/`, `routes/`, `pages/Welcome/`, `styles/*.css`, `App.css`, `index.css`, `index.js` restored verbatim; interim Phase-1 sidebar `Layout`, `ProtectedRoute`, custom `LoginPage/DashboardPage/AdminPage/ProvidersPage/ResearchPage/StrategiesPage`, `lib/api.js`, `lib/auth.jsx`, `lib/legacy-fetch-shim.js`, `eslint.config.js` deleted.
-- **Backend auth compatibility bridge** (Feb 15) — `/api/auth/login` and `/api/auth/me` now emit both Phase-1 flat and v01 nested `{token, user}` shapes so the v01 `services/auth.js` works unchanged.
-- Full audit of 3 disparate repositories; phase-by-phase recovery plan.
-- `backend/legacy/engines/llm_runner.py` + `llm_config.py` re-wired to VIE. Zero `EMERGENT_LLM_KEY` references remain.
-- Legacy `sys.path` shims and import fixes (`auth_utils`, `config.symbols`).
-- v01 `mongodump` restored.
-- Bulk legacy router mount in `backend/app/main.py` (83 routers, 497 endpoints).
-- Lint hooks green — `ruff` clean on backend; `eslint` zero blocking errors on frontend.
-- Docker Compose configs ready for preview and VPS.
-
-## Byte-parity summary
-- **202 of 215** tracked frontend source files are byte-identical to the v01 baseline.
-- **13 files** differ by exactly one benign line: `/* eslint-disable */` prepend, added to placate the pre-commit lint hook. Zero functional or visual lines modified.
-
-## Roadmap
-### P0 — Delivered ✅
-- Canonical repo assembly, v01 Command OS restored as primary UI, VIE integration, v01 data restore, lint hooks green, backend auth bridge, acceptance report + screenshot pack.
-
-### P1 — Post-handover (user roadmap)
-- **ArbiCore X** module integration
-- **GemHunter** module integration
-- Additional intelligence modules
-
-### P2 — Ops hardening (future)
-- CI pipeline with linting + smoke tests
-- Automated VPS deployment via GitHub Actions
-- Observability (metrics, tracing) layer
-
-## Testing Status
-- Runtime: `/api/health` 200, `/api/version` 200, `/api/auth/login` returns v01-shaped body, `/api/auth/me` returns dual shape.
-- Frontend E2E: `/c/dashboard`, `/c/lab`, `/c/explorer`, `/c/mutate`, `/c/portfolio`, `/c/propfirm`, `/c/exec`, `/c/ai`, `/c/diag`, `/c/governance` all render without `HTTP 401 missing bearer token`.
-- Side-by-side screenshots (12 original vs 10 recovered) captured under `/app/docs/acceptance_v1_1/`.
-- Static: `ruff` clean, `eslint` blocking errors = 0.
-
-## Constraints (Do Not Break)
-- Never redesign or refactor `backend/legacy/**` business logic.
-- Never touch original v01 React components' logic; only wrap or wire.
-- Never re-introduce `EMERGENT_LLM_KEY`.
-- Never replace the v01 Command OS as the primary UI.
-- Always preserve `.git`, `.emergent`, `/app/vie/.env` and user-provided API keys.
+Post-deploy health check should show `legacy full-recovery mount: 89 routers/attachers online` in the backend container log.
