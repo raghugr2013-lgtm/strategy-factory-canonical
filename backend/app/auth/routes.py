@@ -24,10 +24,12 @@ from app.auth.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    hash_password,
     verify_password,
 )
 from app.db.models import UserPublic
 from app.db.mongo import get_db
+import uuid
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
@@ -36,6 +38,20 @@ logger = logging.getLogger(__name__)
 class LoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=256)
+
+    @field_validator("email")
+    @classmethod
+    def _e(cls, v: str) -> str:
+        return _norm_email(v)
+
+
+class SignupRequest(BaseModel):
+    """v01-compatible public signup — creates a user with status="pending".
+    Admin approval is required before login succeeds. Mirrors the shape used
+    by the frontend `signup()` helper in services/auth.js.
+    """
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=6, max_length=256)
 
     @field_validator("email")
     @classmethod
@@ -66,6 +82,11 @@ async def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail="invalid email or password")
     if doc.get("status") == "disabled":
         raise HTTPException(status_code=403, detail="account disabled")
+    # v01 admin-approve-signup flow: block login until approved.
+    if doc.get("status") == "pending":
+        raise HTTPException(status_code=403, detail="account awaiting admin approval")
+    if doc.get("status") == "rejected":
+        raise HTTPException(status_code=403, detail="account rejected")
 
     access = create_access_token(user_id=doc["user_id"], email=doc["email"], role=doc.get("role", "viewer"))
     refresh, jti, expires_at = create_refresh_token(user_id=doc["user_id"])
@@ -94,6 +115,45 @@ async def login(req: LoginRequest):
             "status": doc.get("status", "approved"),
         },
     )
+
+
+@router.post("/signup")
+async def signup(req: SignupRequest):
+    """Public signup — creates a user with status="pending". Admin must
+    approve via `/api/admin/approve/{user_id}` before the account can log in.
+    Idempotent-friendly: returns 409 if the email is already registered.
+    Response shape matches v01 legacy so services/auth.js works unchanged.
+    """
+    email = req.email.strip().lower()
+    db = get_db()
+    existing = await db.users.find_one({"email": email}, {"_id": 0, "status": 1})
+    if existing:
+        raise HTTPException(status_code=409, detail="email already registered")
+
+    now = datetime.now(timezone.utc)
+    doc = {
+        "user_id": uuid.uuid4().hex[:16],
+        "email": email,
+        "password_hash": hash_password(req.password),
+        "role": "viewer",
+        "status": "pending",
+        "created_at": now,
+        "updated_at": now,
+    }
+    try:
+        await db.users.insert_one(doc)
+    except Exception as e:  # noqa: BLE001
+        logger.exception("signup failed")
+        if "duplicate key" in str(e).lower():
+            raise HTTPException(status_code=409, detail="email already registered")
+        raise HTTPException(status_code=500, detail="signup failed")
+
+    return {
+        "message": "Account created. Awaiting admin approval.",
+        "email": email,
+        "status": "pending",
+    }
+
 
 
 @router.post("/refresh", response_model=TokenPair)

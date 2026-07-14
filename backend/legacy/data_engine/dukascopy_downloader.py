@@ -2,18 +2,39 @@
 Dukascopy historical data downloader.
 Downloads OHLCV forex data and stores in MongoDB (same schema as CSV upload).
 Supports incremental updates and duplicate avoidance.
+
+`dukascopy_python` is an OPTIONAL dependency. When it isn't installed we
+degrade gracefully — the module still imports (so `legacy.api.data` can be
+mounted) and every function raises a clean RuntimeError only when actually
+invoked. This keeps startup clean on hosts that only need the non-ingestion
+endpoints of `legacy/api/data.py`.
 """
 from datetime import datetime, timezone
-import dukascopy_python as dp
-from dukascopy_python.instruments import (
-    INSTRUMENT_FX_MAJORS_EUR_USD,
-    INSTRUMENT_FX_MAJORS_GBP_USD,
-    INSTRUMENT_FX_MAJORS_USD_JPY,
-    INSTRUMENT_FX_METALS_XAU_USD,
-    INSTRUMENT_IDX_AMERICA_E_NQ_100,
-    INSTRUMENT_VCCY_BTC_USD,
-    INSTRUMENT_VCCY_ETH_USD,
-)
+
+try:
+    import dukascopy_python as dp
+    from dukascopy_python.instruments import (
+        INSTRUMENT_FX_MAJORS_EUR_USD,
+        INSTRUMENT_FX_MAJORS_GBP_USD,
+        INSTRUMENT_FX_MAJORS_USD_JPY,
+        INSTRUMENT_FX_METALS_XAU_USD,
+        INSTRUMENT_IDX_AMERICA_E_NQ_100,
+        INSTRUMENT_VCCY_BTC_USD,
+        INSTRUMENT_VCCY_ETH_USD,
+    )
+    _DUKASCOPY_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    _DUKASCOPY_AVAILABLE = False
+    dp = None  # type: ignore[assignment]
+    # Sentinels so downstream `INSTRUMENT_MAP` still builds without crashing.
+    INSTRUMENT_FX_MAJORS_EUR_USD = None
+    INSTRUMENT_FX_MAJORS_GBP_USD = None
+    INSTRUMENT_FX_MAJORS_USD_JPY = None
+    INSTRUMENT_FX_METALS_XAU_USD = None
+    INSTRUMENT_IDX_AMERICA_E_NQ_100 = None
+    INSTRUMENT_VCCY_BTC_USD = None
+    INSTRUMENT_VCCY_ETH_USD = None
+
 from engines.db import get_db
 
 # Symbol -> Dukascopy instrument mapping
@@ -36,7 +57,15 @@ INTERVAL_MAP = {
     "1h": dp.INTERVAL_HOUR_1,
     "4h": dp.INTERVAL_HOUR_4,
     "1d": dp.INTERVAL_DAY_1,
-}
+} if _DUKASCOPY_AVAILABLE else {}
+
+
+def _require_dukascopy() -> None:
+    if not _DUKASCOPY_AVAILABLE:
+        raise RuntimeError(
+            "dukascopy_python is not installed on this host — Dukascopy "
+            "ingestion is disabled. Install `dukascopy-python` to enable."
+        )
 
 
 async def download_and_store(
@@ -45,6 +74,7 @@ async def download_and_store(
     date_from: str,
     date_to: str,
 ) -> dict:
+    _require_dukascopy()
     """
     Download historical data from Dukascopy and store in MongoDB.
     Handles incremental updates by checking existing data and skipping duplicates.

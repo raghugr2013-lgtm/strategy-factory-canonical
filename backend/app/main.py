@@ -5,6 +5,26 @@ research + dashboard + health). Legacy routers are gated behind
 ENABLE_LEGACY_ROUTERS. When true, legacy routers are mounted MODULE-BY-MODULE
 by the phase that owns them (Strategy Generation in Phase 1, Backtesting in
 Phase 2, etc.).
+
+──────────────────────────────────────────────────────────────────────
+v1.1.1 API-Compatibility Recovery — routing fixes (Feb 2026)
+──────────────────────────────────────────────────────────────────────
+Legacy full-recovery mounts every preserved v01 router at its canonical
+`/api/*` path. The previous `conflict_map` that relocated the four
+"colliding" modules to `/api/legacy/*` broke the entire frontend, which
+was written against `/api/challenge-firms`, `/api/dashboard/generate`,
+`/api/rank-strategies`, `/api/admin/readiness`, `/api/library/*`, etc.
+The relocation was unnecessary because Phase-1 core routes register
+first and win on identical paths — every other legacy route lives at a
+path Phase-1 core never claims.
+
+`/strategies`-scoped legacy routers (`strategy_memory`,
+`market_intelligence`, `prop_firm_analysis`, `challenge_matching`) MUST
+mount before the legacy `strategies.py` router and Phase-1 core
+`strategies_router`, otherwise Phase-1 core's
+`GET /api/strategies/{strategy_id}` catch-all shadows every specific
+subpath (`/explorer`, `/{hash}/history`, `/{hash}/market-scan`, etc.).
+FastAPI matches routes in registration order.
 """
 from __future__ import annotations
 
@@ -44,11 +64,26 @@ async def lifespan(_app: FastAPI):
     logger.info("shutdown")
 
 
+# ──────────────────────────────────────────────────────────────────
+# Legacy /strategies-scoped routers — MUST mount before Phase-1 core
+# so specific subpaths beat `/api/strategies/{strategy_id}` catch-all.
+# ──────────────────────────────────────────────────────────────────
+_PRIORITY_STRATEGY_SCOPE_MODULES = (
+    "strategy_memory",      # /strategies/explorer, /strategies/library/{id}/details, /strategies/{hash}/*
+    "market_intelligence",  # /strategies/{hash}/market-scan|profile
+    "prop_firm_analysis",   # /strategies/{hash}/prop-analysis
+    "challenge_matching",   # /strategies/{hash}/match-challenges|challenge-match
+)
+
+
 def _mount_legacy_routers(app: FastAPI) -> None:
     """Full-recovery mount block. All ~85 preserved legacy routers under
-    a single ENABLE_LEGACY_ROUTERS gate. Route-prefix conflicts with the
-    Phase-1 core are resolved by mounting under /api/legacy/ instead of
-    /api/. Every mounted router inherits JWT auth via get_current_user.
+    a single ENABLE_LEGACY_ROUTERS gate. Every legacy router mounts at
+    `/api` — the previous `conflict_map` relocation to `/api/legacy` has
+    been removed because it stranded ~40 frontend-consumed endpoints.
+    Route collisions with Phase-1 core (only 3 identical paths exist)
+    are naturally resolved by FastAPI: Phase-1 core routes register
+    first in `create_app()` and win.
     """
     s = get_settings()
     if not s.enable_legacy_routers:
@@ -56,23 +91,14 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         return
 
     from app.auth.deps import get_current_user  # noqa: WPS433
-    from fastapi import APIRouter as _APIRouter  # noqa: WPS433
+    from fastapi import APIRouter  # noqa: WPS433
 
     auth_dep = [Depends(get_current_user)]
 
-    # ── Modules that COLLIDE with Phase-1 core routes ────────────
-    #   Phase-1 owns /api/auth, /api/admin, /api/dashboard/summary,
-    #   /api/strategies, /api/readiness. Mount conflicting legacy
-    #   modules under /api/legacy/ to preserve their surface.
-    conflict_map = {
-        "admin": "/api/legacy",           # legacy admin dashboard
-        "strategies": "/api/legacy",      # legacy strategies (attaches dashboard_route + phase4_route)
-        "dashboard": "/api/legacy",       # legacy dashboard widgets
-        "readiness": "/api/legacy",       # legacy readiness (different from Phase-1 /api/readiness)
-    }
-
     # ── Primary routers ─────────────────────────────────────────
-    # (auto_factory already mounted separately in Phase 1B; skip)
+    # (`strategy_memory`, `market_intelligence`, `prop_firm_analysis`,
+    #  `challenge_matching` are lifted to _PRIORITY_STRATEGY_SCOPE_MODULES
+    #  and mounted FIRST; do not repeat them here.)
     primary_names = [
         "admin", "admin_execution_realism", "admin_flag_governance", "admin_market_universe",
         "asf", "auto_mutation", "auto_selection",
@@ -93,33 +119,64 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "prop_firm_intelligence", "prop_firm_rules_review", "prop_firms",
         "readiness", "regime", "research_lineage",
         "runner", "scaling", "soak_diagnostics",
-        "strategies", "strategy_memory", "trade_runner",
+        "strategies", "trade_runner",
     ]
 
     mounted = 0
-    from fastapi import APIRouter
-    for name in primary_names:
+
+    # ── PHASE A ── /strategies-scope legacy routers FIRST ──────────
+    for name in _PRIORITY_STRATEGY_SCOPE_MODULES:
         try:
             mod = __import__(f"legacy.api.{name}", fromlist=["*"])
-            # Collect every APIRouter attribute (some modules expose 2)
             for _n, _v in vars(mod).items():
                 if isinstance(_v, APIRouter):
-                    prefix = conflict_map.get(name, "/api")
-                    app.include_router(_v, prefix=prefix, dependencies=auth_dep)
+                    app.include_router(_v, prefix="/api", dependencies=auth_dep)
+                    mounted += 1
+        except Exception:  # noqa: BLE001
+            logger.exception("legacy priority mount failed for api.%s", name)
+
+    # ── PHASE B ── everything else ────────────────────────────────
+    for name in primary_names:
+        # Before mounting `strategies`, run the side-effect imports that
+        # ATTACH additional endpoints to the strategies router
+        # (dashboard_route: /library/*, /dashboard/*, /strategy/describe,
+        #  /cbot/build-reliable, /dashboard/portfolios/*, /pipeline/dashboard;
+        #  phase4_route: /match-firms-phase4). These must be imported before
+        # `include_router(strategies.router)` because FastAPI snapshots a
+        # router's routes at include-time — later mutations don't propagate.
+        #
+        # IMPORTANT: dashboard_route and phase4_route import via the shim
+        # path `from api.strategies import router` — under the sys.path
+        # shim installed by server.py this becomes a *different* Python
+        # module object than `legacy.api.strategies`, so we mount the same
+        # `api.strategies` module the side-effects decorated. Otherwise
+        # the ~16 side-effect endpoints are attached to an orphan router.
+        if name == "strategies":
+            for side_effect in ("dashboard_route", "phase4_route"):
+                try:
+                    __import__(f"legacy.api.{side_effect}", fromlist=["*"])
+                    mounted += 1  # counted as attached
+                except Exception:  # noqa: BLE001
+                    logger.exception("legacy side-effect import failed: %s", side_effect)
+            try:
+                # Use the shim path so we grab the SAME router object the
+                # side-effects mutated.
+                mod = __import__("api.strategies", fromlist=["*"])
+                for _n, _v in vars(mod).items():
+                    if isinstance(_v, APIRouter):
+                        app.include_router(_v, prefix="/api", dependencies=auth_dep)
+                        mounted += 1
+            except Exception:  # noqa: BLE001
+                logger.exception("legacy mount failed for api.strategies (shim path)")
+            continue
+        try:
+            mod = __import__(f"legacy.api.{name}", fromlist=["*"])
+            for _n, _v in vars(mod).items():
+                if isinstance(_v, APIRouter):
+                    app.include_router(_v, prefix="/api", dependencies=auth_dep)
                     mounted += 1
         except Exception:  # noqa: BLE001
             logger.exception("legacy mount failed for api.%s", name)
-
-    # dashboard_route + phase4_route attach endpoints to legacy strategies
-    # router at import time. Importing them is sufficient — their side
-    # effect is to add sub-endpoints to `legacy.api.strategies.router`,
-    # which is already mounted above.
-    for side_effect in ("dashboard_route", "phase4_route"):
-        try:
-            __import__(f"legacy.api.{side_effect}", fromlist=["*"])
-            mounted += 1  # count as attached
-        except Exception:  # noqa: BLE001
-            logger.exception("legacy side-effect import failed: %s", side_effect)
 
     # ── Latent routers (v01 Phase 29+ additions) ────────────────
     latent_names = [
@@ -153,11 +210,6 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         logger.info("mounted legacy router: /api/auto-factory")
     except Exception:  # noqa: BLE001
         logger.exception("auto_factory mount failed")
-
-    # Also mount `market_intelligence` (two routers) + `challenge_matching`
-    # + `prop_firm_analysis` — these expose 2 routers each and are already
-    # handled by the primary_names iteration above (matched via APIRouter
-    # attribute enumeration).
 
     logger.info("legacy full-recovery mount: %d routers/attachers online", mounted)
 
@@ -227,16 +279,32 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # Phase-1 core (always on)
+    # ── Phase-1 core (always on) — register first ────────────────
+    # These are the small, hand-audited routes that own the canonical
+    # `/api/auth`, `/api/admin`, `/api/health`, `/api/research`, and
+    # `/api/dashboard/summary` paths. They must be first so their exact
+    # paths win any collision with legacy modules.
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(admin_router)
-    app.include_router(strategies_router)
     app.include_router(research_router)
     app.include_router(dashboard_router)
 
-    # Legacy — module-by-module (currently all dormant in Phase 0)
+    # ── Legacy full-recovery mount ───────────────────────────────
+    # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
+    # Phase-1 core `strategies_router` so `/api/strategies/explorer`,
+    # `/api/strategies/{hash}/history`, `/api/strategies/{hash}/re-run`,
+    # `/api/strategies/{hash}/market-scan`, `/api/strategies/{hash}/prop-analysis`,
+    # `/api/strategies/{hash}/match-challenges`, and
+    # `/api/strategies/library/{id}/details` register ahead of Phase-1's
+    # `GET/DELETE /api/strategies/{strategy_id}` catch-all.
     _mount_legacy_routers(app)
+
+    # ── Phase-1 core strategies (catch-all LAST) ─────────────────
+    # `/api/strategies/{strategy_id}` is a catch-all that must come
+    # after every specific `/api/strategies/<static>` route.
+    app.include_router(strategies_router)
+
     # Future modules — mounted from /app/modules/<slug>/backend/api/ (never modifies frozen core)
     _mount_future_modules(app)
     return app
