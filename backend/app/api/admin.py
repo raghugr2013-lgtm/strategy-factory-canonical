@@ -138,10 +138,55 @@ async def delete_user(user_id: str):
 
 @router.get("/providers")
 async def list_providers():
+    """List available LLM providers via VIE.
+
+    v1.1.1: when VIE is unreachable (typical on cold-start or if the
+    optional VIE sidecar isn't running) we degrade gracefully to 200
+    with the local diagnostic snapshot from ``legacy.engines.llm_config``
+    so the frontend AI Workforce panel can still render per-provider
+    "configured" state from direct API-key env vars. This keeps the UI
+    honest without forcing a 503 spinner-of-death on the whole admin
+    page every time VIE hiccups.
+    """
     try:
-        return {"providers": await get_vie().providers()}
+        return {"providers": await get_vie().providers(), "source": "vie"}
     except VIEUnavailable as e:
-        raise HTTPException(status_code=503, detail=f"VIE unavailable: {e}")
+        # Fall back to the read-only local snapshot from llm_config.
+        try:
+            import sys, os
+            _legacy_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "legacy")
+            if _legacy_path not in sys.path:
+                sys.path.insert(0, _legacy_path)
+            from engines import llm_config as _lc  # type: ignore
+            env = _lc.validate_environment()
+            # Reshape to match the VIE /providers response contract.
+            providers_out = []
+            for name, info in (env.get("providers") or {}).items():
+                providers_out.append({
+                    "name": name,
+                    "available": bool(info.get("configured")),
+                    "model": info.get("model"),
+                    "key_env": info.get("key_env"),
+                    "key_present": bool(info.get("key_present")),
+                })
+            return {
+                "providers": providers_out,
+                "source": "fallback",
+                "vie_status": "unavailable",
+                "vie_error": str(e)[:200],
+                "hint": "VIE sidecar not reachable — showing env-var derived "
+                        "provider status. Start the VIE service to enable live "
+                        "provider probes.",
+            }
+        except Exception:  # noqa: BLE001
+            # Absolute last resort — genuinely empty response so the UI
+            # can still render its "no providers" state without crashing.
+            return {
+                "providers": [],
+                "source": "empty",
+                "vie_status": "unavailable",
+                "vie_error": str(e)[:200],
+            }
 
 
 class ProbeBody(BaseModel):

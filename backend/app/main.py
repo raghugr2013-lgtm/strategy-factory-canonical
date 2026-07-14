@@ -60,6 +60,28 @@ async def lifespan(_app: FastAPI):
         await seed_admin()
     except Exception:  # noqa: BLE001
         logger.exception("seed_admin failed")
+
+    # v1.1.1 — Automatic market-data maintenance resume-on-boot.
+    # If the persisted config in `auto_maintenance_config.enabled == True`
+    # (operator toggled it on before restart), transparently restart the
+    # APScheduler so BID/BI5 top-ups resume without a manual toggle.
+    # Never crashes boot — best-effort only. Requires ENABLE_LEGACY_ROUTERS.
+    if get_settings().enable_legacy_routers:
+        try:
+            import sys as _sys, os as _os
+            _lp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "legacy")
+            if _lp not in _sys.path:
+                _sys.path.insert(0, _lp)
+            from data_engine import auto_data_maintainer as _adm  # type: ignore
+            _cfg = await _adm._load_config()
+            if _cfg.get("enabled"):
+                await _adm.start_scheduler()
+                logger.info("auto-maintenance scheduler resumed on boot (config.enabled=True)")
+            else:
+                logger.info("auto-maintenance scheduler dormant on boot (config.enabled=False — toggle via /api/data/maintenance/toggle)")
+        except Exception:  # noqa: BLE001
+            logger.exception("auto-maintenance resume-on-boot failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 

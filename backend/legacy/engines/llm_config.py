@@ -193,15 +193,57 @@ def get_failover_chain_for_task(task: str) -> List[Dict[str, str]]:
 def validate_environment() -> Dict[str, object]:
     """Diagnostic summary — used by legacy `/api/llm/diagnostics`. Safe
     to call even when VIE is unreachable.
+
+    v1.1.1 additions (never removed the previous keys — additive only):
+      * ``primary_provider``  — resolved routing head for `default` task.
+        Prefer whatever VIE reports as available, else the first provider
+        whose direct API-key env var is set. ``None`` if nothing is
+        configured.
+      * ``providers`` (dict)  — {name: {configured: bool, model: str,
+        vie_available: bool, key_env: str}}. The frontend AI Workforce
+        panel keys off this so it can render the correct "no key
+        configured" vs "openai · gpt-4o-mini" state even when VIE itself
+        is offline.
+      * ``vie_reachable`` (bool) — did VIE answer /providers this cycle?
     """
     snap = _providers_snapshot()
+    vie_reachable = len(snap) > 0
+
+    # Build the per-provider dict. Prefer VIE snapshot info when present,
+    # fall back to env-var probing so the panel isn't blank when VIE
+    # is temporarily unreachable.
+    providers: Dict[str, Dict[str, Any]] = {}
+    snap_by_name = {p.get("name"): p for p in snap if p.get("name")}
+    for name, key_env in _PROVIDER_KEY_ENV.items():
+        via_vie = snap_by_name.get(name) or {}
+        key_present = bool(os.environ.get(key_env))
+        providers[name] = {
+            "configured": bool(via_vie.get("available") or key_present),
+            "model": via_vie.get("model") or _PROVIDER_DEFAULT_MODEL.get(name),
+            "vie_available": bool(via_vie.get("available")),
+            "key_env": key_env,
+            "key_present": key_present,
+        }
+
+    # Primary provider = first entry in the default-task chain that is
+    # actually configured. VIE-reported availability wins over key_present.
+    primary_provider: Optional[str] = None
+    for cand in _TASK_PREFERENCE.get("default", []):
+        info = providers.get(cand) or {}
+        if info.get("configured"):
+            primary_provider = cand
+            break
+
     return {
         "flag_enabled": _flag("LLM_GENERATOR_ENABLED", True),
         "vie_url": _vie_url(),
+        "vie_reachable": vie_reachable,
         "providers_total": len(snap),
         "providers_available": len([p for p in snap if p.get("available")]),
         "available": [p["name"] for p in snap if p.get("available")],
         "task_preference": _TASK_PREFERENCE,
+        "primary_provider": primary_provider,
+        "providers": providers,
     }
 
 
