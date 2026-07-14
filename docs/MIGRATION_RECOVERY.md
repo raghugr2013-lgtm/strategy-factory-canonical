@@ -2,7 +2,12 @@
 
 **Purpose:** Move historical strategy data (Strategy Library, Explorer rollup, lifecycle & performance history) from the temporary `strategy_factory_recovery` database into the live `strategy_factory_v1` database on the production VPS.
 
-**Author-signed properties of the migration script (`scripts/migrate_strategy_recovery.py`):**
+**Where the script lives:**
+- In the repository: `backend/scripts/migrate_strategy_recovery.py`
+- Inside the `factory-backend` container: `/app/scripts/migrate_strategy_recovery.py`
+  (the `backend/` prefix disappears because `backend/Dockerfile` uses `WORKDIR /app` + `COPY . .` from `context: ../../backend`).
+
+**Author-signed properties of the migration script (`backend/scripts/migrate_strategy_recovery.py`):**
 - Read-only on the source — the recovery DB is left untouched as a rollback copy.
 - Idempotent — safe to re-run any number of times (`ReplaceOne(upsert=True)` keyed by original `_id`).
 - Preserves document IDs and every field.
@@ -36,25 +41,22 @@ To migrate anything else from the recovery snapshot, pass `--include COLLECTION_
 # ssh into the box
 ssh coinnike-vps
 
-# Get a shell inside factory-backend
-docker exec -it factory-backend bash
-
-# Sanity: confirm both DBs are reachable
-python3 -c "
+# Sanity: confirm both DBs are reachable from inside the container
+docker exec factory-backend python3 -c "
 from pymongo import MongoClient; import os
 c = MongoClient(os.environ['MONGO_URL'])
 print('recovery:', c['strategy_factory_recovery'].command('dbstats')['collections'], 'collections')
 print('v1      :', c['strategy_factory_v1'].command('dbstats')['collections'], 'collections')
 "
+
+# Sanity: confirm the migration script is present in the image
+docker exec factory-backend ls -l /app/scripts/migrate_strategy_recovery.py
 ```
 
 ## Step 2 — Discover what's in the recovery DB
 
 ```bash
-python3 scripts/migrate_strategy_recovery.py \
-    --source strategy_factory_recovery \
-    --target strategy_factory_v1 \
-    --discover
+docker exec factory-backend python3 scripts/migrate_strategy_recovery.py --discover
 ```
 
 Expected output (production numbers you already validated):
@@ -74,22 +76,16 @@ If any additional `strategy_*` collection appears with `(NOT in default whitelis
 Prints the plan, per-collection counts, and every index it would rebuild. Writes nothing.
 
 ```bash
-python3 scripts/migrate_strategy_recovery.py \
-    --source strategy_factory_recovery \
-    --target strategy_factory_v1 \
-    --dry-run
+docker exec factory-backend python3 scripts/migrate_strategy_recovery.py --dry-run
 ```
 
 ## Step 4 — Real migration
 
 ```bash
-python3 scripts/migrate_strategy_recovery.py \
-    --source strategy_factory_recovery \
-    --target strategy_factory_v1
-# → interactive prompt "Proceed? [y/N]"
+docker exec factory-backend python3 scripts/migrate_strategy_recovery.py --yes
 ```
 
-To run non-interactively (e.g. from a deploy pipeline), add `--yes`.
+(Omit `--yes` if you want the interactive `Proceed? [y/N]` prompt — it requires an interactive TTY, so add `-it` to the `docker exec` in that case.)
 
 Expected result:
 
@@ -135,10 +131,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ## Step 6 — Post-migration verify-only sweep (safe, read-only)
 
 ```bash
-python3 scripts/migrate_strategy_recovery.py \
-    --source strategy_factory_recovery \
-    --target strategy_factory_v1 \
-    --verify-only
+docker exec factory-backend python3 scripts/migrate_strategy_recovery.py --verify-only
 ```
 
 Exit code 0 = target counts ≥ source counts across all whitelisted collections.
@@ -202,8 +195,8 @@ Confirmed by the integration test at `scripts/test_migrate_strategy_recovery.py`
 
 ## Files
 
-| Path | Purpose |
-|---|---|
-| `scripts/migrate_strategy_recovery.py` | The migration script itself (CLI + idempotent bulk-upsert). |
-| `scripts/test_migrate_strategy_recovery.py` | Integration test proving all six safety properties (read-only source, idempotence, ID preservation, index rebuild, unrelated collection safety, verify-only). Runs against local MongoDB. |
-| `docs/MIGRATION_RECOVERY.md` | This runbook. |
+| Path (repo)                                           | Path (in container)                     | Purpose |
+|---|---|---|
+| `backend/scripts/migrate_strategy_recovery.py`        | `/app/scripts/migrate_strategy_recovery.py` | The migration script itself (CLI + idempotent bulk-upsert). |
+| `backend/scripts/test_migrate_strategy_recovery.py`   | `/app/scripts/test_migrate_strategy_recovery.py` | Integration test proving all six safety properties (read-only source, idempotence, ID preservation, index rebuild, unrelated collection safety, verify-only). Runs against local MongoDB. |
+| `docs/MIGRATION_RECOVERY.md`                          | —                                       | This runbook. |

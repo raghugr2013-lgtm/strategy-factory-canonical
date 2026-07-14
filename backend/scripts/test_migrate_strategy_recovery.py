@@ -20,7 +20,7 @@ from pymongo import MongoClient
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 SRC_DB = "strategy_factory_recovery_test"
 TGT_DB = "strategy_factory_v1_test"
-SCRIPT = "/app/scripts/migrate_strategy_recovery.py"
+SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "migrate_strategy_recovery.py")
 
 
 def seed(client: MongoClient) -> dict:

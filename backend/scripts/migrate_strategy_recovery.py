@@ -32,32 +32,39 @@ Design contract
 
 Usage
 -----
+Inside the ``factory-backend`` container the file lives at
+``/app/scripts/migrate_strategy_recovery.py`` (the ``backend/`` prefix
+disappears because the Docker build context is the backend directory
+itself — see ``backend/Dockerfile``: ``COPY . .`` into ``WORKDIR /app``).
+
 ::
 
     # Dry-run against production (READS ONLY, prints a plan):
-    python scripts/migrate_strategy_recovery.py \\
-        --mongo mongodb://strategy_factory:XYZ@mongo:27017 \\
+    docker exec -it factory-backend \\
+        python3 scripts/migrate_strategy_recovery.py \\
         --source strategy_factory_recovery \\
         --target strategy_factory_v1 \\
         --dry-run
 
     # Real migration:
-    python scripts/migrate_strategy_recovery.py \\
-        --mongo mongodb://strategy_factory:XYZ@mongo:27017 \\
+    docker exec -it factory-backend \\
+        python3 scripts/migrate_strategy_recovery.py \\
         --source strategy_factory_recovery \\
-        --target strategy_factory_v1
+        --target strategy_factory_v1 \\
+        --yes
 
     # Discover-only (list all strategy_* collections in the source):
-    python scripts/migrate_strategy_recovery.py \\
-        --mongo mongodb://strategy_factory:XYZ@mongo:27017 \\
-        --source strategy_factory_recovery --target strategy_factory_v1 \\
-        --discover
+    docker exec -it factory-backend \\
+        python3 scripts/migrate_strategy_recovery.py --discover
 
-    # Verify-only (compare counts after migration, no writes):
-    python scripts/migrate_strategy_recovery.py \\
-        --mongo mongodb://strategy_factory:XYZ@mongo:27017 \\
-        --source strategy_factory_recovery --target strategy_factory_v1 \\
-        --verify-only
+    # Verify-only (compare counts, no writes):
+    docker exec -it factory-backend \\
+        python3 scripts/migrate_strategy_recovery.py --verify-only
+
+The container already has ``MONGO_URL`` in its environment (loaded from
+``.env``), so no ``--mongo`` flag is required inside the container. Pass
+``--mongo`` only when running the script from a host without that env
+var (e.g. on a workstation).
 
 Exit codes
 ----------
@@ -65,11 +72,6 @@ Exit codes
     1  argument error / configuration failure
     2  connection error
     3  data integrity mismatch after migration (verification failed)
-
-The script is safe to run inside the ``factory-backend`` container:
-
-    docker exec -it factory-backend \\
-        python scripts/migrate_strategy_recovery.py --dry-run
 """
 from __future__ import annotations
 
