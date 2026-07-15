@@ -102,6 +102,19 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("auto-maintenance resume-on-boot failed (non-fatal)")
 
+    # v1.2.0-alpha2 — bootstrap outcome_events indexes so the ledger
+    # is ready to accept writes from the pipeline decorators.
+    if get_settings().enable_legacy_routers:
+        try:
+            import sys as _sys, os as _os
+            _lp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "legacy")
+            if _lp not in _sys.path:
+                _sys.path.insert(0, _lp)
+            from engines.learning import ensure_indexes as _learning_ensure_indexes
+            await _learning_ensure_indexes()
+        except Exception:  # noqa: BLE001
+            logger.exception("learning.ensure_indexes failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -153,6 +166,8 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "execution", "factory_supervisor", "gem_factory", "governance",
         "incremental_run_alias", "ingestion",
         "knowledge",     # v1.1.1 AI Learning Layer — /api/knowledge/*
+        "learning",      # v1.2.0-alpha2 outcome-event ledger — /api/learning/*
+        "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",
         "optimization", "orchestrator", "orchestrator_heartbeat",

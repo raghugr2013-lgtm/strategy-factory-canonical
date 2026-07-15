@@ -106,7 +106,19 @@ async def _single_attempt(
 ) -> Optional[str]:
     """One HTTP call to VIE /generate. Raises on transport error; returns
     None on provider-level failure (no available provider, upstream 5xx).
+
+    v1.2.0-alpha2: every attempt is metered via ai_workforce.telemetry
+    (rolling ring buffer + circuit-breaker per provider). Failures are
+    still returned as None to keep the retry loop in run_chat unchanged.
     """
+    import time as _t
+    _tel = None
+    try:
+        from engines.ai_workforce import get_telemetry  # local import — never crash on missing
+        _tel = get_telemetry()
+    except Exception:  # noqa: BLE001
+        _tel = None
+
     payload: Dict[str, Any] = {
         "prompt": prompt,
         "system_message": system_message,
@@ -115,23 +127,68 @@ async def _single_attempt(
     }
     url = _vie_url() + "/generate"
     timeout = httpx.Timeout(call_timeout_sec(), connect=5.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        r = await client.post(url, json=payload)
-    if r.status_code == 503:
-        # "no providers available" or "provider unavailable"
-        _STATS["fail_provider"] += 1
-        logger.info("VIE 503 for task=%s: %s", task, r.text[:200])
-        return None
-    if r.status_code >= 400:
-        _STATS["fail_provider"] += 1
-        logger.warning("VIE %d for task=%s: %s", r.status_code, task, r.text[:200])
-        return None
-    data = r.json()
-    out = (data.get("output") or "").strip()
-    if not out:
-        _STATS["fail_provider"] += 1
-        return None
-    return out
+    t0 = _t.time()
+    provider = model = ""
+    r_status: Optional[int] = None
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.post(url, json=payload)
+        r_status = r.status_code
+        if r.status_code == 503:
+            _STATS["fail_provider"] += 1
+            if _tel:
+                _tel.record(provider="vie", model="", task=task, ok=False,
+                            latency_ms=int((_t.time() - t0) * 1000),
+                            http_status=503, error_class="upstream_503",
+                            error=r.text[:200])
+            logger.info("VIE 503 for task=%s: %s", task, r.text[:200])
+            return None
+        if r.status_code >= 400:
+            _STATS["fail_provider"] += 1
+            if _tel:
+                _tel.record(provider="vie", model="", task=task, ok=False,
+                            latency_ms=int((_t.time() - t0) * 1000),
+                            http_status=r.status_code,
+                            error_class=f"upstream_{r.status_code}",
+                            error=r.text[:200])
+            logger.warning("VIE %d for task=%s: %s", r.status_code, task, r.text[:200])
+            return None
+        data = r.json()
+        provider = str(data.get("provider") or "unknown")
+        model    = str(data.get("model") or "unknown")
+        out = (data.get("output") or "").strip()
+        usage = data.get("usage") or {}
+        if not out:
+            _STATS["fail_provider"] += 1
+            if _tel:
+                _tel.record(provider=provider or "vie", model=model, task=task, ok=False,
+                            latency_ms=int((_t.time() - t0) * 1000),
+                            http_status=r.status_code,
+                            prompt_tokens=usage.get("prompt_tokens"),
+                            completion_tokens=usage.get("completion_tokens"),
+                            error_class="empty_output",
+                            error="VIE returned empty output")
+            return None
+        if _tel:
+            _tel.record(provider=provider, model=model, task=task, ok=True,
+                        latency_ms=int((_t.time() - t0) * 1000),
+                        http_status=r.status_code,
+                        prompt_tokens=usage.get("prompt_tokens"),
+                        completion_tokens=usage.get("completion_tokens"),
+                        cost_usd=data.get("estimated_cost_usd"))
+        return out
+    except httpx.TimeoutException as e:
+        if _tel:
+            _tel.record(provider="vie", model="", task=task, ok=False,
+                        latency_ms=int((_t.time() - t0) * 1000),
+                        error_class="timeout", error=str(e)[:200])
+        raise
+    except (httpx.ConnectError, httpx.NetworkError) as e:
+        if _tel:
+            _tel.record(provider="vie", model="", task=task, ok=False,
+                        latency_ms=int((_t.time() - t0) * 1000),
+                        error_class="network", error=str(e)[:200])
+        raise
 
 
 async def run_chat(
