@@ -67,6 +67,26 @@ async def lifespan(_app: FastAPI):
     # APScheduler so BID/BI5 top-ups resume without a manual toggle.
     # Never crashes boot — best-effort only. Requires ENABLE_LEGACY_ROUTERS.
     if get_settings().enable_legacy_routers:
+        # v1.1.1a — one-shot cleanup of stale `bi5_runner_error` rows that
+        # were emitted before commit 976e04e (BI5SymbolSpec dataclass fix,
+        # 2026-07-14T15:24Z). Their error text is "'dict' object has no
+        # attribute 'symbol'" and they leak into the operator UI. Any row
+        # with that string is safe to drop — the next scheduled BI5 tick
+        # rewrites the correct state for every symbol. Non-fatal; runs
+        # once per boot; matches by error substring so re-run is a no-op.
+        try:
+            from app.db.mongo import get_db as _get_db
+            _db = _get_db()
+            _res = await _db.auto_maintenance_status.delete_many({
+                "bi5_runner_error": {"$regex": "'dict' object has no attribute 'symbol'"}
+            })
+            if _res.deleted_count:
+                logger.info(
+                    "auto-maintenance: purged %d stale pre-fix BI5 error rows",
+                    _res.deleted_count,
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception("auto-maintenance stale BI5 cleanup failed (non-fatal)")
         try:
             import sys as _sys, os as _os
             _lp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "legacy")
