@@ -71,30 +71,42 @@ async def stamp_lineage(
     if extra:                             base["extra"] = extra
 
     set_fields = {f"lineage.{k}": v for k, v in base.items()}
-    # first_seen_at only set on first stamp
-    set_on_insert = {"lineage.first_seen_at": now}
+    # first_seen_at must persist only on the FIRST stamp — use an
+    # aggregation-pipeline update with $ifNull so subsequent stamps
+    # never overwrite it. Combined with the plain $set fields into a
+    # single pipeline stage.
+    pipeline_set: Dict[str, Any] = dict(set_fields)
+    pipeline_set["lineage.first_seen_at"] = {
+        "$ifNull": ["$lineage.first_seen_at", now]
+    }
     add_stage = {"lineage.stage_chain": stage} if stage else None
 
     db = get_db()
     total = {"strategies": 0, "strategy_library": 0, "strategy_library_archive": 0}
     for coll in _TARGET_COLLECTIONS:
         try:
-            update: Dict[str, Any] = {
-                "$set": set_fields,
-                "$setOnInsert": set_on_insert,
-            }
-            if add_stage:
-                update["$addToSet"] = add_stage
-            # Match by any of the common id fields.
+            # 1) Aggregation pipeline update — sets everything atomically
+            #    while preserving first_seen_at across re-stamps.
             res = await db[coll].update_many(
                 {"$or": [
                     {"strategy_hash": strategy_hash},
                     {"fingerprint": strategy_hash},
                     {"_id": strategy_hash},
                 ]},
-                update,
+                [{"$set": pipeline_set}],
             )
             total[coll] = int(res.modified_count or 0)
+            # 2) Append to stage_chain via a normal update (pipeline
+            #    updates don't support $addToSet in the same call).
+            if add_stage:
+                await db[coll].update_many(
+                    {"$or": [
+                        {"strategy_hash": strategy_hash},
+                        {"fingerprint": strategy_hash},
+                        {"_id": strategy_hash},
+                    ]},
+                    {"$addToSet": add_stage},
+                )
         except Exception:  # noqa: BLE001
             logger.exception("stamp_lineage: %s update failed", coll)
 
