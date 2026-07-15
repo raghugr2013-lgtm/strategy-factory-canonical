@@ -23,6 +23,7 @@ work without modification.
 from __future__ import annotations
 
 import logging
+import os
 import random
 import re
 import threading
@@ -741,9 +742,38 @@ async def _try_llm_generation(
     user_prompt = _format_user_prompt(pair, timeframe, cfg)
     indicators: List[str] = list(cfg.get("indicators") or [])  # type: ignore[arg-type]
 
+    # v1.1.1 AI Learning Layer — inject prior-knowledge block into the
+    # system prompt so the LLM can inherit indicators/risk shapes from
+    # historical winners and avoid known-loser shapes. Toggled by
+    # KNOWLEDGE_INJECTION env flag (default OFF). Any retriever error
+    # is swallowed — generation falls back to the vanilla system prompt.
+    system_prompt = SYSTEM_PROMPT
+    if os.environ.get("KNOWLEDGE_INJECTION", "").lower() in ("true", "1", "yes", "on"):
+        try:
+            from engines.knowledge import retrieve, build_block
+            ctx = await retrieve(
+                pair=pair, timeframe=timeframe,
+                style=str(cfg.get("strategy_type") or ""),
+                strategy_type=str(cfg.get("strategy_type") or ""),
+                indicators=indicators,
+                top_k=6, include_failures=True,
+            )
+            block = build_block(ctx)
+            if block and block != "(no prior knowledge yet — generate from scratch)":
+                system_prompt = (
+                    SYSTEM_PROMPT
+                    + "\n\n## Prior knowledge\n"
+                    + block
+                    + "\n\nUse the WINNERS as concrete templates when helpful; "
+                    "do NOT copy the LOSERS' shapes."
+                )
+                _LLM_STATS["knowledge_injected"] = _LLM_STATS.get("knowledge_injected", 0) + 1
+        except Exception as e:  # noqa: BLE001 — never let retrieval crash generation
+            logger.debug("knowledge retrieval failed (non-fatal): %s", e)
+
     try:
         from engines.llm_runner import run_chat as _run_chat
-        text = await _run_chat("strategy", user_prompt, system_message=SYSTEM_PROMPT)
+        text = await _run_chat("strategy", user_prompt, system_message=system_prompt)
         if text is None:
             logger.warning(
                 "LLM strategy generation: VIE returned no text — falling back to offline"

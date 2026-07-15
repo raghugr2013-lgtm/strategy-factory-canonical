@@ -30,11 +30,41 @@ MAX_FILES_PER_REPO = 3
 TRADINGVIEW_URLS_FILE = Path(__file__).parent / "tradingview_urls.json"
 
 # Built-in GitHub seed queries. Used alongside any user-supplied ones.
-DEFAULT_GITHUB_QUERIES: List[str] = [
-    "pine script strategy forex",
-    "mt5 expert advisor forex",
-    "forex trading strategy python",
+# v1.1.1: replaced 3 broad noise-heavy queries with a curated high-signal
+# set from `curated_sources.HIGH_SIGNAL_QUERIES` (language / filename /
+# stars pre-filters), and additionally crawl a hand-picked
+# `CURATED_REPOS` allow-list unconditionally. Rationale + version log
+# lives in `curated_sources.py`. Env-var overrides:
+#     INGESTION_GITHUB_QUERIES  — comma-separated queries (replace)
+#     INGESTION_GITHUB_REPOS    — comma-separated owner/repo entries (append)
+try:
+    from .curated_sources import HIGH_SIGNAL_QUERIES, CURATED_REPOS
+except Exception:  # noqa: BLE001 — never crash import if curated file missing
+    HIGH_SIGNAL_QUERIES = []
+    CURATED_REPOS = []
+
+DEFAULT_GITHUB_QUERIES: List[str] = list(HIGH_SIGNAL_QUERIES) or [
+    # Emergency fallback if the curated file was somehow removed —
+    # still narrower than the pre-1.1.1 defaults.
+    'language:pinescript "strategy(" stars:>50',
+    'filename:strategy.py "backtrader" stars:>50',
+    'topic:algorithmic-trading stars:>100',
 ]
+
+
+def _env_override_queries() -> Optional[List[str]]:
+    raw = os.environ.get("INGESTION_GITHUB_QUERIES", "").strip()
+    if not raw:
+        return None
+    parts = [q.strip() for q in raw.split(",") if q.strip()]
+    return parts or None
+
+
+def _env_extra_repos() -> List[str]:
+    raw = os.environ.get("INGESTION_GITHUB_REPOS", "").strip()
+    if not raw:
+        return []
+    return [r.strip() for r in raw.split(",") if r.strip() and "/" in r]
 
 
 # ── GitHub ───────────────────────────────────────────────────────────
@@ -132,12 +162,66 @@ async def collect_from_github(
 ) -> List[Dict[str, object]]:
     """Return up to `max_total` raw code snippets from matching repos.
 
+    v1.1.1: two-track crawl.
+      * Track A — curated allow-list (`curated_sources.CURATED_REPOS`
+        + env-var extras). No search step; every entry is crawled.
+      * Track B — high-signal search queries (defaults from
+        `curated_sources.HIGH_SIGNAL_QUERIES`; env-var override wins).
+
     Each entry: {source: 'github', name, raw_code, url, repo, path, ext}.
     """
-    queries = list(queries or DEFAULT_GITHUB_QUERIES)
+    # Env-var overrides beat call-site defaults which beat file defaults.
+    env_qs = _env_override_queries()
+    queries = list(queries or env_qs or DEFAULT_GITHUB_QUERIES)
+    curated: List[str] = [f"{o}/{r}" for o, r, _ in CURATED_REPOS] + _env_extra_repos()
+
     out: List[Dict[str, object]] = []
     seen_urls: set = set()
 
+    async def _crawl_repo(full: str, default_branch: str = "main") -> None:
+        if len(out) >= max_total:
+            return
+        tree = await _github_list_files(full)
+        picked = 0
+        for node in tree:
+            if picked >= MAX_FILES_PER_REPO or len(out) >= max_total:
+                break
+            if node.get("type") != "blob":
+                continue
+            path = node.get("path", "")
+            lower = path.lower()
+            if not lower.endswith(ALLOWED_EXTENSIONS):
+                continue
+            size = node.get("size") or 0
+            if size <= 0 or size > MAX_FILE_BYTES:
+                continue
+            blob_url = node.get("url")
+            if not blob_url or blob_url in seen_urls:
+                continue
+            code = await _github_fetch_blob(blob_url)
+            if not code or len(code) < 80:
+                continue
+            seen_urls.add(blob_url)
+            ext = "." + lower.rsplit(".", 1)[-1] if "." in lower else ""
+            out.append({
+                "source": "github",
+                "name": f"{full}/{path}",
+                "raw_code": code,
+                "url": f"https://github.com/{full}/blob/{default_branch}/{path}",
+                "repo": full,
+                "path": path,
+                "ext": ext,
+            })
+            picked += 1
+
+    # Track A — curated allow-list first, so the operator's known-good
+    # sources are guaranteed to be represented even under low `max_total`.
+    for full in curated:
+        if len(out) >= max_total:
+            break
+        await _crawl_repo(full)
+
+    # Track B — high-signal search queries.
     for q in queries:
         if len(out) >= max_total:
             break
@@ -146,40 +230,10 @@ async def collect_from_github(
             if len(out) >= max_total:
                 break
             full = repo.get("full_name")
-            if not full:
-                continue
-            tree = await _github_list_files(full)
-            picked = 0
-            for node in tree:
-                if picked >= MAX_FILES_PER_REPO or len(out) >= max_total:
-                    break
-                if node.get("type") != "blob":
-                    continue
-                path = node.get("path", "")
-                lower = path.lower()
-                if not lower.endswith(ALLOWED_EXTENSIONS):
-                    continue
-                size = node.get("size") or 0
-                if size <= 0 or size > MAX_FILE_BYTES:
-                    continue
-                blob_url = node.get("url")
-                if not blob_url or blob_url in seen_urls:
-                    continue
-                code = await _github_fetch_blob(blob_url)
-                if not code or len(code) < 80:
-                    continue
-                seen_urls.add(blob_url)
-                ext = "." + lower.rsplit(".", 1)[-1] if "." in lower else ""
-                out.append({
-                    "source": "github",
-                    "name": f"{full}/{path}",
-                    "raw_code": code,
-                    "url": f"https://github.com/{full}/blob/{repo.get('default_branch', 'main')}/{path}",
-                    "repo": full,
-                    "path": path,
-                    "ext": ext,
-                })
-                picked += 1
+            if not full or full in {c for c in curated}:
+                continue  # skip duplicates already crawled in Track A
+            await _crawl_repo(full, default_branch=repo.get("default_branch", "main"))
+
     return out
 
 

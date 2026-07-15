@@ -132,6 +132,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "deployment", "diag_bi5_health",
         "execution", "factory_supervisor", "gem_factory", "governance",
         "incremental_run_alias", "ingestion",
+        "knowledge",     # v1.1.1 AI Learning Layer — /api/knowledge/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",
         "optimization", "orchestrator", "orchestrator_heartbeat",
