@@ -168,6 +168,20 @@ async def retrieve(
     ranked = ranked[: max(top_k * 3, 20)]
     ranked = await _maybe_tfidf_rerank(ranked, want, top_k)
 
+    # v1.2.0-alpha2 Phase B — outcome-conditioned rerank. Adds a boost
+    # derived from the outcome_events ledger (validate/repair/optimize/
+    # operator ratings). Never raises: any failure returns the metadata
+    # ranking untouched.
+    try:
+        from .outcome_conditioning import apply_boosts, boosts_for
+        hashes = [str(r.get("strategy_hash") or "") for _, r in ranked]
+        hashes = [h for h in hashes if h]
+        boosts = await boosts_for(hashes)
+        if boosts:
+            ranked = apply_boosts(ranked, boosts)
+    except Exception:  # noqa: BLE001
+        logger.exception("outcome-conditioned rerank failed (non-fatal)")
+
     winners:  List[Dict[str, Any]] = []
     losers:   List[Dict[str, Any]] = []
     neutral:  List[Dict[str, Any]] = []

@@ -199,7 +199,30 @@ async def run_chat(
     """Route an LLM call through VIE. Returns the model output text or
     None on failure. Retries with exponential backoff when
     LLM_RETRY_ENABLED is truthy.
+
+    v1.2.0-alpha2 Phase B — when `AI_WORKFORCE_FAILOVER=true` this
+    delegates to the AI Workforce router (`ai_workforce.router.route_call`)
+    which applies the circuit-breaker + provider-quality preference
+    chain. Otherwise (default) executes the legacy retry loop below.
     """
+    # Phase B delegation — opt-in via env flag. Falls back to legacy
+    # path on any router-import failure so callers are never blocked.
+    try:
+        from engines.ai_workforce.router import is_router_enabled, route_call
+        if is_router_enabled():
+            _STATS["calls"] += 1
+            text, _prov, _model, _attempts = await route_call(
+                task, prompt, system_message=system_message,
+            )
+            if text:
+                _STATS["ok"] += 1
+                _STATS["last_ok_ts"] = int(time.time())
+            else:
+                _STATS["last_fail_ts"] = int(time.time())
+            return text
+    except Exception:  # noqa: BLE001
+        logger.exception("AI Workforce delegation failed — falling back to legacy path")
+
     _STATS["calls"] += 1
 
     max_attempts = retry_max_attempts() if is_retry_enabled() else 1

@@ -115,6 +115,20 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("learning.ensure_indexes failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase B — auto-start the continuous learning
+        # scheduler when `LEARNING_SCHEDULER_ENABLED=true`. Any failure
+        # here is non-fatal: manual /api/learning/scheduler/start is
+        # always available as a recovery path.
+        try:
+            from engines.learning import config as _lcfg, start_scheduler as _learning_start_scheduler
+            if _lcfg.scheduler_enabled():
+                _sched_info = await _learning_start_scheduler()
+                logger.info("learning scheduler auto-started on boot: %s", _sched_info)
+            else:
+                logger.info("learning scheduler dormant on boot (LEARNING_SCHEDULER_ENABLED=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("learning scheduler auto-start failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 

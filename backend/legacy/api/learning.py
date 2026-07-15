@@ -1,27 +1,54 @@
-"""v1.2.0-alpha2 — /api/learning/* endpoints.
+"""v1.2.0-alpha2 — /api/learning/* endpoints (Phase A + Phase B).
 
-Exposes the outcome-event ledger + genealogy walks. Every strategy's
-full lineage is reachable via `GET /api/learning/lineage/{hash}`.
+Phase A endpoints (unchanged):
+    POST /learning/runs                 — mint a fresh learning_run_id
+    POST /learning/events               — write a manual outcome event
+    POST /learning/operator-decision    — approve/reject an outcome
+    GET  /learning/events               — list stored events
+    GET  /learning/runs                 — list rollup of runs
+    GET  /learning/lineage/{hash}       — walk a hash's genealogy
+
+Phase B endpoints (new — self-improving learning engine):
+    POST /learning/cycles               — kick off a continuous learning cycle
+    GET  /learning/cycles/{run_id}      — get status + stage stream
+    GET  /learning/cycles               — list active + recent cycles
+    GET  /learning/metrics              — supervisor counters + pass rates
+    GET  /learning/config               — effective env-driven thresholds
+    POST /learning/scheduler/start      — start the periodic scheduler
+    POST /learning/scheduler/stop       — stop the periodic scheduler
+    GET  /learning/scheduler/status     — scheduler state
+    GET  /learning/lineage/detail/{h}   — Phase B enriched lineage
 """
 from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from auth_utils import require_admin
 from engines.db import get_db
 from engines.learning import (
     COLL,
-    new_run_id,
+    LearningSeed,
+    config as lcfg,
+    counters_snapshot,
     emit,
     emit_operator_decision,
+    get_lineage,
+    get_run,
+    new_run_id,
+    run_learning_cycle,
+    scheduler_status,
+    start_scheduler,
+    stop_scheduler,
     VALID_STAGES,
 )
 
 router = APIRouter(prefix="/learning", tags=["learning"])
 
 
+# ── Phase A models ───────────────────────────────────────────────
 class ManualEventRequest(BaseModel):
     learning_run_id: Optional[str] = None
     stage: str = Field(..., pattern="|".join(VALID_STAGES))
@@ -41,9 +68,17 @@ class OperatorDecisionRequest(BaseModel):
     comment: Optional[str] = ""
 
 
+class CycleRequest(BaseModel):
+    pair: str = "EURUSD"
+    timeframe: str = "H1"
+    style: str = "trend-following"
+    count: int = 1
+    max_duration_s: float = 120.0
+
+
+# ── Phase A endpoints ────────────────────────────────────────────
 @router.post("/runs")
 async def start_run():
-    """Return a fresh learning_run_id for the caller to propagate."""
     return {"learning_run_id": new_run_id()}
 
 
@@ -60,11 +95,8 @@ async def write_event(req: ManualEventRequest):
         provider=req.provider,
         model=req.model,
     )
-    return {
-        "ok": inserted_id is not None,
-        "event_id": inserted_id,
-        "learning_run_id": run_id,
-    }
+    return {"ok": inserted_id is not None, "event_id": inserted_id,
+            "learning_run_id": run_id}
 
 
 @router.post("/operator-decision")
@@ -125,13 +157,10 @@ async def list_runs(limit: int = Query(20, ge=1, le=200)):
 
 @router.get("/lineage/{strategy_hash}")
 async def lineage(strategy_hash: str):
-    """Full genealogy: every outcome_events row for this hash + all
-    ancestor hashes reached by walking `parent_hash` links.
-    """
     db = get_db()
     chain: List[str] = [strategy_hash]
     ancestor = strategy_hash
-    for _ in range(20):  # cap to prevent cycles
+    for _ in range(20):
         row = await db[COLL].find_one(
             {"strategy_hash": ancestor, "parent_hash": {"$ne": None}},
             {"parent_hash": 1, "_id": 0},
@@ -140,7 +169,7 @@ async def lineage(strategy_hash: str):
         if not row or not row.get("parent_hash"):
             break
         if row["parent_hash"] in chain:
-            break  # cycle guard
+            break
         chain.append(row["parent_hash"])
         ancestor = row["parent_hash"]
     events = []
@@ -148,3 +177,108 @@ async def lineage(strategy_hash: str):
         e["_id"] = str(e["_id"])
         events.append(e)
     return {"strategy_hash": strategy_hash, "chain": chain, "events": events}
+
+
+# ── Phase B endpoints ────────────────────────────────────────────
+@router.post("/cycles")
+async def start_cycle(req: CycleRequest, _u=Depends(require_admin)):
+    """Kick off ONE continuous learning cycle. Runs to completion in
+    the request context and returns the final LearningRun record.
+    """
+    seed = LearningSeed(
+        pair=req.pair, timeframe=req.timeframe,
+        style=req.style, count=req.count,
+        max_duration_s=req.max_duration_s,
+    )
+    run = await run_learning_cycle(seed)
+    return run.to_dict()
+
+
+@router.get("/cycles")
+async def list_cycles():
+    """List active + recent cycles held in the supervisor's in-process
+    buffer. Cheap — no DB read."""
+    return counters_snapshot()
+
+
+@router.get("/cycles/{run_id}")
+async def get_cycle(run_id: str):
+    row = get_run(run_id)
+    if not row:
+        raise HTTPException(status_code=404, detail={"code": "cycle_not_found",
+                                                     "run_id": run_id})
+    return row
+
+
+@router.get("/metrics")
+async def learning_metrics():
+    """Supervisor counters + rolled-up pass rates from outcome_events.
+    Provides the future dashboard everything it needs in one call.
+    """
+    snap = counters_snapshot()
+    counters = snap.get("counters", {})
+    db = get_db()
+    pass_rates: dict = {}
+    try:
+        pipeline = [
+            {"$group": {
+                "_id": {"stage": "$stage", "status": "$status"},
+                "n": {"$sum": 1},
+            }},
+        ]
+        per_stage: dict = {}
+        async for row in db[COLL].aggregate(pipeline):
+            rid = row["_id"] or {}
+            stage = rid.get("stage")
+            status = rid.get("status")
+            if not stage:
+                continue
+            rec = per_stage.setdefault(stage, {"pass": 0, "fail": 0,
+                                               "partial": 0, "skipped": 0})
+            rec[status] = rec.get(status, 0) + int(row.get("n", 0))
+        for stage, rec in per_stage.items():
+            total = sum(rec.values())
+            pass_rates[stage] = {
+                **rec,
+                "total": total,
+                "pass_rate": round(
+                    (rec.get("pass", 0) + 0.5 * rec.get("partial", 0)) / total,
+                    4,
+                ) if total else 0.0,
+            }
+    except Exception:
+        pass_rates = {"_error": "aggregation_failed"}
+    return {
+        "counters": counters,
+        "pass_rates": pass_rates,
+        "active_runs": len(snap.get("active_runs") or []),
+        "recent_runs": len(snap.get("recent_runs") or []),
+    }
+
+
+@router.get("/config")
+async def learning_config():
+    """Effective env-driven configuration. Read-only for now."""
+    return lcfg.snapshot()
+
+
+@router.post("/scheduler/start")
+async def scheduler_start(_u=Depends(require_admin)):
+    return await start_scheduler()
+
+
+@router.post("/scheduler/stop")
+async def scheduler_stop(_u=Depends(require_admin)):
+    return await stop_scheduler()
+
+
+@router.get("/scheduler/status")
+async def scheduler_state():
+    return scheduler_status()
+
+
+@router.get("/lineage/detail/{strategy_hash}")
+async def lineage_detail(strategy_hash: str):
+    """Phase B enriched lineage — reads the `lineage` sub-doc stamped on
+    the strategy collections + walks the parent chain."""
+    return await get_lineage(strategy_hash)
