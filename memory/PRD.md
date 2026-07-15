@@ -63,11 +63,41 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 - **P0 (done)**: Fix Phase-1 core `/api/strategies/{strategy_id}` shadow of Strategy Memory `/explorer`.
 - **P0 (done)**: Restore `dashboard_route` + `phase4_route` side-effect endpoints.
 - **P0 (done)**: Add `/api/auth/signup`.
+- **P0 (done)**: v1.2.0-alpha2 Phase A — outcome-event ledger, AI Workforce telemetry, design doc.
+- **P0 (done, 2026-02-15)**: v1.2.0-alpha2 Phase B — Continuous Learning Supervisor + Strategy Lineage + Outcome-conditioned Retrieval + AI Workforce Router. 29 Phase B tests + 32 Phase A tests + 35 baseline = **96/96 passing**. Router mount count unchanged at 92 (strictly additive).
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
+- **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
+- **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
+- **P1 (alpha3)**: Frontend Learning tab — event stream + lineage tree viewer.
 - **P2**: Delete stale `/app/backend/tests/backend_test.py` which uses obsolete admin password.
-- **P2**: Add pytest-based nightly regression run in CI targeting the same 35-test file.
+- **P2**: Add pytest-based nightly regression run in CI targeting the same test files.
 - **P3**: Consider a periodic cleanup job for `TEST_signup_*` users created by the compat test-suite.
 - **P3**: Frontend UI smoke test (Playwright) covering Dashboard → Explorer → Prop Firm → Challenge Firms → Library → Portfolio Builder → Trade Runner navigation with the seeded admin.
+
+## Phase B Files Added (2026-02-15)
+
+| File | Purpose |
+|---|---|
+| `backend/legacy/engines/learning/config.py` | Env-driven thresholds (PF/DD/trades/WR/scheduler/retrieval/workforce) |
+| `backend/legacy/engines/learning/supervisor.py` | Continuous Learning Supervisor + scheduler |
+| `backend/legacy/engines/learning/lineage.py` | Strategy-lineage stamper across `strategies`+`strategy_library`+`archive` |
+| `backend/legacy/engines/ai_workforce/router.py` | AI Workforce Router (opt-in failover) |
+| `backend/legacy/engines/ai_workforce/scorer.py` | Per-provider quality scorer (60s cache) |
+| `backend/legacy/engines/knowledge/outcome_conditioning.py` | Outcome-conditioned retrieval boost |
+| `backend/tests/test_v1_2_0_alpha2_phase_b.py` | 29 regression tests |
+
+## Phase B Files Modified (additive only)
+
+| File | Change |
+|---|---|
+| `backend/legacy/engines/learning/__init__.py` | Export new modules |
+| `backend/legacy/engines/ai_workforce/__init__.py` | Export router + scorer |
+| `backend/legacy/engines/knowledge/retriever.py` | Call `apply_boosts` after TF-IDF pass |
+| `backend/legacy/engines/llm_runner.py` | Delegate to router when `AI_WORKFORCE_FAILOVER=true` |
+| `backend/legacy/api/learning.py` | 9 new endpoints (cycles/metrics/config/scheduler/lineage-detail) |
+| `backend/legacy/api/ai_workforce.py` | 4 new endpoints (router-config/metrics/quality/route-test) |
+| `backend/app/main.py` | Auto-start scheduler on boot when env flag set |
+| `docs/V1.2.0_ALPHA2_DESIGN.md` | Section 10 — Phase B shipped |
 
 ## VPS Deployment Recovery Steps (for the user)
 
