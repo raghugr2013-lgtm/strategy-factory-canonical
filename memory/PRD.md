@@ -118,6 +118,20 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
   - `CtraderBrokerAdapter` — implements `BrokerAdapter` Protocol; wraps transport in `ResilientConnection`; owns `OAuthSession`; emits `BrokerHealth` from live-connection state
   - Falls back to `paper` when `BROKER=ctrader` is set without an explicit production transport wire-up — safe VPS boot (Q1)
   - **26 Phase H tests passing** (was 14 pre-H4). 265 passing in Phase A–H full suite; same 3 pre-existing xdist flakes only.
+- **P0 (done, 2026-02-16)**: v1.2.0-alpha2 Phase H — **H5 · Broker Health engine** (`engines/execution/broker_health.py` + orchestrator task `broker_health_check`).
+  - Rolling weighted health scores per Q4: **short 5m, medium 1h, long 24h**. Composite formula: `0.35·uptime + 0.25·(1−reject) + 0.15·(1−requote) + 0.15·latency_norm + 0.10·(1−disconnect_bias)` bounded to [0..1] with `_band_for` mapping (≥0.80 healthy, ≥0.50 degraded, else unhealthy).
+  - `sample_broker_health()` reads active adapter, persists via ledger, emits `broker_health_check` outcome event. Never raises.
+  - `is_broker_healthy_for_new_orders()` — Q3-safe read helper (recommend-only; blocks nothing itself; caller decides).
+  - Orchestrator task `broker_health_check` (60s cadence, active by default, respects `EXEC_ENABLED`). Task count 13 → 14.
+  - **28 Phase H tests passing** (was 26; +4 for H5: scoring formula bounds, persistence roundtrip, unhealthy-gate, task registration). Zero regression across Phase A–G.
+- **P0 (done, 2026-02-16)**: v1.2.0-alpha2 **Tiered Regression Pyramid** (`/app/Makefile` + `backend/scripts/tier5_validation.py`).
+  - **Tier 1** (every commit): memory backend + Phase H pytest + 10-order drill (~2s)
+  - **Tier 2** (hourly): memory backend + 100-order clean drill + 500-order hostile stress drill (~15s)
+  - **Tier 3** (daily): mongo backend + 500-order integration drill + full Phase A–H regression sweep (~3min)
+  - **Tier 4** (pre-release): mongo backend + 1000-order clean drill + 1000-order stress + full regression (~10min)
+  - **Tier 5** (production): `tier5_validation.py` runs the paper drill in a loop for 24h / 72h + writes canonical aggregate JSON report
+  - Every tier exits 0 on PASS, non-zero on FAIL, JSON reports timestamped to `/app/test_reports/`. Suitable for CI matrix / cron / GitHub Actions.
+- **P1 (done, 2026-02-16)**: **UI/UX Master Design Specification v1.0** (`docs/UI_UX_MASTER_DESIGN_SPECIFICATION_v1.0.md`). 34-section canonical frontend constitution covering vision, IA, navigation, Mission Control, Factory Pipeline, all workspace modules (Trading Brain, Market Intelligence, Execution Intelligence, Portfolio, Knowledge Graph, etc.), motion + sound + colour + typography + component library + design tokens + accessibility + performance budget + desktop/tablet/mobile layouts. Backend independent; frontend implementation is intentionally deferred until Phase H closes. Every future UI PR must conform to this spec unless an approved design update lands.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.

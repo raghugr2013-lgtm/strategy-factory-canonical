@@ -662,3 +662,112 @@ asyncio.run(go())
                             "PYTHONPATH": "/app/backend:/app/backend/legacy"})
         assert r.returncode == 0, r.stderr
         assert "OAUTH_OK" in r.stdout
+
+
+# ── 9. Phase H5 · Broker Health engine ──────────────────────────
+class TestBrokerHealth:
+    def test_scoring_formula_bounded(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution import compute_health_score
+# Perfect: connected + zero rejects/requotes + 20ms latency + no disconnects → 1.0
+assert compute_health_score(True, 0.0, 0.0, 20.0, 0.0) == 1.0
+# Disaster: disconnected + high rejects/requotes + 1500ms + many disconnects
+score = compute_health_score(False, 0.5, 0.5, 1500.0, 10.0)
+assert 0.0 <= score < 0.4, f'expected <0.4, got {score}'
+# Middling: connected + normal latency + 5% rejects
+mid = compute_health_score(True, 0.05, 0.0, 100.0, 0.0)
+assert 0.85 < mid < 0.99, f'mid={mid}'
+print('SCORING_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "SCORING_OK" in r.stdout
+
+    def test_sample_persists_and_reads_back(self):
+        script = r"""
+import asyncio, sys, os
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import (
+    reset_backend, ensure_indexes, sample_broker_health,
+    read_latest_health, is_broker_healthy_for_new_orders,
+    get_paper_adapter,
+)
+from engines.execution.broker import reset_paper_adapter
+async def go():
+    reset_backend()
+    await ensure_indexes()
+    reset_paper_adapter()
+    await get_paper_adapter().connect()
+    snap = await sample_broker_health()
+    assert snap is not None
+    assert snap.connected is True
+    assert snap.band == 'healthy'
+    assert snap.score_5m == 1.0
+    latest = await read_latest_health()
+    assert latest is not None and latest.score_5m == 1.0
+    assert await is_broker_healthy_for_new_orders() is True
+    print('BROKER_HEALTH_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "BROKER_HEALTH_OK" in r.stdout
+
+    def test_unhealthy_broker_gates_new_orders(self):
+        """Q3-safe: `is_broker_healthy_for_new_orders` returns False
+        when the score is below the operator-configured floor. Callers
+        decide whether to honour — the function itself blocks nothing."""
+        script = r"""
+import asyncio, sys, os
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+os.environ['RISK_BROKER_HEALTH_MIN'] = '0.90'   # ridiculously high floor
+from engines.execution import (
+    reset_backend, ensure_indexes, sample_broker_health,
+    is_broker_healthy_for_new_orders, get_paper_adapter,
+)
+from engines.execution.broker import reset_paper_adapter
+async def go():
+    reset_backend()
+    await ensure_indexes()
+    reset_paper_adapter()
+    br = get_paper_adapter()
+    await br.connect()
+    # Force a lower health by simulating rejects (bump the counter directly)
+    br._reject_count = 50
+    br._total_submits = 100
+    br._latency_samples = [500.0] * 10   # 500ms mean latency
+    await sample_broker_health()
+    # score should fall below the 0.90 floor
+    ok = await is_broker_healthy_for_new_orders()
+    assert ok is False, 'should have been blocked by 0.90 floor'
+    print('GATE_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "GATE_OK" in r.stdout
+
+    def test_orchestrator_task_registered(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+import engines.orchestrator.tasks  # side-effect registration
+from engines.orchestrator import registry
+assert 'broker_health_check' in registry.names()
+print('TASK_REGISTERED_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "TASK_REGISTERED_OK" in r.stdout

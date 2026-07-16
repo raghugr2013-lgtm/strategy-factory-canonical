@@ -348,7 +348,7 @@ class TestOrchestratorIntegration:
         assert r.status_code == 200
         names = {t["name"] for t in r.json()["tasks"]}
         assert "self_rebuild" in names
-        assert r.json()["count"] in (12, 13)   # 11 + self_rebuild; +1 with Phase G market_intelligence_refresh
+        assert r.json()["count"] in (12, 13, 14)   # 11 + self_rebuild; +1 Phase G MI; +1 Phase H5 broker_health
 
     def test_self_rebuild_is_passive_by_default(self, admin):
         r = admin.get(f"{BASE_URL}/api/orchestrator/tasks")
