@@ -326,6 +326,98 @@ class TestBackwardCompatibility:
         assert r.status_code == 200
 
 
+# ── 7. LedgerBackend abstraction (mongo ↔ memory parity) ────────
+class TestLedgerBackends:
+    def test_memory_backend_parity(self):
+        """MemoryLedgerBackend must satisfy the same Protocol as Mongo
+        with identical externally-visible behaviour."""
+        script = r"""
+import asyncio, sys, os, uuid
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import (
+    reset_backend, active_backend_name, ensure_indexes,
+    OrderRequest, OrderState, JournalEventType,
+    append_order_request, update_order_state, read_order,
+    append_fill_event, FillEvent, read_fills,
+    append_journal, read_journal_range, wipe_account,
+    MemoryLedgerBackend, MongoLedgerBackend, LedgerBackend,
+)
+async def go():
+    reset_backend()
+    assert active_backend_name() == 'memory'
+    await ensure_indexes()
+    await wipe_account('PARITY')
+    rid = 'p_' + uuid.uuid4().hex[:6]
+    o = OrderRequest(request_id=rid, account_id='PARITY',
+        pair='EURUSD', side='BUY', type='MARKET', qty=1000.0,
+        strategy_hash='sh', brain_decision_id='bd')
+    await append_order_request(o)
+    await append_order_request(o)   # idempotent
+    r = await read_order(rid)
+    assert r.request_id == rid
+    ok = await update_order_state(rid, state=OrderState.WORKING,
+                                     broker_order_id='br')
+    assert ok
+    r2 = await read_order(rid)
+    assert r2.state == 'WORKING' and r2.broker_order_id == 'br'
+    # Fill
+    f = FillEvent(fill_id='f1', request_id=rid, account_id='PARITY',
+        pair='EURUSD', side='BUY', qty_filled=1000.0, price=1.08,
+        timestamp='2026-02-16T00:00:00Z')
+    await append_fill_event(f)
+    fs = await read_fills(request_id=rid)
+    assert len(fs) == 1
+    # Journal — 30 concurrent writers, all unique monotonic seqs
+    tasks = [append_journal('PARITY', JournalEventType.LATENCY_SAMPLE,
+        {'i': i}) for i in range(30)]
+    results = await asyncio.gather(*tasks)
+    seqs = [r.seq for r in results if r]
+    assert len(set(seqs)) == 30 and min(seqs) == 1 and max(seqs) == 30
+    # Range read is chronological
+    rows = await read_journal_range('PARITY', limit=100)
+    prev = 0
+    for r in rows:
+        assert r.seq > prev
+        prev = r.seq
+    # Protocol structural check
+    mem = MemoryLedgerBackend()
+    mon = MongoLedgerBackend()
+    assert isinstance(mem, LedgerBackend)
+    assert isinstance(mon, LedgerBackend)
+    print('PARITY_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "PARITY_OK" in r.stdout
+
+    def test_env_selects_backend(self):
+        """`EXEC_LEDGER_BACKEND=memory` env selects memory backend."""
+        script = r"""
+import os, sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import reset_backend, active_backend_name
+reset_backend()
+assert active_backend_name() == 'memory'
+os.environ['EXEC_LEDGER_BACKEND'] = 'mongo'
+reset_backend()
+assert active_backend_name() == 'mongo'
+os.environ.pop('EXEC_LEDGER_BACKEND', None)
+reset_backend()
+assert active_backend_name() == 'mongo'   # default
+print('ENV_SELECT_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "ENV_SELECT_OK" in r.stdout
+
+
 # ── 6. Explainability — Q5 immutable audit chain ────────────────
 class TestExplainability:
     def test_journal_chain_preserves_ids(self):
@@ -369,3 +461,204 @@ asyncio.run(go())
                             "PYTHONPATH": "/app/backend:/app/backend/legacy"})
         assert r.returncode == 0, r.stderr
         assert "AUDIT_OK" in r.stdout
+
+
+# ── 8. Phase H4 · CtraderBrokerAdapter + resilience ─────────────
+class TestCtraderAdapter:
+    def test_protocol_conformance(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution import BrokerAdapter
+from engines.execution.broker import CtraderBrokerAdapter, MockCtraderTransport
+br = CtraderBrokerAdapter(MockCtraderTransport())
+assert isinstance(br, BrokerAdapter), 'not a BrokerAdapter'
+print('CTD_PROTOCOL_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "CTD_PROTOCOL_OK" in r.stdout
+
+    def test_submit_idempotency_and_fill(self):
+        script = r"""
+import asyncio, sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution import OrderRequest
+from engines.execution.broker import CtraderBrokerAdapter, MockCtraderTransport
+async def go():
+    br = CtraderBrokerAdapter(MockCtraderTransport())
+    await br.connect()
+    r = OrderRequest(request_id='ctd_x', account_id='X',
+        pair='EURUSD', side='BUY', type='MARKET', qty=1000.0, price=1.08)
+    b1 = await br.submit(r)
+    b2 = await br.submit(r)
+    assert b1 == b2, 'not idempotent'
+    fills = await br.drain_fills()
+    assert len(fills) == 1
+    assert fills[0].request_id == 'ctd_x'
+    print('CTD_SUBMIT_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "CTD_SUBMIT_OK" in r.stdout
+
+    def test_reject_updates_health_metrics(self):
+        script = r"""
+import asyncio, sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution import OrderRequest
+from engines.execution.broker import CtraderBrokerAdapter, MockCtraderTransport, BrokerError
+async def go():
+    br = CtraderBrokerAdapter(MockCtraderTransport(reject_ids=['R1', 'R2']))
+    await br.connect()
+    ok_count = 0; rej_count = 0
+    for rid in ['A', 'R1', 'B', 'R2', 'C']:
+        r = OrderRequest(request_id=rid, account_id='X',
+            pair='EURUSD', side='BUY', type='MARKET', qty=100.0, price=1.08)
+        try:
+            await br.submit(r); ok_count += 1
+        except BrokerError:
+            rej_count += 1
+    assert ok_count == 3 and rej_count == 2
+    h = await br.health()
+    # 2 rejects / 5 submits
+    assert 0.35 < h.reject_rate_5m < 0.45, f'reject_rate={h.reject_rate_5m}'
+    print('CTD_REJECT_OK reject_rate=', h.reject_rate_5m)
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "CTD_REJECT_OK" in r.stdout
+
+
+class TestResilience:
+    def test_circuit_breaker_open_after_threshold(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution.broker import CircuitBreaker
+cb = CircuitBreaker(failure_threshold=3, failure_window_s=60,
+    open_duration_s=1.0, clock_fn=lambda: 1000.0)
+assert cb.can_proceed()
+for _ in range(3): cb.record_failure()
+assert not cb.can_proceed(), 'breaker should be OPEN'
+assert cb.state.value == 'open'
+print('BREAKER_OPEN_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "BREAKER_OPEN_OK" in r.stdout
+
+    def test_circuit_breaker_half_open_after_cooldown(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution.broker import CircuitBreaker
+clock = [1000.0]
+def now(): return clock[0]
+cb = CircuitBreaker(failure_threshold=3, failure_window_s=60,
+    open_duration_s=5.0, clock_fn=now)
+for _ in range(3): cb.record_failure()
+assert not cb.can_proceed()
+# Fast-forward past the open duration
+clock[0] += 6
+assert cb.can_proceed()
+assert cb.state.value == 'half_open'
+cb.record_success()
+assert cb.state.value == 'closed'
+print('BREAKER_HALFOPEN_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "BREAKER_HALFOPEN_OK" in r.stdout
+
+    def test_exponential_backoff_monotonic_and_capped(self):
+        script = r"""
+import sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution.broker import ExponentialBackoff
+b = ExponentialBackoff(base_ms=100, factor=2.0, max_ms=1000)
+seq = [b.next_delay_s() for _ in range(10)]
+for a, b2 in zip(seq, seq[1:]):
+    assert a <= b2, 'not monotonic'
+# Capped at max_ms/1000 = 1.0s
+assert max(seq) <= 1.0
+b.reset()
+assert b.next_delay_s() == 0.1
+print('BACKOFF_OK')
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "BACKOFF_OK" in r.stdout
+
+    def test_heartbeat_disconnect_after_3_missed(self):
+        script = r"""
+import asyncio, sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution.broker import (
+    ResilientConnection, MockCtraderTransport,
+)
+async def go():
+    tp = MockCtraderTransport(disconnect_after=1)
+    conn = ResilientConnection(tp, heartbeat_interval_s=0.01,
+        max_missed_heartbeats=3, sleep_fn=lambda s: asyncio.sleep(0))
+    await conn.connect()
+    # First hb triggers the mocked disconnect exception → miss #1
+    ok1 = await conn.heartbeat_once()
+    # Subsequent hbs are on a disconnected transport → misses #2, #3
+    ok2 = await conn.heartbeat_once()
+    ok3 = await conn.heartbeat_once()
+    # After 3 misses conn.connected should be False
+    assert conn.connected is False, f'still connected: missed={conn.missed_heartbeats}'
+    print('HEARTBEAT_OK missed=', conn.missed_heartbeats)
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "HEARTBEAT_OK" in r.stdout
+
+
+class TestOAuthSession:
+    def test_expiry_and_refresh_flow(self):
+        script = r"""
+import asyncio, sys
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+from engines.execution.broker import (
+    CtraderBrokerAdapter, MockCtraderTransport, OAuthSession,
+)
+async def go():
+    clk = [1000.0]
+    sess = OAuthSession(access_token='old_a', refresh_token='old_r',
+        expires_at_epoch=1050.0, account_id='X', safety_margin_s=100,
+        clock_fn=lambda: clk[0])
+    # 1050 - 1000 = 50s < 100s margin → is_expiring_soon
+    assert sess.is_expiring_soon() is True
+    assert sess.is_expired() is False
+    br = CtraderBrokerAdapter(MockCtraderTransport(), session=sess)
+    await br.connect()
+    await br._ensure_session()
+    assert sess.access_token.startswith('mock_access_'), sess.access_token
+    assert sess.refresh_token.startswith('mock_refresh_')
+    print('OAUTH_OK new_access=', sess.access_token)
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "OAUTH_OK" in r.stdout

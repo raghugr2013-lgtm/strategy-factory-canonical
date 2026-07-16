@@ -13,21 +13,32 @@ import tempfile
 
 
 def test_drill_10_orders_all_pass():
-    """The 10-order preset must PASS every validation category."""
+    """The 10-order preset on the default (mongo) backend must PASS
+    every validation category."""
+    _run_drill_assert_pass(backend="mongo")
+
+
+def test_drill_memory_backend_all_pass():
+    """MemoryLedgerBackend must satisfy every validation category too
+    — proves the backend abstraction is behaviour-preserving."""
+    _run_drill_assert_pass(backend="memory")
+
+
+def _run_drill_assert_pass(backend: str) -> None:
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
         path = tf.name
     env = {**os.environ,
            "PYTHONPATH": "/app/backend:/app/backend/legacy"}
     r = subprocess.run(
         ["python3", "/app/backend/scripts/paper_flow_drill.py",
-          "--orders", "10", "--json", path],
+          "--orders", "10", "--backend", backend, "--json", path],
         capture_output=True, text=True, env=env, timeout=120,
     )
-    assert r.returncode == 0, f"drill failed:\n{r.stdout}\n{r.stderr}"
+    assert r.returncode == 0, f"drill failed ({backend}):\n{r.stdout}\n{r.stderr}"
     report = json.load(open(path))
-    assert report["verdict"] == "PASS"
+    assert report["verdict"] == "PASS", f"{backend} verdict: {report}"
     assert report["n_failed"] == 0
-    # Every named validation category must be present.
+    assert report["config"]["backend"] == backend
     got = {v["name"] for v in report["validations"]}
     expected = {
         "order_lifecycle", "position_lifecycle", "journal_integrity",

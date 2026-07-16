@@ -53,7 +53,7 @@ async def _get_db():
         return None
 
 
-async def ensure_indexes() -> None:
+async def _mongo_ensure_indexes() -> None:
     """Idempotent index bootstrap — safe to re-run at every boot.
 
     Every collection is (account_id, ...)-indexed — Q8 multi-account
@@ -124,7 +124,7 @@ async def ensure_indexes() -> None:
 
 
 # ── Order requests ────────────────────────────────────────────────
-async def append_order_request(order: OrderRequest) -> Optional[str]:
+async def _mongo_append_order_request(order: OrderRequest) -> Optional[str]:
     db = await _get_db()
     if db is None:
         return None
@@ -141,7 +141,7 @@ async def append_order_request(order: OrderRequest) -> Optional[str]:
         return None
 
 
-async def update_order_state(
+async def _mongo_update_order_state(
     request_id: str, *,
     state: str,
     broker_order_id: Optional[str] = None,
@@ -174,7 +174,7 @@ async def update_order_state(
         return False
 
 
-async def read_order(request_id: str) -> Optional[OrderRequest]:
+async def _mongo_read_order(request_id: str) -> Optional[OrderRequest]:
     db = await _get_db()
     if db is None:
         return None
@@ -188,7 +188,7 @@ async def read_order(request_id: str) -> Optional[OrderRequest]:
         return None
 
 
-async def read_orders(
+async def _mongo_read_orders(
     *, account_id: Optional[str] = None,
     strategy_hash: Optional[str] = None,
     state: Optional[str] = None,
@@ -214,7 +214,7 @@ async def read_orders(
 
 
 # ── Fill events ───────────────────────────────────────────────────
-async def append_fill_event(fill: FillEvent) -> Optional[str]:
+async def _mongo_append_fill_event(fill: FillEvent) -> Optional[str]:
     db = await _get_db()
     if db is None:
         return None
@@ -230,7 +230,7 @@ async def append_fill_event(fill: FillEvent) -> Optional[str]:
         return None
 
 
-async def read_fills(
+async def _mongo_read_fills(
     *, request_id: Optional[str] = None,
     account_id: Optional[str] = None,
     pair: Optional[str] = None,
@@ -256,7 +256,7 @@ async def read_fills(
 
 
 # ── Positions ─────────────────────────────────────────────────────
-async def upsert_position(pos: Position) -> Optional[str]:
+async def _mongo_upsert_position(pos: Position) -> Optional[str]:
     db = await _get_db()
     if db is None:
         return None
@@ -270,7 +270,7 @@ async def upsert_position(pos: Position) -> Optional[str]:
         return None
 
 
-async def read_position(position_id: str) -> Optional[Position]:
+async def _mongo_read_position(position_id: str) -> Optional[Position]:
     db = await _get_db()
     if db is None:
         return None
@@ -284,7 +284,7 @@ async def read_position(position_id: str) -> Optional[Position]:
         return None
 
 
-async def read_positions(
+async def _mongo_read_positions(
     *, account_id: Optional[str] = None, open_only: bool = True,
     limit: int = 100,
 ) -> List[Position]:
@@ -306,7 +306,7 @@ async def read_positions(
         return []
 
 
-async def read_closed_positions(
+async def _mongo_read_closed_positions(
     *, account_id: Optional[str] = None, limit: int = 100,
 ) -> List[Position]:
     db = await _get_db()
@@ -327,7 +327,7 @@ async def read_closed_positions(
 
 
 # ── Broker health ─────────────────────────────────────────────────
-async def upsert_broker_health(h: BrokerHealth, ttl_days: int = 30) -> Optional[str]:
+async def _mongo_upsert_broker_health(h: BrokerHealth, ttl_days: int = 30) -> Optional[str]:
     db = await _get_db()
     if db is None:
         return None
@@ -343,7 +343,7 @@ async def upsert_broker_health(h: BrokerHealth, ttl_days: int = 30) -> Optional[
         return None
 
 
-async def read_latest_broker_health(
+async def _mongo_read_latest_broker_health(
     account_id: str,
 ) -> Optional[BrokerHealth]:
     db = await _get_db()
@@ -362,7 +362,7 @@ async def read_latest_broker_health(
         return None
 
 
-async def read_broker_health_history(
+async def _mongo_read_broker_health_history(
     account_id: str, limit: int = 100,
 ) -> List[BrokerHealth]:
     db = await _get_db()
@@ -382,7 +382,7 @@ async def read_broker_health_history(
 
 
 # ── Execution quality ─────────────────────────────────────────────
-async def upsert_execution_quality(
+async def _mongo_upsert_execution_quality(
     q: ExecutionQualitySnapshot,
 ) -> Optional[str]:
     db = await _get_db()
@@ -399,7 +399,7 @@ async def upsert_execution_quality(
         return None
 
 
-async def read_execution_quality(
+async def _mongo_read_execution_quality(
     *, account_id: str, pair: str, session: str = "all",
     window: str = "24h",
 ) -> Optional[ExecutionQualitySnapshot]:
@@ -421,7 +421,7 @@ async def read_execution_quality(
 
 
 # ── Attribution ───────────────────────────────────────────────────
-async def upsert_attribution(a: ExecutionAttribution) -> Optional[str]:
+async def _mongo_upsert_attribution(a: ExecutionAttribution) -> Optional[str]:
     db = await _get_db()
     if db is None:
         return None
@@ -435,7 +435,7 @@ async def upsert_attribution(a: ExecutionAttribution) -> Optional[str]:
         return None
 
 
-async def read_attribution(attribution_id: str) -> Optional[ExecutionAttribution]:
+async def _mongo_read_attribution(attribution_id: str) -> Optional[ExecutionAttribution]:
     db = await _get_db()
     if db is None:
         return None
@@ -450,7 +450,7 @@ async def read_attribution(attribution_id: str) -> Optional[ExecutionAttribution
         return None
 
 
-async def read_attributions_for_strategy(
+async def _mongo_read_attributions_for_strategy(
     strategy_hash: str, limit: int = 50,
 ) -> List[ExecutionAttribution]:
     db = await _get_db()
@@ -505,7 +505,7 @@ async def _next_seq(db, account_id: str) -> int:
     return base + 1
 
 
-async def append_journal(
+async def _mongo_append_journal(
     account_id: str, event_type: str, payload: Dict[str, Any],
     *, correlation: Optional[Dict[str, str]] = None,
 ) -> Optional[JournalEvent]:
@@ -547,7 +547,7 @@ async def append_journal(
         return None
 
 
-async def read_journal_range(
+async def _mongo_read_journal_range(
     account_id: str, *,
     start_seq: Optional[int] = None, end_seq: Optional[int] = None,
     start_ts_ns: Optional[int] = None, end_ts_ns: Optional[int] = None,
@@ -589,3 +589,126 @@ async def read_journal_range(
         return out
     except Exception:  # noqa: BLE001
         return []
+
+
+async def _mongo_wipe_account(account_id: str) -> None:
+    """Delete every row for an account across all 7 collections. Used
+    by test harnesses. Also flushes the seq cache + lock."""
+    db = await _get_db()
+    if db is None:
+        return
+    for c in (COLL_ORDERS, COLL_FILLS, COLL_POSITIONS, COLL_HEALTH,
+              COLL_QUALITY, COLL_ATTRIBUTION, COLL_JOURNAL):
+        try:
+            await db[c].delete_many({"account_id": account_id})
+        except Exception:                                # noqa: BLE001
+            pass
+    _SEQ_CACHE.pop(account_id, None)
+    _SEQ_LOCKS.pop(account_id, None)
+
+
+# ══════════════════════════════════════════════════════════════════
+# ── PUBLIC FACADE ─────────────────────────────────────────────────
+#
+# Every public function below delegates to the active LedgerBackend
+# selected via `ledger_backends.get_backend()`. Backends implement
+# the LedgerBackend Protocol (`ledger_backends.base`).
+#
+# Selection precedence:
+#   1. `ledger_backends.set_backend(backend)` explicit override
+#   2. `EXEC_LEDGER_BACKEND=memory|mongo` env
+#   3. Default: mongo
+# ══════════════════════════════════════════════════════════════════
+from .ledger_backends.registry import get_backend  # noqa: E402
+
+
+async def ensure_indexes() -> None:
+    return await get_backend().ensure_indexes()
+
+
+async def append_order_request(order):
+    return await get_backend().append_order_request(order)
+
+
+async def update_order_state(request_id, **kw):
+    return await get_backend().update_order_state(request_id, **kw)
+
+
+async def read_order(request_id):
+    return await get_backend().read_order(request_id)
+
+
+async def read_orders(**kw):
+    return await get_backend().read_orders(**kw)
+
+
+async def append_fill_event(fill):
+    return await get_backend().append_fill_event(fill)
+
+
+async def read_fills(**kw):
+    return await get_backend().read_fills(**kw)
+
+
+async def upsert_position(pos):
+    return await get_backend().upsert_position(pos)
+
+
+async def read_position(position_id):
+    return await get_backend().read_position(position_id)
+
+
+async def read_positions(**kw):
+    return await get_backend().read_positions(**kw)
+
+
+async def read_closed_positions(**kw):
+    return await get_backend().read_closed_positions(**kw)
+
+
+async def upsert_broker_health(h, ttl_days=30):
+    return await get_backend().upsert_broker_health(h, ttl_days=ttl_days)
+
+
+async def read_latest_broker_health(account_id):
+    return await get_backend().read_latest_broker_health(account_id)
+
+
+async def read_broker_health_history(account_id, limit=100):
+    return await get_backend().read_broker_health_history(
+        account_id, limit=limit)
+
+
+async def upsert_execution_quality(q):
+    return await get_backend().upsert_execution_quality(q)
+
+
+async def read_execution_quality(**kw):
+    return await get_backend().read_execution_quality(**kw)
+
+
+async def upsert_attribution(a):
+    return await get_backend().upsert_attribution(a)
+
+
+async def read_attribution(attribution_id):
+    return await get_backend().read_attribution(attribution_id)
+
+
+async def read_attributions_for_strategy(strategy_hash, limit=50):
+    return await get_backend().read_attributions_for_strategy(
+        strategy_hash, limit=limit)
+
+
+async def append_journal(account_id, event_type, payload,
+                          *, correlation=None):
+    return await get_backend().append_journal(
+        account_id, event_type, payload, correlation=correlation)
+
+
+async def read_journal_range(account_id, **kw):
+    return await get_backend().read_journal_range(account_id, **kw)
+
+
+async def wipe_account(account_id):
+    return await get_backend().wipe_account(account_id)

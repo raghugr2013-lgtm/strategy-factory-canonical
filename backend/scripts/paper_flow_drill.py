@@ -63,6 +63,7 @@ class DrillConfig:
     account_id:      str = "DRILL_ACC"
     strategy_hash:   str = "drill_strategy_hash"
     stress_scenarios: bool = True
+    backend:         str = "mongo"           # "mongo" | "memory"
     verbose:         bool = False
 
     def to_env(self) -> Dict[str, str]:
@@ -126,6 +127,10 @@ class PaperFlowDrill:
         # Apply paper broker env knobs.
         for k, v in config.to_env().items():
             os.environ[k] = v
+        # Apply LedgerBackend selection BEFORE the engine touches Mongo.
+        os.environ["EXEC_LEDGER_BACKEND"] = self.cfg.backend
+        from engines.execution import reset_backend
+        reset_backend()
         self.report = DrillReport(
             config=self.cfg.__dict__,
             started_at=datetime.now(timezone.utc).isoformat(),
@@ -164,23 +169,11 @@ class PaperFlowDrill:
         return self.report
 
     async def _wipe_account(self) -> None:
-        try:
-            db = ledger.get_db() if hasattr(ledger, "get_db") else None
-        except Exception:  # noqa: BLE001
-            db = None
-        if db is None:
-            from engines.db import get_db
-            db = get_db()
-        # Reset seq cache for this account
-        ledger._SEQ_CACHE.pop(self.cfg.account_id, None)  # noqa: SLF001
-        ledger._SEQ_LOCKS.pop(self.cfg.account_id, None)  # noqa: SLF001
-        for c in ("order_requests", "fill_events", "positions",
-                   "broker_health", "execution_quality",
-                   "execution_attribution", "execution_journal"):
-            try:
-                await db[c].delete_many({"account_id": self.cfg.account_id})
-            except Exception:                              # noqa: BLE001
-                pass
+        from engines.execution import wipe_account
+        await wipe_account(self.cfg.account_id)
+        # Determinism-run scratch accounts + stress account also cleaned.
+        for suffix in ("_DETERMINISM_A", "_DETERMINISM_B", "_STRESS"):
+            await wipe_account(self.cfg.account_id + suffix)
 
     async def _submit_workload(self,
                                 broker: PaperBrokerAdapter) -> List[str]:
@@ -539,16 +532,8 @@ class PaperFlowDrill:
         """Run a mini 20-order workload on a scratch account. Returns
         the list of fills produced (in submit order)."""
         from engines.execution.broker.paper import reset_paper_adapter
-        from engines.db import get_db
-        db = get_db()
-        for c in ("order_requests", "fill_events", "positions",
-                   "execution_journal"):
-            try:
-                await db[c].delete_many({"account_id": account_id})
-            except Exception:                              # noqa: BLE001
-                pass
-        ledger._SEQ_CACHE.pop(account_id, None)            # noqa: SLF001
-        ledger._SEQ_LOCKS.pop(account_id, None)            # noqa: SLF001
+        from engines.execution import wipe_account
+        await wipe_account(account_id)
         reset_paper_adapter()
         br = PaperBrokerAdapter(seed=self.cfg.seed)
         await br.connect()
@@ -580,17 +565,9 @@ class PaperFlowDrill:
         everything correctly."""
         async def _go():
             from engines.execution.broker.paper import reset_paper_adapter
+            from engines.execution import wipe_account
             stress_acct = f"{self.cfg.account_id}_STRESS"
-            from engines.db import get_db
-            db = get_db()
-            for c in ("order_requests", "fill_events", "positions",
-                       "execution_journal"):
-                try:
-                    await db[c].delete_many({"account_id": stress_acct})
-                except Exception:                          # noqa: BLE001
-                    pass
-            ledger._SEQ_CACHE.pop(stress_acct, None)       # noqa: SLF001
-            ledger._SEQ_LOCKS.pop(stress_acct, None)       # noqa: SLF001
+            await wipe_account(stress_acct)
             # Save + override paper knobs.
             saved = {k: os.environ.get(k) for k in
                      ("PAPER_REJECT_RATE", "PAPER_PARTIAL_RATE",
@@ -682,6 +659,11 @@ def parse_args() -> DrillConfig:
     p.add_argument("--slippage-pips", type=float, default=0.2)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--account-id", type=str, default="DRILL_ACC")
+    p.add_argument("--backend", type=str, default="mongo",
+                    choices=["mongo", "memory"],
+                    help="LedgerBackend: `mongo` (default) hits Mongo; "
+                         "`memory` runs against an in-process dict "
+                         "backend (~10× faster, deterministic).")
     p.add_argument("--no-stress", action="store_true",
                     help="Skip stress scenario validation")
     p.add_argument("--verbose", "-v", action="store_true")
@@ -697,6 +679,7 @@ def parse_args() -> DrillConfig:
         slippage_pips=args.slippage_pips,
         seed=args.seed,
         account_id=args.account_id,
+        backend=args.backend,
         stress_scenarios=not args.no_stress,
         verbose=args.verbose,
     ), args
@@ -712,6 +695,7 @@ def _print_report(report: DrillReport) -> None:
     print(f"  duration     : {d['duration_s']}s")
     print(f"  workload     : {d['config']['orders']} orders across "
           f"{len(d['config']['symbols'])} symbols")
+    print(f"  backend      : {d['config']['backend']}")
     print(f"  reject_rate  : {d['config']['reject_rate']}   "
           f"partial_rate: {d['config']['partial_rate']}   "
           f"slippage_pips: {d['config']['slippage_pips']}   "
