@@ -198,6 +198,25 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("execution engine bootstrap failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase I — bootstrap meta-learning engine
+        # Mongo indexes (5 new collections). Non-fatal. Runs even in
+        # OBSERVE mode (default) so read endpoints work immediately.
+        try:
+            from engines.meta_learning import (
+                ensure_indexes as _ml_ensure_indexes,
+                config as _ml_cfg,
+            )
+            if _ml_cfg.mode() != "disabled":
+                await _ml_ensure_indexes()
+                logger.info(
+                    "meta_learning engine ready (mode=%s, cadence=%ss)",
+                    _ml_cfg.mode(), _ml_cfg.cadence_sec())
+            else:
+                logger.info("meta_learning engine dormant on boot "
+                            "(META_LEARNING_MODE=disabled)")
+        except Exception:  # noqa: BLE001
+            logger.exception("meta_learning engine bootstrap failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -256,6 +275,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "brain_engine",         # v1.2.0-alpha2 Phase F — /api/brain/*
         "market_intelligence_engine",  # v1.2.0-alpha2 Phase G — /api/market-intelligence/{state,changes,intelligence,refresh,...}
         "execution_engine",     # v1.2.0-alpha2 Phase H9 — /api/execution/{orders,fills,positions,quality,attribution,risk,replay,journal,...}
+        "meta_learning_engine", # v1.2.0-alpha2 Phase I — /api/meta-learning/{config,evaluations,recommendations,pending,applications,overrides,refresh,approve,reject,revert,...}
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",

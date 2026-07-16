@@ -307,5 +307,5 @@ class TestRouterCount:
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
         # Phase F adds brain_engine → 96. Phase G adds market_intelligence_engine → 97. Phase H9 adds execution_engine → 98.
-        assert m[-1] in ("96", "97", "98"), (
+        assert m[-1] in ("96", "97", "98", "99"), (
             f"latest boot reports {m[-1]} routers (expected 96/97/98)")

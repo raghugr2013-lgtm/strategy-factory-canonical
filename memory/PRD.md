@@ -141,6 +141,90 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
   - **H11** `replay.py replay_range` — deterministic offline replay from `execution_journal`. Derives terminal state per request_id purely from journaled events, byte-identical to live-run state (verified). `ReplayReport` aggregates event counts, terminal state distribution, and fills-per-order. Exposed via `POST /api/execution/replay` (admin).
   - **45 Phase H tests passing** (was 28 pre-batch; +17 H6/H7/H8/H9/H11).
   - **`make ci-verdict`** — one-line PASS/FAIL summary for pre-push hooks + GitHub commit status.
+- **P0 (done, 2026-02-16)**: v1.2.0-alpha2 **Phase I — Meta-Learning Engine (IMPLEMENTED in OBSERVE MODE)**.
+  - **Package**: `engines/meta_learning/` with `types`, `config`, `ledger`, `explainability`, `collectors/{4 modules}`, `evaluators/{6 modules}`, `stats`, `proposers`, `ranker`, `applier`, `engine`.
+  - **4 operating modes**: `disabled → observe (default) → recommend → autonomous`. Default OBSERVE. Autonomous requires belt-and-suspenders `META_LEARNING_AUTONOMOUS_CONFIRM=YES` env + per-surface whitelist gating.
+  - **6 evaluators** (pure functions, deterministic): weight_sensitivity (Pearson+Spearman correlation between scoring components and realised PnL), threshold_calibration (bucketed expected-uplift search), confidence_calibration (reliability-curve gap), style_regime_matrix (6×4 miscalibration cells), market_signal_utility (Phase G weights with first-activation gate capping at 0.05 from 0.0), execution_quality_gate (delta_predicted_realised p95 analysis).
+  - **5 proposers**: brain_weights, brain_thresholds, market_weights, execution_gate, confidence_calibration. Each bounded by `META_LEARNING_MAX_DELTA_PER_TICK=0.02` and class-cap-per-day.
+  - **Ranker**: `score = expected_uplift × confidence × (1 − risk_penalty(green|amber|red))`. Below `META_LEARNING_RANK_FLOOR=0.01` → EXPIRED. Ties broken by lowest recent-application load.
+  - **Applier**: DORMANT in OBSERVE. Even in RECOMMEND/AUTONOMOUS, writes only to `meta_learning_overrides`; downstream engines consume overrides only when `BRAIN_USE_META_OVERRIDES / PORTFOLIO_USE_META_OVERRIDES / EXEC_USE_META_OVERRIDES=true` (all default `false` = byte-identical to Phase H).
+  - **Structural non-modification guarantee**: pytest hashes 10 watched brain/portfolio/execution source files; changes fail the suite. Zero edits to `brain/scorer.py`, `brain/policy.py`, `brain/brain.py`, `brain/config.py`, `portfolio/allocation.py`, `capital.py`, `rebuilder.py`, `execution/risk_monitor.py`, `quality.py`, `attribution.py`.
+
+## Phase I Files Added (2026-02-16)
+
+| File | Purpose |
+|---|---|
+| `docs/V1.2.0_ALPHA2_PHASE_I_DESIGN.md` | 649-line design document with Q1–Q8 operator questions and resolved defaults |
+| `docs/V1.2.0_ARCHITECTURE_BOOK.md` | 700+ line canonical technical + design-rationale reference for the entire v1.2.0 backend |
+| `backend/legacy/engines/meta_learning/__init__.py` | Public engine API (types, config, ledger, engine) |
+| `backend/legacy/engines/meta_learning/types.py` | `MetaEvaluation`, `MetaRecommendation`, `MetaApplication`, `MetaMode`, `MetaSurface`, `MetaSeverity`, `MetaRiskBand`, `MetaRecStatus` |
+| `backend/legacy/engines/meta_learning/config.py` | Env-driven mode + cadence + significance thresholds + autonomous whitelist + class caps |
+| `backend/legacy/engines/meta_learning/ledger.py` | Mongo-persisted 5-collection ledger with idempotent index bootstrap |
+| `backend/legacy/engines/meta_learning/explainability.py` | Emits `meta_learning_*` outcome_events |
+| `backend/legacy/engines/meta_learning/stats.py` | Pure-function pearson, spearman, bin_edges, normalise_pnl, p_value_from_r |
+| `backend/legacy/engines/meta_learning/collectors/__init__.py` | Read-only outcome_event collectors |
+| `backend/legacy/engines/meta_learning/collectors/brain_decisions.py` | `collect_brain_decisions()` |
+| `backend/legacy/engines/meta_learning/collectors/execution_realised.py` | `collect_execution_realised()` + `join_decision_to_realised()` |
+| `backend/legacy/engines/meta_learning/collectors/market_intelligence.py` | Phase G outcome_events collector |
+| `backend/legacy/engines/meta_learning/collectors/portfolio.py` | Phase D outcome_events collector |
+| `backend/legacy/engines/meta_learning/evaluators/__init__.py` | 6 evaluator exports |
+| `backend/legacy/engines/meta_learning/evaluators/weight_sensitivity.py` | Per-scoring-weight Pearson/Spearman correlation vs realised PnL |
+| `backend/legacy/engines/meta_learning/evaluators/threshold_calibration.py` | Bucketed expected-uplift threshold search |
+| `backend/legacy/engines/meta_learning/evaluators/confidence_calibration.py` | Reliability-curve gap detector |
+| `backend/legacy/engines/meta_learning/evaluators/style_regime_matrix.py` | 6×4 style-regime miscalibration |
+| `backend/legacy/engines/meta_learning/evaluators/market_signal_utility.py` | Phase G weights utility with first-activation gate |
+| `backend/legacy/engines/meta_learning/evaluators/execution_quality_gate.py` | Delta_predicted_realised p95 gate analysis |
+| `backend/legacy/engines/meta_learning/proposers.py` | 5 proposers with severity + risk band + guardrails |
+| `backend/legacy/engines/meta_learning/ranker.py` | Score-based ranker with floor + tie-break |
+| `backend/legacy/engines/meta_learning/applier.py` | Dormant-in-OBSERVE applier with `ApplierGuardBlocked` safety net |
+| `backend/legacy/engines/meta_learning/engine.py` | Top-level `run_meta_learning_cycle()` orchestrator |
+| `backend/legacy/engines/orchestrator/tasks/meta_learning_evaluation.py` | Orchestrator task (priority 55, cadence 900s) |
+| `backend/legacy/api/meta_learning_engine.py` | 12 new `/api/meta-learning/*` endpoints |
+| `backend/tests/test_v1_2_0_alpha2_phase_i.py` | 48 regression tests (config, ledger, stats, evaluators, proposers, ranker, applier OBSERVE-safety, engine, orchestrator, API, structural non-modification, determinism) |
+
+## Phase I Files Modified (additive only)
+
+| File | Change |
+|---|---|
+| `backend/app/main.py` | +1 line to `primary_names` list (mount `meta_learning_engine` router) + `meta_learning ensure_indexes()` bootstrap call |
+| `backend/legacy/engines/orchestrator/tasks/__init__.py` | Import `meta_learning_evaluation` for side-effect registration |
+| `backend/tests/test_v1_2_0_alpha2_phase_{a,b,b1,b2,c,d,f,g,h}.py` | Widen router-count assertion tuples to include `'99'` (predicted in Phase I §11) |
+| `backend/tests/test_v1_2_0_alpha2_phase_d.py::TestOrchestratorIntegration::test_self_rebuild_task_registered` | Widen accepted task count to include 16 |
+
+## Phase I Configuration surface
+
+| Var | Default | Description |
+|---|---|---|
+| `META_LEARNING_MODE` | `observe` | `disabled|observe|recommend|autonomous` |
+| `META_LEARNING_CADENCE_SEC` | `900` | Orchestrator dispatch interval |
+| `META_LEARNING_WINDOW_HOURS` | `24` | Evaluator look-back window |
+| `META_LEARNING_MIN_SAMPLES` | `50` | Minimum decisions per evaluator |
+| `META_LEARNING_MIN_SAMPLES_WARMUP` | `30` | Warmup ramp value (if `WARMUP_UNTIL` in future) |
+| `META_LEARNING_WARMUP_UNTIL` | `""` | ISO date; while in future, uses warmup value |
+| `META_LEARNING_SIG_THRESHOLD` | `0.20` | Pearson `|ρ|` floor for recommendations |
+| `META_LEARNING_WEIGHT_STEP` | `0.01` | Base step size for weight recommendations |
+| `META_LEARNING_MAX_DELTA_PER_TICK` | `0.02` | Absolute cap on any single-tick recommendation |
+| `META_LEARNING_REC_TTL_DAYS` | `7` | Pending recommendation TTL |
+| `META_LEARNING_RANK_FLOOR` | `0.01` | Recommendations below this score auto-expire |
+| `META_LEARNING_CALIB_GAP_MIN` | `0.10` | Reliability curve gap floor |
+| `META_LEARNING_AUTONOMOUS_CONFIRM` | `""` | Must be `YES` for autonomous mode to actually apply |
+| `META_LEARNING_AUTONOMOUS_WHITELIST` | `"brain_weight,market_weight"` | Comma-separated surface whitelist |
+| `META_LEARNING_CAP_<surface>` | `0.05` | Per-surface max cumulative delta per rolling 24h |
+| `BRAIN_USE_META_OVERRIDES` | `false` | Downstream opt-in: brain reads `meta_learning_overrides` |
+| `PORTFOLIO_USE_META_OVERRIDES` | `false` | Downstream opt-in: portfolio reads overrides |
+| `EXEC_USE_META_OVERRIDES` | `false` | Downstream opt-in: execution reads overrides |
+
+
+  - **12 new API endpoints** under `/api/meta-learning/*`: `config`, `status`, `evaluations`, `evaluations/{id}`, `recommendations`, `pending`, `recommendations/{id}`, `applications`, `overrides`, `mode-history`, `refresh` (admin), `recommendations/{id}/approve` (admin, **returns 409 in OBSERVE**), `recommendations/{id}/reject` (admin), `overrides/{target}/revert` (admin).
+  - **5 new Mongo collections**: `meta_learning_evaluations` (TTL 90d), `meta_learning_recommendations` (TTL 180d via `expires_at`), `meta_learning_applications` (TTL 365d, dormant in OBSERVE), `meta_learning_overrides` (permanent, dormant in OBSERVE), `meta_learning_mode_history` (TTL 365d).
+  - **7 new outcome_event decision-type markers**: `meta_learning_cycle_start`, `meta_learning_evaluation`, `meta_learning_recommendation`, `meta_learning_cycle_end`, `meta_learning_mode_change`, `meta_learning_application`, `meta_learning_revert`. Full immutable-ID audit chain.
+  - **Orchestrator task**: `meta_learning_evaluation` (priority 55, cadence 900s, depends on `execution_attribution`, respects `META_LEARNING_MODE=disabled`). Task count 15 → **16**.
+  - **48 Phase I tests + full A–I regression = 335 passing** (32 A + 22 B + 21 B.1 + 29 B.2 + 24 C + 33 D + 11 E + 25 F + 38 G + 45 H + 48 I; running with `-n 0`). Router count 98 → **99** exactly as designed.
+  - **Boot log**: `meta_learning engine ready (mode=observe, cadence=900s)`.
+  - **API-level verified**: OBSERVE mode `approve` endpoint returns HTTP 409 with `{"error": "meta_learning is in observe mode; approval blocked", "mode": "observe"}`. Force-refresh cycle completes cleanly with zero overrides + zero applications written.
+  - Design doc at `docs/V1.2.0_ALPHA2_PHASE_I_DESIGN.md` (649 lines) with all 8 operator questions Q1–Q8 answered via recommended defaults.
+- **P1 (done, 2026-02-16)**: **v1.2.0 Architecture Book** (`docs/V1.2.0_ARCHITECTURE_BOOK.md`, 1000+ lines) — canonical technical + design-rationale reference. 20 chapters covering the philosophy (six design commitments), system topology, why each engine is separated from the others, explainability chain, why Meta-Learning starts in OBSERVE, why the frontend is decoupled, LedgerBackend abstraction rationale, replay determinism, feature flags, and validation pyramid. Explains not just *how* but *why*.
+- **P1 (done, 2026-02-16)**: **UI/UX Master Design Specification v1.0 — Phase I Meta-Learning workspace appendix** added (`docs/UI_UX_MASTER_DESIGN_SPECIFICATION_v1.0.md` §Appendix C). Covers navigation, desktop/tablet/mobile layouts, KPI grid, ReliabilityChart, StyleRegimeMiscalibrationHeatmap, details drawer, motion design, sound design, data-testid inventory, accessibility, performance budget, empty states, interaction guidelines, and full explainability trace integration. Documentation only — no React/CSS.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.

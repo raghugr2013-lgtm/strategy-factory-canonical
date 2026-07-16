@@ -690,3 +690,162 @@ Any deviation from this specification must be documented in `docs/UI_UX_DESIGN_U
 * Operator sign-off
 
 Silent divergence is not permitted. This document is the frontend's constitution.
+
+
+---
+
+## Appendix C — Phase I Meta-Learning module (2026-02-16 addendum)
+
+### Purpose
+
+Give the operator a dedicated workspace to inspect the meta-learning
+engine's evaluations, ranked recommendations, applied overrides, and
+mode history. Read-only in OBSERVE mode; gains approve/reject/revert
+actions in RECOMMEND and AUTONOMOUS modes.
+
+### Route + navigation
+
+* Route: `/workspace/meta-learning`
+* Nav rail: below **Knowledge Graph**, above **Factory Self-Eval** (P1)
+* Icon: `brain-circuit` (Lucide)
+* Mode chip in top-right of workspace header: `OBSERVE | RECOMMEND | AUTONOMOUS | DISABLED`
+
+### Layout — desktop (≥1440px)
+
+Two-column primary layout:
+
+**Left column (60%)** — `PendingRecommendationsRail`
+* Card list, one per recommendation, sorted by ranker_score DESC.
+* Each card shows:
+  * Target env key (mono, small)
+  * Surface pill (brain_weight / brain_threshold / market_weight / execution_gate / confidence_calibration / style_regime_matrix)
+  * Current → Proposed value (with directional arrow, colour-coded by delta sign)
+  * Confidence bar (0..1, gradient)
+  * Risk band chip (green / amber / red — Material 900-tone borders on dark theme)
+  * Severity chip (info / low / med / high)
+  * Rationale one-liner
+  * Evidence link "3 samples" → drawer
+  * Actions: **Approve** / **Reject** / **Details** (Approve returns 409 toast in OBSERVE mode; button remains disabled with tooltip explaining mode gate.)
+* Cards are keyboard-navigable via `↑↓`; Enter opens details drawer.
+
+**Right column (40%)** — `MetaLearningInsightsPanel`
+* Top: KPI grid
+  * `Mode` (chip)
+  * `Cycles today` (int)
+  * `Evaluations today` (int)
+  * `Recommendations pending` (int)
+  * `Applications today` (int, expected 0 in OBSERVE)
+* Middle: `ReliabilityChart`
+  * Confidence-calibration reliability curve: x = mean confidence per bin, y = mean realised (mapped to 0..1). Ideal line = y=x. Deviations highlighted.
+  * Data source: `GET /api/meta-learning/evaluations?surface=confidence_calibration&limit=1` → parse `evidence.bin_reliability`.
+* Bottom: `StyleRegimeMiscalibrationHeatmap`
+  * 6 styles × 4 regimes = 24 cells.
+  * Cell colour = miscalibration magnitude (blue = under-predicted, red = over-predicted).
+  * Hover → cell details (n_samples, mean_expected, mean_realised).
+  * Data source: `GET /api/meta-learning/evaluations?surface=style_regime_matrix`.
+
+### Layout — tablet (768–1439px)
+
+Stacked: PendingRecommendationsRail on top (full-width, cards scroll horizontally with snap), InsightsPanel below. Reliability chart + heatmap side-by-side, stack under 640px.
+
+### Layout — mobile (<768px)
+
+Single column. Recommendations show 1 card at a time with swipe-navigate. Details drawer opens full-screen. Approve/reject actions require the mode chip to display RECOMMEND or AUTONOMOUS explicitly, plus a confirm modal.
+
+### Details drawer
+
+Right-slide drawer, 480px wide.
+
+**Sections:**
+
+1. **Summary** — everything from the card, larger.
+2. **Evidence chain** — sequence of outcome_event links:
+   * Evaluation → linked outcome_event ID
+   * Cycle → cycle_id from `meta_learning_cycle_start`
+   * Sample outcome_events (up to 10) with brief metadata
+   * Every link opens the Explainability Explorer at that event.
+3. **Metrics** — full `metrics` block (Pearson, Spearman, mean gap, etc.) rendered as a labeled JSON table.
+4. **Guardrails** — max_delta_per_tick, class_caps applicable, whitelist membership.
+5. **Actions** — Approve / Reject / Revert (if applied). Each action requires a modal with:
+   * The exact env var / target
+   * Preview of new value
+   * "This is <mode> mode — action is <permitted|blocked>" banner
+   * Confirm CTA
+
+### Motion
+
+* Rail cards fade+slide in 120ms, staggered 30ms.
+* Reliability curve line draws left-to-right 400ms after first render.
+* Heatmap cells fade in row-by-row 200ms.
+* Mode chip pulses when mode changes (2s glow + 1s fade).
+* Approve/reject buttons: press → 150ms scale-down, release → snap-back.
+
+### Sound
+
+* Approval confirm → soft "click-tick" 40ms.
+* Rejection confirm → longer "click-thunk" 70ms.
+* Mode transition → chime (150ms, C5 sine + envelope).
+* All sounds respect `SOUND_ENABLED` user setting (default off).
+
+### Data-testids (mandatory)
+
+* `meta-learning-workspace-root`
+* `meta-learning-mode-chip`
+* `meta-learning-pending-rail`
+* `meta-learning-rec-card-{recommendation_id}`
+* `meta-learning-rec-approve-{recommendation_id}`
+* `meta-learning-rec-reject-{recommendation_id}`
+* `meta-learning-rec-details-{recommendation_id}`
+* `meta-learning-reliability-chart`
+* `meta-learning-style-regime-heatmap`
+* `meta-learning-kpi-{mode|cycles|evals|pending|applied}`
+* `meta-learning-drawer-close`
+
+### Accessibility
+
+* Every card is a `<button role="listitem">` inside a `role="list"` rail.
+* Focus ring: `outline: 2px solid var(--focus-cyan)` at all times when tab-navigated.
+* Announcements: mode changes announced via `aria-live="polite"` on the mode chip.
+* Colour is never the sole conveyor of information — every risk band pairs a colour with a text label + icon.
+* Contrast: all text ≥ WCAG AA on the dark theme. Approve/reject buttons ≥ WCAG AAA.
+
+### Performance budget
+
+* Initial workspace paint: ≤ 250ms after data fetch.
+* Recommendation list virtualised — 60fps scroll at 500+ items.
+* Reliability chart re-renders debounced 100ms on data change.
+* Details drawer lazy-loads evidence outcome_events on open (paginated 20 at a time).
+
+### Empty states
+
+* **No evaluations yet**: illustration + "Meta-learning is warming up. Recommendations will appear once <MIN_SAMPLES> decisions have been observed."
+* **No pending recommendations**: "All clear. The factory's meta-parameters are considered well-calibrated in the current window."
+* **Disabled mode**: "Meta-learning is disabled. Set META_LEARNING_MODE=observe to activate observations."
+
+### Interaction guidelines
+
+* Never permit rapid-fire approve — after each approve, disable the next Approve button for 500ms and show a small progress ring.
+* Rejected recommendations remain visible for 24h with a `Rejected · <reason>` chip, then auto-hide (still queryable via history endpoint).
+* Applied recommendations show in a `RecentApplicationsRail` below KPI grid — click to see Application → Override → Journal chain.
+* Every operator action writes a client-side journal entry with timestamp + operator email (queryable via audit logs).
+
+### Explainability integration
+
+Every card exposes a "Trace" link that opens the **Explainability Explorer** filtered to the recommendation's evidence chain. From there the operator can walk:
+
+```
+meta_learning_recommendation
+  → meta_learning_evaluation
+    → brain_decision (one per sample)
+      → execution_realised (twin of the brain_decision)
+        → execution_attribution
+          → position_id → fills → journal
+```
+
+Every link is an outcome_event ID. Every hop is one Mongo find.
+
+### Change control
+
+Any UI change to this workspace must land as an appendix here first,
+with operator sign-off, before code implementation begins.
+
