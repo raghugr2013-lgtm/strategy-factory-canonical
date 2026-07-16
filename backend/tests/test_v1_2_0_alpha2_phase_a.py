@@ -84,8 +84,8 @@ class TestBootLog:
             log = f.read()
         matches = re.findall(r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches, "no router-mount log line found"
-        # Latest boot must be 92..94 (each phase adds routers additively)
-        assert matches[-1] in ("92", "93", "94"), f"latest boot reports {matches[-1]} routers, expected 92..94"
+        # Later phases (B.2, C, D) add more routers additively.
+        assert matches[-1] in ("92", "93", "94", "95"), f"latest boot reports {matches[-1]} routers"
 
 
 # ── 2. Design doc ──────────────────────────────────────────────────

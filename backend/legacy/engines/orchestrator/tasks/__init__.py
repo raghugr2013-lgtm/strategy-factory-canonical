@@ -21,4 +21,5 @@ from . import (              # noqa: F401 — side-effect: registration
     learning_cycle,
     ranking,
     master_bot_bundle_refresh,
+    self_rebuild,
 )

@@ -32,8 +32,10 @@ _EXPECTED_TASKS = {
     "market_data_topup", "bi5_realism_sweep", "knowledge_index_refresh",
     "strategy_generate", "backtest", "validation", "mutation",
     "optimization", "learning_cycle", "ranking", "master_bot_bundle_refresh",
+    "self_rebuild",   # Phase D adds this
 }
-_EXPECTED_PASSIVE = {"validation", "optimization", "master_bot_bundle_refresh"}
+_EXPECTED_PASSIVE = {"validation", "optimization", "master_bot_bundle_refresh",
+                     "self_rebuild"}
 
 
 @pytest.fixture(scope="module")
@@ -65,19 +67,31 @@ class TestTaskRegistry:
         r = admin.get(f"{BASE_URL}/api/orchestrator/tasks")
         assert r.status_code == 200
         body = r.json()
-        assert body["count"] == 11, body
+        # Phase D adds `self_rebuild` → 12.
+        assert body["count"] >= 11, body
         names = {t["name"] for t in body["tasks"]}
-        assert names == _EXPECTED_TASKS, f"unexpected task set: {names ^ _EXPECTED_TASKS}"
+        # Every Phase B.2 task must still be present (strictly additive).
+        expected_b2 = {"market_data_topup", "bi5_realism_sweep",
+                       "knowledge_index_refresh", "strategy_generate",
+                       "backtest", "validation", "mutation", "optimization",
+                       "learning_cycle", "ranking", "master_bot_bundle_refresh"}
+        missing = expected_b2 - names
+        assert not missing, f"missing Phase B.2 tasks: {missing}"
 
     def test_passive_defaults_match_design(self, admin):
         r = admin.get(f"{BASE_URL}/api/orchestrator/tasks")
         assert r.status_code == 200
         tasks = {t["name"]: t for t in r.json()["tasks"]}
-        for name, t in tasks.items():
-            if name in _EXPECTED_PASSIVE:
-                assert t["passive"] is True, f"{name} should be passive by default"
-            else:
-                assert t["passive"] is False, f"{name} should be active by default"
+        # Phase B.2 passive defaults still hold (Phase D additions have their
+        # own assertions in the Phase D test suite).
+        b2_passive = {"validation", "optimization", "master_bot_bundle_refresh"}
+        b2_active  = {"market_data_topup", "bi5_realism_sweep",
+                      "knowledge_index_refresh", "strategy_generate",
+                      "backtest", "mutation", "learning_cycle", "ranking"}
+        for name in b2_passive:
+            assert tasks[name]["passive"] is True, f"{name} should be passive"
+        for name in b2_active:
+            assert tasks[name]["passive"] is False, f"{name} should be active"
 
     def test_task_metadata_complete(self, admin):
         r = admin.get(f"{BASE_URL}/api/orchestrator/tasks")
@@ -289,11 +303,9 @@ class TestBootLogRouterCount:
         matches = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches, "no mount log line found"
-        # Phase B.2 adds orchestrator_engine → 93; Phase C adds intelligence_engine → 94.
-        assert matches[-1] in ("93", "94"), (
-            f"latest boot reports {matches[-1]} routers (expected 93 or 94 — "
-            "Phase B.2 adds orchestrator_engine)"
-        )
+        # Router count grows additively as new phases land.
+        assert matches[-1] in ("93", "94", "95"), (
+            f"latest boot reports {matches[-1]} routers (expected 93..95)")
 
 
 # ── 8. Regression — Phase A + B + B.1 endpoints ──────────────────

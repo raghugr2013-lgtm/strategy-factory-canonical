@@ -217,6 +217,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "learning",      # v1.2.0-alpha2 outcome-event ledger — /api/learning/*
         "orchestrator_engine",  # v1.2.0-alpha2 Phase B.2 — /api/orchestrator/*
         "intelligence_engine",  # v1.2.0-alpha2 Phase C — /api/intelligence/*
+        "portfolio_engine",     # v1.2.0-alpha2 Phase D — /api/portfolio/*
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",
