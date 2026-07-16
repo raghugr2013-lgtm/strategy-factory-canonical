@@ -1,0 +1,190 @@
+{
+  "generated_at": "2026-07-16T08:11:23.549778+00:00",
+  "host": {
+    "cpu_count": 16,
+    "cpu_count_physical": 16,
+    "mem_total_gb": 62.68,
+    "python": "3.11.15",
+    "compute_probe": {
+      "ts": "2026-07-16T08:11:23.549465+00:00",
+      "available": true,
+      "cpu_count": 16,
+      "cpu_percent": 12.4,
+      "load_avg": [
+        2.896,
+        1.759,
+        1.221
+      ],
+      "mem_total_gb": 62.682,
+      "mem_available_gb": 42.329,
+      "mem_percent": 32.5,
+      "open_fds": 7,
+      "process_rss_mb": 41.16
+    },
+    "headroom_summary": {
+      "ok": true,
+      "cpu_headroom_pct": 87.6,
+      "mem_headroom_pct": 67.5,
+      "load_per_core": 0.181,
+      "band": "ok"
+    }
+  },
+  "env": {
+    "USE_PROCESS_POOL": null,
+    "ENABLE_PROCESS_POOL_BACKTEST": null,
+    "CPU_POOL_SIZE": null,
+    "LEARNING_MIN_TRADES": "1"
+  },
+  "modes": [
+    {
+      "mode": "sequential",
+      "n_cycles": 6,
+      "wall_seconds": 0.437,
+      "cycles_per_second": 13.726,
+      "status_counts": {
+        "completed": 0,
+        "early_reject": 6,
+        "failed": 0
+      },
+      "stage_ms": {
+        "generate": {
+          "n": 6,
+          "p50_ms": 0,
+          "p95_ms": 0,
+          "max_ms": 0,
+          "mean_ms": 0
+        },
+        "backtest": {
+          "n": 6,
+          "p50_ms": 30,
+          "p95_ms": 35,
+          "max_ms": 41,
+          "mean_ms": 30
+        },
+        "approve": {
+          "n": 6,
+          "p50_ms": 1,
+          "p95_ms": 1,
+          "max_ms": 1,
+          "mean_ms": 1
+        }
+      },
+      "cpu_percent": {
+        "n_samples": 2,
+        "mean": 8.3,
+        "max": 9.0,
+        "p95": 7.6
+      },
+      "mem_percent": {
+        "mean": 32.4,
+        "max": 32.4
+      },
+      "cpu_pool_state": {
+        "enabled": false,
+        "pool_size_configured": 4,
+        "pool_initialized": false,
+        "worker_count": 0
+      }
+    },
+    {
+      "mode": "gathered_4",
+      "n_cycles": 6,
+      "wall_seconds": 0.498,
+      "cycles_per_second": 12.039,
+      "status_counts": {
+        "completed": 0,
+        "early_reject": 6,
+        "failed": 0
+      },
+      "stage_ms": {
+        "generate": {
+          "n": 6,
+          "p50_ms": 0,
+          "p95_ms": 0,
+          "max_ms": 0,
+          "mean_ms": 0
+        },
+        "backtest": {
+          "n": 6,
+          "p50_ms": 37,
+          "p95_ms": 44,
+          "max_ms": 70,
+          "mean_ms": 42
+        },
+        "approve": {
+          "n": 6,
+          "p50_ms": 18,
+          "p95_ms": 21,
+          "max_ms": 25,
+          "mean_ms": 19
+        }
+      },
+      "cpu_percent": {
+        "n_samples": 2,
+        "mean": 7.95,
+        "max": 8.5,
+        "p95": 7.4
+      },
+      "mem_percent": {
+        "mean": 32.4,
+        "max": 32.4
+      },
+      "cpu_pool_state": {
+        "enabled": false,
+        "pool_size_configured": 4,
+        "pool_initialized": false,
+        "worker_count": 0
+      }
+    },
+    {
+      "mode": "staggered_250ms",
+      "n_cycles": 6,
+      "wall_seconds": 1.504,
+      "cycles_per_second": 3.99,
+      "status_counts": {
+        "completed": 0,
+        "early_reject": 6,
+        "failed": 0
+      },
+      "stage_ms": {
+        "generate": {
+          "n": 6,
+          "p50_ms": 0,
+          "p95_ms": 0,
+          "max_ms": 0,
+          "mean_ms": 0
+        },
+        "backtest": {
+          "n": 6,
+          "p50_ms": 27,
+          "p95_ms": 28,
+          "max_ms": 30,
+          "mean_ms": 26
+        },
+        "approve": {
+          "n": 6,
+          "p50_ms": 2,
+          "p95_ms": 2,
+          "max_ms": 2,
+          "mean_ms": 2
+        }
+      },
+      "cpu_percent": {
+        "n_samples": 6,
+        "mean": 5.15,
+        "max": 9.0,
+        "p95": 6.8
+      },
+      "mem_percent": {
+        "mean": 32.28,
+        "max": 32.3
+      },
+      "cpu_pool_state": {
+        "enabled": false,
+        "pool_size_configured": 4,
+        "pool_initialized": false,
+        "worker_count": 0
+      }
+    }
+  ]
+}

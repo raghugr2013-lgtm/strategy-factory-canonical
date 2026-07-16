@@ -65,6 +65,7 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 - **P0 (done)**: Add `/api/auth/signup`.
 - **P0 (done)**: v1.2.0-alpha2 Phase A — outcome-event ledger, AI Workforce telemetry, design doc.
 - **P0 (done, 2026-02-15)**: v1.2.0-alpha2 Phase B — Continuous Learning Supervisor + Strategy Lineage + Outcome-conditioned Retrieval + AI Workforce Router. 29 Phase B tests + 32 Phase A tests + 35 baseline = **96/96 passing**. Router mount count unchanged at 92 (strictly additive).
+- **P0 (done, 2026-01-16)**: v1.2.0-alpha2 Phase B.1 — **Continuous Capacity-Aware Scheduler**. Adaptive-concurrency-driven learning-cycle dispatcher that continuously polls `host_capability` + `compute_probe` + `queue_pressure` and launches cycles as `asyncio.Task`s up to the recommended concurrency. Never sleeps unconditionally; respects hard cap + rolling-hour governor + capacity band. 21 new Phase B.1 tests + full Phase A/B regression = **82/82 passing** (116/116 including legacy suites). Router count still 92 (strictly additive). Performance audit report at `audit/PHASE_B1_PERFORMANCE_AUDIT.md` documents root cause (fixed-interval scheduler + `USE_PROCESS_POOL=false` + `_SIG_LOCK` + serialised Mongo emit) with measurable evidence: `sequential 13.7 cycles/s ≈ gathered_4 12.0 cycles/s` on 16-core box at 9% CPU utilisation.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
@@ -85,6 +86,37 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 | `backend/legacy/engines/ai_workforce/scorer.py` | Per-provider quality scorer (60s cache) |
 | `backend/legacy/engines/knowledge/outcome_conditioning.py` | Outcome-conditioned retrieval boost |
 | `backend/tests/test_v1_2_0_alpha2_phase_b.py` | 29 regression tests |
+
+## Phase B.1 Files Added (2026-01-16)
+
+| File | Purpose |
+|---|---|
+| `backend/legacy/engines/learning/continuous_scheduler.py` | **Continuous Capacity-Aware Scheduler** — polls `AdaptiveConcurrency.recommend()` on every tick, dispatches `run_learning_cycle` as `asyncio.Task`s, respects host capacity + hard cap + hourly governor + AI-provider RPM budget. Opt-in via `LEARNING_CONTINUOUS_MODE=true`. |
+| `backend/scripts/perf_audit_learning_loop.py` | Performance profiling harness — sequential vs `asyncio.gather` vs staggered dispatch under `psutil`+`compute_probe`+`queue_pressure` sampling. |
+| `audit/PHASE_B1_PERFORMANCE_AUDIT.md` | Root-cause analysis of "big VPS slower than small VPS" — with measurable evidence. |
+| `audit/PERF_AUDIT_REPORT.json` | Raw timing evidence produced by the harness. |
+| `backend/tests/test_v1_2_0_alpha2_phase_b1.py` | 21 regression tests (endpoint contract + capacity logic + legacy scheduler regression + 92-router boot-log invariant). |
+
+## Phase B.1 Files Modified (additive only)
+
+| File | Change |
+|---|---|
+| `backend/legacy/engines/learning/__init__.py` | Export continuous scheduler API |
+| `backend/legacy/api/learning.py` | +3 endpoints: `/api/learning/continuous/{start,stop,status}` |
+| `backend/app/main.py` | Auto-start continuous scheduler on boot when `LEARNING_CONTINUOUS_MODE=true` |
+
+## Phase B.1 Configuration surface (all env-driven, live-reload)
+
+| Var | Default | Description |
+|---|---|---|
+| `LEARNING_CONTINUOUS_MODE` | `false` | Master switch — set `true` to activate |
+| `LEARNING_CONTINUOUS_TICK_MS` | `1000` | Capacity poll cadence when dispatching |
+| `LEARNING_CONTINUOUS_IDLE_MS` | `2000` | Poll cadence when band is warn/critical / at cap |
+| `LEARNING_CONTINUOUS_MAX_CONCURRENT` | `8` | Hard ceiling regardless of adaptive recommendation |
+| `LEARNING_CONTINUOUS_CYCLES_PER_HOUR` | `600` | Rolling-hour governor (0=disabled) |
+| `LEARNING_CONTINUOUS_PROVIDER_RPM` | `0` | Per-provider RPM cap (0=rely on VIE limiter) |
+| `LEARNING_CONTINUOUS_CYCLE_MAX_S` | `300` | Per-cycle timeout |
+| `LEARNING_CONTINUOUS_PAIR` / `_TIMEFRAME` / `_STYLE` | `EURUSD` / `H1` / `trend-following` | Default seed |
 
 ## Phase B Files Modified (additive only)
 

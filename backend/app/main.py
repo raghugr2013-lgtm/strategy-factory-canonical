@@ -129,6 +129,24 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("learning scheduler auto-start failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase B.1 — auto-start the continuous
+        # capacity-aware scheduler when `LEARNING_CONTINUOUS_MODE=true`.
+        # Preferred to the fixed-interval scheduler above; the two are
+        # designed to coexist (legacy remains for backward compat) but
+        # production deployments should choose one.
+        try:
+            from engines.learning import (
+                continuous_mode_enabled as _continuous_enabled,
+                start_continuous_scheduler as _continuous_start,
+            )
+            if _continuous_enabled():
+                _cont_info = await _continuous_start()
+                logger.info("continuous scheduler auto-started on boot: %s", _cont_info)
+            else:
+                logger.info("continuous scheduler dormant on boot (LEARNING_CONTINUOUS_MODE=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("continuous scheduler auto-start failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 

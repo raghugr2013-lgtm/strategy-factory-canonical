@@ -33,6 +33,7 @@ from engines.learning import (
     LearningSeed,
     config as lcfg,
     counters_snapshot,
+    continuous_status,
     emit,
     emit_operator_decision,
     get_lineage,
@@ -40,7 +41,9 @@ from engines.learning import (
     new_run_id,
     run_learning_cycle,
     scheduler_status,
+    start_continuous_scheduler,
     start_scheduler,
+    stop_continuous_scheduler,
     stop_scheduler,
     VALID_STAGES,
 )
@@ -275,6 +278,37 @@ async def scheduler_stop(_u=Depends(require_admin)):
 @router.get("/scheduler/status")
 async def scheduler_state():
     return scheduler_status()
+
+
+# ── Phase B.1 endpoints — Continuous Capacity-Aware Scheduler ─────
+@router.post("/continuous/start")
+async def continuous_start(_u=Depends(require_admin)):
+    """Start the continuous capacity-aware scheduler. Idempotent.
+
+    Phase B.1 — replaces the fixed-interval learning scheduler with a
+    loop that continuously polls the Adaptive Concurrency Engine
+    (`host_capability` + `compute_probe` + `queue_pressure`) and
+    launches new learning cycles whenever CPU/RAM headroom exists.
+    Additive: does NOT stop the legacy fixed-interval scheduler — the
+    operator may run both, but doing so is not recommended.
+    """
+    return await start_continuous_scheduler()
+
+
+@router.post("/continuous/stop")
+async def continuous_stop(_u=Depends(require_admin)):
+    return await stop_continuous_scheduler()
+
+
+@router.get("/continuous/status")
+async def continuous_state():
+    """Read-only snapshot of the continuous scheduler:
+      - runtime (running, tick_count, cycles_launched_total, in_flight)
+      - last tick derivation (band, recommended_concurrency, reason)
+      - recent ticks (last 20) for the operator dashboard
+      - effective config from env
+    """
+    return continuous_status()
 
 
 @router.get("/lineage/detail/{strategy_hash}")

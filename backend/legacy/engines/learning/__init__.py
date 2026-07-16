@@ -24,3 +24,9 @@ from .supervisor import (        # noqa: F401
     start_scheduler,
     stop_scheduler,
 )
+from .continuous_scheduler import (   # noqa: F401
+    continuous_mode_enabled,
+    continuous_status,
+    start_continuous_scheduler,
+    stop_continuous_scheduler,
+)
