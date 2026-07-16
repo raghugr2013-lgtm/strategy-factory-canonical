@@ -150,20 +150,36 @@ def build_tiered_bundles(
         bundle.append(c)
 
     # 4. Split into tiers.
-    def _shape(s: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "strategy_hash":     s["strategy_hash"],
-            "style":             s["style"],
-            "confidence":        s["confidence"],
-            "solo_score":        s["solo_score"],
-            "regime_suitability": s["regime_suitability"],
-            "risk_profile":      s["risk_profile"],
-            "portfolio_score":   s.get("portfolio_score"),
-        }
+    # OPERATOR REFINEMENT (Phase F sign-off): Tier 1 is the BEST DIVERSIFIED
+    # portfolio for the current market — NOT the top-10 by profit factor.
+    # Diversification-first splitting: iterate the accepted pool and place
+    # each element into the FIRST tier where its style is under-represented
+    # (≤ 30% share). This guarantees each tier balances styles rather than
+    # concentrating the strongest raw scores at the top.
+    def _place_diversified(accepted: List[Dict[str, Any]]) -> tuple:
+        t1: List[Dict[str, Any]] = []
+        t2: List[Dict[str, Any]] = []
+        t3: List[Dict[str, Any]] = []
+        for cand in accepted:
+            style = str(cand["style"])
+            for tier in (t1, t2, t3):
+                if len(tier) >= MAX_TIER_SIZE:
+                    continue
+                # Under-represented check (30% cap per tier for diversification)
+                cur_style_count = sum(1 for x in tier if x["style"] == style)
+                proposed_share = (cur_style_count + 1) / max(1, len(tier) + 1)
+                if len(tier) < 4 or proposed_share <= 0.35:
+                    tier.append(cand)
+                    break
+            else:
+                # All tiers full — drop.
+                pass
+        return t1, t2, t3
 
-    tier_1 = [_shape(s) for s in bundle[0:10]]
-    tier_2 = [_shape(s) for s in bundle[10:20]]
-    tier_3 = [_shape(s) for s in bundle[20:30]]
+    t1_raw, t2_raw, t3_raw = _place_diversified(bundle)
+    tier_1 = [_shape(s) for s in t1_raw]
+    tier_2 = [_shape(s) for s in t2_raw]
+    tier_3 = [_shape(s) for s in t3_raw]
     style_balance = _tier_style_frequencies(bundle)
 
     from datetime import datetime, timezone
@@ -176,3 +192,15 @@ def build_tiered_bundles(
         style_balance=style_balance,
         rejections=rejections[:50],   # cap
     )
+
+
+def _shape(s: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "strategy_hash":     s["strategy_hash"],
+        "style":             s["style"],
+        "confidence":        s["confidence"],
+        "solo_score":        s["solo_score"],
+        "regime_suitability": s["regime_suitability"],
+        "risk_profile":      s["risk_profile"],
+        "portfolio_score":   s.get("portfolio_score"),
+    }

@@ -125,8 +125,32 @@ async def rebuild_master_bot(
             if pid: outcome_ids.append(pid)
 
     # 4. Allocation decisions per member
+    # Phase F integration — PORTFOLIO_POLICY env switch:
+    #   phase_d (default) → deterministic Phase D allocation engine
+    #   brain             → Phase F Adaptive Trading Brain
+    # Behaviour under `phase_d` is byte-identical to Phase D. Instant
+    # rollback: set `PORTFOLIO_POLICY=phase_d` (or unset).
     try:
-        actions = [a.to_dict() for a in allocation_decisions(state, regime=regime)]
+        import os
+        policy = os.environ.get("PORTFOLIO_POLICY", "phase_d").strip().lower()
+        if policy == "brain":
+            from engines.brain import brain_tick
+            brain_report = await brain_tick(
+                [m.to_dict() for m in state.members], pair="EURUSD",
+                timeframe="H1",
+            )
+            actions = []
+            # Translate BrainDecision → Phase D PortfolioAction wire format.
+            for d in brain_report.decisions:
+                actions.append({
+                    "strategy_hash": d["strategy_hash"],
+                    "action":        d["action"],
+                    "weight_delta":  d["weight_delta"],
+                    "reason":        d["reason"],
+                    "evidence":      d.get("evidence") or {},
+                })
+        else:
+            actions = [a.to_dict() for a in allocation_decisions(state, regime=regime)]
     except Exception:                                        # noqa: BLE001
         actions = []
     change_cap = pcfg.rebuild_max_changes()
