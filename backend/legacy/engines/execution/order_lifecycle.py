@@ -158,10 +158,24 @@ async def process_fill(fill: FillEvent) -> Dict[str, Any]:
     avg_price  = (total_notional / total_qty) if total_qty > 0 else None
 
     # REJECT path: qty_filled=0 and is_partial=False → mark REJECTED.
-    if fill.qty_filled == 0 and not fill.is_partial and parent.state != OrderState.REJECTED:
+    if fill.qty_filled == 0 and not fill.is_partial:
+        # Already rejected (submit-time race with the zero-fill queue
+        # in paper broker) — skip the update to prevent overwriting
+        # state back to FILLED.
+        if parent.state == OrderState.REJECTED:
+            return {"state": OrderState.REJECTED, "qty_filled": 0.0}
         await ledger.update_order_state(fill.request_id,
                                           state=OrderState.REJECTED,
                                           reject_reason="broker_reject_zero_fill")
+        await ledger.append_journal(
+            fill.account_id, JournalEventType.ORDER_STATE_CHANGE,
+            payload={"from": parent.state, "to": OrderState.REJECTED,
+                      "broker_reason": "zero_fill_reject",
+                      "trigger_fill_id": fill.fill_id},
+            correlation={"request_id": fill.request_id,
+                          "fill_id": fill.fill_id,
+                          "broker_order_id": parent.broker_order_id or ""},
+        )
         await _emit_state_change(fill.account_id, fill.request_id,
                                    parent.state, OrderState.REJECTED,
                                    broker_reason="zero_fill_reject")
@@ -175,6 +189,18 @@ async def process_fill(fill: FillEvent) -> Dict[str, Any]:
         fill.request_id, state=new_state,
         qty_filled=total_qty,
         avg_fill_price=avg_price,
+    )
+    # Journal the state transition — replay engine derives terminal
+    # state purely from this stream, so we MUST record it here.
+    await ledger.append_journal(
+        fill.account_id, JournalEventType.ORDER_STATE_CHANGE,
+        payload={"from": parent.state, "to": new_state,
+                  "qty_filled_total": total_qty,
+                  "avg_fill_price": avg_price,
+                  "trigger_fill_id": fill.fill_id},
+        correlation={"request_id": fill.request_id,
+                      "broker_order_id": parent.broker_order_id or "",
+                      "fill_id": fill.fill_id},
     )
     await _emit_state_change(fill.account_id, fill.request_id,
                                parent.state, new_state,
