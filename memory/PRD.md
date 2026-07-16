@@ -66,6 +66,7 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 - **P0 (done)**: v1.2.0-alpha2 Phase A — outcome-event ledger, AI Workforce telemetry, design doc.
 - **P0 (done, 2026-02-15)**: v1.2.0-alpha2 Phase B — Continuous Learning Supervisor + Strategy Lineage + Outcome-conditioned Retrieval + AI Workforce Router. 29 Phase B tests + 32 Phase A tests + 35 baseline = **96/96 passing**. Router mount count unchanged at 92 (strictly additive).
 - **P0 (done, 2026-01-16)**: v1.2.0-alpha2 Phase B.1 — **Continuous Capacity-Aware Scheduler**. Adaptive-concurrency-driven learning-cycle dispatcher that continuously polls `host_capability` + `compute_probe` + `queue_pressure` and launches cycles as `asyncio.Task`s up to the recommended concurrency. Never sleeps unconditionally; respects hard cap + rolling-hour governor + capacity band. 21 new Phase B.1 tests + full Phase A/B regression = **82/82 passing** (116/116 including legacy suites). Router count still 92 (strictly additive). Performance audit report at `audit/PHASE_B1_PERFORMANCE_AUDIT.md` documents root cause (fixed-interval scheduler + `USE_PROCESS_POOL=false` + `_SIG_LOCK` + serialised Mongo emit) with measurable evidence: `sequential 13.7 cycles/s ≈ gathered_4 12.0 cycles/s` on 16-core box at 9% CPU utilisation.
+- **P0 (done, 2026-01-16)**: v1.2.0-alpha2 Phase B.2 — **Unified Autonomous Orchestration Engine**. Central decision engine replacing per-purpose schedulers with a single priority-scored task dispatcher. 11 task adapters registered (`market_data_topup`, `bi5_realism_sweep`, `knowledge_index_refresh`, `strategy_generate`, `backtest`, `validation` (passive), `mutation`, `optimization` (passive), `learning_cycle`, `ranking`, `master_bot_bundle_refresh` (passive)). Each declares CPU/RAM/duration/AI-required/cost/business-value metadata; the scorer computes `priority_base × business_value × pressure × dep_readiness × budget_headroom ÷ resource_cost_factor` deterministically every tick. Provider budget tracker enforces per-provider RPM + per-provider daily USD + global daily/monthly USD ceilings, and `choose_provider()` implements the cost/quality/latency/availability weighted pick. Subordinate hooks added to `auto_scheduler` and `orchestrator_scheduler` so legacy APScheduler jobs go dormant while `ORCHESTRATOR_ENABLED=true`. 6 new API endpoints under `/api/orchestrator/*`. **29 Phase B.2 tests + full A/B/B.1 regression = 111/111 passing**. E2E self-improving loop verified with orchestrator active — all 6 stages green. Router count 92 → 93 (strictly additive; `orchestrator_engine` router added). Design doc at `docs/V1.2.0_ALPHA2_PHASE_B2_DESIGN.md`.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
@@ -104,6 +105,47 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 | `backend/legacy/engines/learning/__init__.py` | Export continuous scheduler API |
 | `backend/legacy/api/learning.py` | +3 endpoints: `/api/learning/continuous/{start,stop,status}` |
 | `backend/app/main.py` | Auto-start continuous scheduler on boot when `LEARNING_CONTINUOUS_MODE=true` |
+
+## Phase B.2 Files Added (2026-01-16)
+
+| File | Purpose |
+|---|---|
+| `docs/V1.2.0_ALPHA2_PHASE_B2_DESIGN.md` | Architecture design document |
+| `backend/legacy/engines/orchestrator/__init__.py` | Package root |
+| `backend/legacy/engines/orchestrator/types.py` | `Task` protocol, `Readiness`, `TaskResult`, `OrchestratorContext` |
+| `backend/legacy/engines/orchestrator/registry.py` | Auto-registration decorator + env-driven passive/priority overrides |
+| `backend/legacy/engines/orchestrator/budget_tracker.py` | Provider RPM + per-provider USD + global USD ceilings + weighted `choose_provider()` |
+| `backend/legacy/engines/orchestrator/core.py` | `Orchestrator` — priority scorer, tick loop, dispatcher, budget/pressure/dep-readiness gating |
+| `backend/legacy/engines/orchestrator/tasks/__init__.py` | Imports 11 adapters for side-effect registration |
+| `backend/legacy/engines/orchestrator/tasks/_helpers.py` | Shared freshness/dependency helpers |
+| `backend/legacy/engines/orchestrator/tasks/market_data_topup.py` | Adapter → `data_engine.auto_data_maintainer` |
+| `backend/legacy/engines/orchestrator/tasks/bi5_realism_sweep.py` | Adapter → `bi5_realism.sweep_realism` |
+| `backend/legacy/engines/orchestrator/tasks/knowledge_index_refresh.py` | Adapter → `knowledge.rebuild` |
+| `backend/legacy/engines/orchestrator/tasks/strategy_generate.py` | Adapter → `strategy_engine.generate_strategy_text` |
+| `backend/legacy/engines/orchestrator/tasks/backtest.py` | Adapter → `learning.supervisor.run_learning_cycle` |
+| `backend/legacy/engines/orchestrator/tasks/validation.py` | Passive stub (validation runs inline in backtest today) |
+| `backend/legacy/engines/orchestrator/tasks/mutation.py` | Adapter → `auto_mutation_runner.run_single_cycle` |
+| `backend/legacy/engines/orchestrator/tasks/optimization.py` | Passive stub |
+| `backend/legacy/engines/orchestrator/tasks/learning_cycle.py` | Adapter → `learning.supervisor.run_learning_cycle` (high priority) |
+| `backend/legacy/engines/orchestrator/tasks/ranking.py` | Adapter → `strategy_ranking_engine.rank_all` |
+| `backend/legacy/engines/orchestrator/tasks/master_bot_bundle_refresh.py` | Passive stub — operator-approved auto-refresh |
+| `backend/legacy/api/orchestrator_engine.py` | 6 new endpoints under `/api/orchestrator/*` |
+| `backend/tests/test_v1_2_0_alpha2_phase_b2.py` | 29 regression tests |
+
+## Phase B.2 Files Modified (additive only)
+
+| File | Change |
+|---|---|
+| `backend/app/main.py` | Register orchestrator_engine router + boot auto-start when `ORCHESTRATOR_ENABLED=true` |
+| `backend/legacy/engines/auto_scheduler.py` | `_is_subordinated()` now defers to orchestrator when it's active |
+| `backend/legacy/engines/orchestrator_scheduler.py` | Tick body checks orchestrator active-state and skips when subordinate |
+
+## Phase B.2 Configuration surface
+
+Master switch: `ORCHESTRATOR_ENABLED=true|false` (default false).
+Tick cadence: `ORCH_TICK_MS`, `ORCH_IDLE_MS`, `ORCH_MAX_CONCURRENT_TASKS`, `ORCH_DECISION_HISTORY`.
+Budget: `ORCH_BUDGET_DAILY_USD_GLOBAL`, `ORCH_BUDGET_MONTHLY_USD_GLOBAL`, `ORCH_BUDGET_DAILY_USD_<PROVIDER>`, `ORCH_BUDGET_RPM_<PROVIDER>`, `ORCH_BUDGET_WEIGHT_{COST,QUALITY,LATENCY,AVAILABILITY}`.
+Per-task overrides: `ORCH_TASK_<NAME>_PASSIVE`, `ORCH_TASK_<NAME>_PRIORITY_BASE`.
 
 ## Phase B.1 Configuration surface (all env-driven, live-reload)
 

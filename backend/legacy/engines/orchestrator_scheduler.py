@@ -103,6 +103,24 @@ def _build_job():
     async def _tick() -> None:
         _runtime["last_tick_at"] = datetime.now(timezone.utc).isoformat()
         _runtime["tick_count"] += 1
+        # Phase B.2 — subordinate to the Unified Autonomous Orchestration
+        # Engine when it is running (higher-priority owner). The APScheduler
+        # cron continues to fire on schedule; it just skips execution while
+        # the orchestrator is authoritative. This is the operator's rollback
+        # path — stopping the orchestrator resumes normal ticks immediately.
+        try:
+            from engines.orchestrator import is_active as _orc_is_active
+            if _orc_is_active():
+                _runtime.setdefault("subordinate_skip_count", 0)
+                _runtime["subordinate_skip_count"] += 1
+                _runtime["last_error"] = None
+                logger.info(
+                    "[orchestrator/scheduler] tick #%d → subordinate (orchestrator active)",
+                    _runtime["tick_count"],
+                )
+                return
+        except Exception:                                    # pragma: no cover
+            pass
         try:
             result = await orc.run_tick(execute_actions=True)
             recs = result.get("recommendations") or []

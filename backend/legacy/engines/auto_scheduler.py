@@ -146,6 +146,14 @@ async def _is_subordinated() -> bool:
         return False
     if not cfg.get("subordinate_to_orchestrator", SUBORDINATE_DEFAULT):
         return False
+    # Phase B.2 — subordinate to the Unified Autonomous Orchestration
+    # Engine as well (higher-priority owner when active).
+    try:
+        from engines.orchestrator import is_active as _orc_is_active
+        if _orc_is_active():
+            return True
+    except Exception:                                       # pragma: no cover
+        pass
     try:
         from engines import orchestrator_scheduler as orc_sched
         return bool(orc_sched.is_active())

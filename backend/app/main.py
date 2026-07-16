@@ -147,6 +147,22 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("continuous scheduler auto-start failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase B.2 — auto-start the Unified Autonomous
+        # Orchestration Engine when `ORCHESTRATOR_ENABLED=true`. Preferred
+        # to the Phase B.1 continuous scheduler for full-factory autonomy.
+        # Every legacy scheduler with `subordinate_to_orchestrator=true`
+        # (default) becomes dormant while this is running.
+        try:
+            import engines.orchestrator.tasks  # noqa: F401 — task registration
+            from engines.orchestrator import get_orchestrator, orchestrator_enabled
+            if orchestrator_enabled():
+                _orc_info = await get_orchestrator().start()
+                logger.info("orchestrator auto-started on boot: %s", _orc_info)
+            else:
+                logger.info("orchestrator dormant on boot (ORCHESTRATOR_ENABLED=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("orchestrator auto-start failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -199,6 +215,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "incremental_run_alias", "ingestion",
         "knowledge",     # v1.1.1 AI Learning Layer — /api/knowledge/*
         "learning",      # v1.2.0-alpha2 outcome-event ledger — /api/learning/*
+        "orchestrator_engine",  # v1.2.0-alpha2 Phase B.2 — /api/orchestrator/*
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",
