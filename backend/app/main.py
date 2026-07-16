@@ -179,6 +179,25 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("market_intelligence bootstrap failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase H — bootstrap execution engine Mongo
+        # indexes (7 new collections including immutable journal for
+        # Execution Replay). Non-fatal: dormant when EXEC_ENABLED=false.
+        try:
+            from engines.execution import (
+                ensure_indexes as _exec_ensure_indexes,
+                exec_enabled as _exec_enabled,
+                broker_name as _broker_name,
+            )
+            if _exec_enabled():
+                await _exec_ensure_indexes()
+                logger.info(
+                    "execution engine indexes bootstrapped (broker=%s)",
+                    _broker_name())
+            else:
+                logger.info("execution engine dormant on boot (EXEC_ENABLED=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("execution engine bootstrap failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
