@@ -306,5 +306,6 @@ class TestRouterCount:
         m = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
-        assert m[-1] == "96", (
-            f"latest boot reports {m[-1]} routers (expected 96 — Phase F adds brain_engine)")
+        # Phase F adds brain_engine → 96. Phase G adds market_intelligence_engine → 97.
+        assert m[-1] in ("96", "97"), (
+            f"latest boot reports {m[-1]} routers (expected 96 or 97)")

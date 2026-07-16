@@ -48,6 +48,57 @@ def _clamp_delta(current: float, proposed: float,
     return round(proposed, 4)
 
 
+def _market_risk_force_pause(
+    member: Dict[str, Any], signals: BrainSignals,
+) -> Optional[BrainDecision]:
+    """Phase G — optional market-driven force-pause.
+
+    Fires ONLY when all conditions are true:
+      * MI switches are on (MI_ENABLED + BRAIN_USES_MARKET_INTELLIGENCE)
+      * BRAIN_MARKET_RISK_PAUSE_ENABLED explicitly set to true
+        (default OFF per Q5 operator ruling — even when the master
+        switch is on)
+      * signals.risk_environment < threshold
+      * style_confidence[member.style] < min_confidence
+
+    Returns a PAUSE BrainDecision or None. Never raises.
+    """
+    try:
+        from engines.market_intel_engine import config as micfg
+        if not (micfg.mi_enabled() and micfg.brain_uses_market_intelligence()
+                and micfg.brain_market_risk_pause_enabled()):
+            return None
+        if signals.risk_environment is None:
+            return None
+        if signals.risk_environment >= micfg.market_risk_pause_threshold():
+            return None
+        style = str(member.get("style") or "unknown")
+        sc = float((signals.style_confidence or {}).get(style, 1.0))
+        if sc >= micfg.market_style_min_confidence():
+            return None
+        current = float(member.get("allocation") or 0.0)
+        target = _clamp_delta(current, 0.0)
+        return BrainDecision(
+            strategy_hash=str(member.get("strategy_hash") or ""),
+            action="PAUSE",
+            target_weight=target, current_weight=current,
+            weight_delta=round(target - current, 4),
+            score_now=0.0, score_next=0.0,
+            reason=(f"market_risk_force_pause "
+                    f"risk_env={signals.risk_environment:.2f} "
+                    f"style_conf={sc:.2f}"),
+            evidence={
+                "market_driven": True,
+                "risk_environment": signals.risk_environment,
+                "style_confidence": sc,
+                "threshold": micfg.market_risk_pause_threshold(),
+                "min_style_confidence": micfg.market_style_min_confidence(),
+            },
+        )
+    except Exception:                                     # pragma: no cover
+        return None
+
+
 def decide_action(
     member: Dict[str, Any],
     score: StrategyScore,
@@ -69,6 +120,11 @@ def decide_action(
             score_next=score.score_next, reason=cat,
             evidence={"catastrophic": True, "score_components": score.components},
         )
+
+    # 1b. Phase G market-driven force-pause (opt-in, off by default)
+    mkt = _market_risk_force_pause(member, signals)
+    if mkt is not None:
+        return mkt
 
     # 2. Retire — deep below threshold
     if score.score_now < bcfg.retire_threshold():

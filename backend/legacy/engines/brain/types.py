@@ -19,6 +19,12 @@ class BrainSignals:
     session:                  str = "unknown"
     spread_context:           str = "unknown"
     ts:                       str = ""
+    # ── Phase G additive fields (all optional; None ⇒ dormant) ──
+    market_confidence:        Optional[float] = None
+    style_confidence:         Dict[str, float] = field(default_factory=dict)
+    opportunity_score:        Optional[float] = None
+    risk_environment:         Optional[float] = None
+    structural_changes:       List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

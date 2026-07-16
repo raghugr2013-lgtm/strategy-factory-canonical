@@ -163,6 +163,22 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("orchestrator auto-start failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase G — bootstrap market_intelligence Mongo
+        # indexes so the ledger is ready to accept the first snapshot /
+        # state write. Non-fatal: MI is dormant when MI_ENABLED=false.
+        try:
+            from engines.market_intel_engine import (
+                ensure_indexes as _mi_ensure_indexes,
+                config as _mi_cfg,
+            )
+            if _mi_cfg.mi_enabled():
+                await _mi_ensure_indexes()
+                logger.info("market_intelligence indexes bootstrapped")
+            else:
+                logger.info("market_intelligence dormant on boot (MI_ENABLED=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("market_intelligence bootstrap failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -219,6 +235,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "intelligence_engine",  # v1.2.0-alpha2 Phase C — /api/intelligence/*
         "portfolio_engine",     # v1.2.0-alpha2 Phase D — /api/portfolio/*
         "brain_engine",         # v1.2.0-alpha2 Phase F — /api/brain/*
+        "market_intelligence_engine",  # v1.2.0-alpha2 Phase G — /api/market-intelligence/{state,changes,intelligence,refresh,...}
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",

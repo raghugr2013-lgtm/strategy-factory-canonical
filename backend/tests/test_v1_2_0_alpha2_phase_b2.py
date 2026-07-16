@@ -304,7 +304,7 @@ class TestBootLogRouterCount:
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches, "no mount log line found"
         # Router count grows additively as new phases land.
-        assert matches[-1] in ('92','93','94','95','96'), (
+        assert matches[-1] in ('92','93','94','95','96','97'), (
             f"latest boot reports {matches[-1]} routers (expected 93..95)")
 
 

@@ -102,6 +102,26 @@ def score_strategy(
         "session_fit":    w["session_fit"]    * _session_fit(style, signals.session),
         "liquidity_fit":  w["liquidity_fit"]  * _liquidity_fit(style, signals.liquidity_band),
     }
+
+    # ── Phase G additive market-intelligence terms ──
+    # These weights default to 0.0 (two-step operator opt-in), so
+    # Phase F behaviour is preserved byte-identically until an operator
+    # sets BRAIN_W_MARKET_CONFIDENCE / _STYLE_CONFIDENCE / _OPPORTUNITY > 0.
+    try:
+        from engines.market_intel_engine import config as micfg
+        w_mkt = micfg.w_market_confidence()
+        w_sty = micfg.w_style_confidence()
+        w_opp = micfg.w_opportunity()
+        if w_mkt > 0.0 and signals.market_confidence is not None:
+            comp["market_confidence"] = w_mkt * float(signals.market_confidence)
+        if w_sty > 0.0 and signals.style_confidence:
+            sc = float(signals.style_confidence.get(style, 0.5))
+            comp["style_confidence"] = w_sty * sc
+        if w_opp > 0.0 and signals.opportunity_score is not None:
+            comp["opportunity"] = w_opp * float(signals.opportunity_score)
+    except Exception:                                     # pragma: no cover
+        pass
+
     score_now = round(max(0.0, min(1.0, sum(comp.values()))), 4)
 
     # score_next: swap regime for predicted_next_regime when transition looms.

@@ -89,6 +89,28 @@ async def collect_signals(
 
     session = _session_now()
     band = _liquidity_band(session)
+
+    # ── Phase G additive block ──
+    # Loads MarketIntelligence only when both switches are on
+    # (MI_ENABLED + BRAIN_USES_MARKET_INTELLIGENCE). Otherwise None →
+    # signals stay Phase F-identical.
+    mi_conf = None
+    mi_style: Dict[str, Any] = {}
+    mi_opp = None
+    mi_risk = None
+    mi_changes: List[Any] = []
+    try:
+        from engines.market_intel_engine.brain_bridge import load_market_intelligence
+        mi = await load_market_intelligence(pair, timeframe)
+        if mi is not None:
+            mi_conf = float(mi.market_confidence)
+            mi_style = dict(mi.style_confidence or {})
+            mi_opp = float(mi.opportunity_score)
+            mi_risk = float(mi.risk_environment)
+            mi_changes = list(mi.active_structural_changes or [])
+    except Exception:                                     # pragma: no cover
+        pass
+
     return BrainSignals(
         regime=snap.regime,
         regime_confidence=snap.confidence,
@@ -102,4 +124,9 @@ async def collect_signals(
         session=session,
         spread_context=_spread_context(band),
         ts=datetime.now(timezone.utc).isoformat(),
+        market_confidence=mi_conf,
+        style_confidence=mi_style,
+        opportunity_score=mi_opp,
+        risk_environment=mi_risk,
+        structural_changes=mi_changes,
     )

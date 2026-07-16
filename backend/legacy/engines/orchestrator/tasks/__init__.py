@@ -22,4 +22,5 @@ from . import (              # noqa: F401 — side-effect: registration
     ranking,
     master_bot_bundle_refresh,
     self_rebuild,
+    market_intelligence_refresh,
 )
