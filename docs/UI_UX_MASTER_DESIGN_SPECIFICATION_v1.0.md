@@ -849,3 +849,262 @@ Every link is an outcome_event ID. Every hop is one Mongo find.
 Any UI change to this workspace must land as an appendix here first,
 with operator sign-off, before code implementation begins.
 
+
+
+---
+
+## Appendix D — Phase J Factory Self-Evaluation module (2026-02-16 addendum)
+
+### Purpose
+
+Give the operator a factory-level command centre showing the health, efficiency, effectiveness and evolution of the entire autonomous organisation. Read-only in OBSERVE mode; gains approve/reject/revert actions in RECOMMEND and AUTONOMOUS modes.
+
+### Route + navigation
+
+* Route: `/workspace/factory-eval`
+* Nav rail: below **Meta-Learning**, above **Ops**
+* Icon: `activity` (Lucide) — factory heartbeat metaphor
+* Mode chip in top-right of workspace header: same taxonomy as Meta-Learning
+
+### Layout — desktop (≥1440px)
+
+Three-band vertical layout:
+
+**Band 1 — KPI Hero Grid (P0 KPIs, full width, 220px height)**
+Six load-bearing tiles:
+1. `pnl_30d` — sparkline + delta vs prior 30d
+2. `dd_current` — vertical drawdown gauge, red when >10%
+3. `prediction_accuracy_30d` — dial 0..1 with target ring at 0.65
+4. `execution_quality_p50` — dial 0..1 with target ring at 0.70
+5. `ai_spend_daily` — daily/monthly progress bars against budget ceiling
+6. `opportunity_capture_ratio` — donut showing realised / theoretical-max
+
+Each tile clickable → deep-links to the corresponding drill-down.
+
+**Band 2 — Trend + Provider + Regime (three columns)**
+
+* **Left column (33%)** — `FactoryImprovementTrend`: multi-line chart, 90-day window, one line per P0 KPI. Regression slopes rendered as subtitle chips ("PnL 30d slope +0.8%/day, r²=0.42").
+* **Middle column (33%)** — `ProviderLeaderboard`: sortable table of providers (or provider/model tuples per Q7) with columns: name · spend · passing strategies · cost/pass · realised PnL attributed · ROI. Row expandable to per-model breakdown.
+* **Right column (33%)** — `RegimeEffectivenessMatrix`: 4 regimes × KPI columns (Sharpe, hit-rate, mean delta). Heatmap cell colours by significance.
+
+**Band 3 — Investment + Bottlenecks + Portfolios (three columns)**
+
+* **Left column (33%)** — `ResearchInvestmentPanel`: ranked coverage-gap cells + top research-ROI winners/losers. Each row shows expected uplift and confidence chips.
+* **Middle column (33%)** — `BottleneckPanel`: single "bottleneck summary" card per Q6 recommendation, listing top-3 saturation points with severity indicators. Recent bottleneck history sparkline underneath.
+* **Right column (33%)** — `PortfolioHealthTrendsPanel`: per-Master-Bot rows with sparkline of rolling Sharpe + DD; upward-trending bots at top (green), deteriorating bots at bottom (red).
+
+**Floating right rail — `PendingRecommendationsRail`**
+Same shape as the Meta-Learning rail (Appendix C) but with a `surface` filter chip row at the top: `compute · budget · research · pruning · portfolio · execution_path`. Each card colour-codes by surface. Approve/reject actions gated on mode (409 in OBSERVE).
+
+### Layout — tablet (768–1439px)
+
+Same bands but each band collapses to two columns. Rail moves inline below Band 3 (not floating). KPI hero grid becomes 3×2.
+
+### Layout — mobile (<768px)
+
+Single column. KPI hero grid becomes vertical stack of 6 tiles with swipe-navigate. Each band becomes an accordion.
+
+### Report Timeline drawer
+
+Left-slide drawer, 560px wide, launched from the report timeline icon in header.
+
+**Contents:**
+* Chronological list of past reports (last 90 days).
+* Each entry: report_id · cycle_ts · mode at cycle · KPI delta vs previous · n_insights · n_recommendations.
+* Clicking a report opens a full-screen historical view — same layout as the workspace but frozen at that report's KPIs.
+
+### Insight & Recommendation drawers
+
+Right-slide, same pattern as Meta-Learning. Every card exposes a "Trace" link opening the Explainability Explorer at the outcome_events that produced the insight.
+
+### Motion
+
+* KPI tile numbers **count up** on first load (400ms cubic easing).
+* Trend chart lines draw left-to-right 500ms after data lands.
+* Regime matrix cells fade in row-by-row (150ms staggered).
+* Bottleneck panel pulses `severity=high` cards subtly (1.5s cycle, low amplitude — attention without alarm fatigue).
+* Rail cards stagger-fade like Meta-Learning.
+
+### Sound
+
+* KPI tiles crossing thresholds (e.g. `dd_current` exceeding 10%) play a soft alert chime (once, muted if `SOUND_ENABLED=false`).
+* Approve/reject same as Meta-Learning.
+* Report timeline scroll produces a subtle tick per report row (like scrolling through a paper log).
+
+### Data-testids
+
+* `factory-eval-workspace-root`
+* `factory-eval-mode-chip`
+* `factory-eval-kpi-tile-{pnl_30d|dd_current|prediction_accuracy|execution_quality|ai_spend_daily|opportunity_capture}`
+* `factory-eval-trend-chart`
+* `factory-eval-provider-leaderboard`
+* `factory-eval-provider-row-{provider_name}`
+* `factory-eval-regime-matrix`
+* `factory-eval-regime-cell-{regime}`
+* `factory-eval-research-investment-panel`
+* `factory-eval-bottleneck-panel`
+* `factory-eval-portfolio-health-panel`
+* `factory-eval-pending-rail`
+* `factory-eval-rec-card-{recommendation_id}`
+* `factory-eval-report-timeline-open`
+* `factory-eval-report-entry-{report_id}`
+
+### Empty states
+
+* **No reports yet**: "Waiting for the first factory-evaluation cycle to complete (up to <cadence_sec>s)."
+* **No insights**: "The factory is behaving within expected parameters over this window."
+* **No pending recommendations**: "All ranked recommendations have been reviewed or expired."
+* **Disabled mode**: "Factory Self-Evaluation is disabled. Set FACTORY_EVAL_MODE=observe to activate."
+
+### Explainability integration
+
+Every card links into the **Explainability Explorer** (Appendix E). From an insight card the trace opens on:
+```
+factory_eval_insight
+  → outcome_events aggregated (up to 500, paginated)
+    → per-event drilldown
+```
+
+From a recommendation card the trace opens on:
+```
+factory_eval_recommendation
+  → factory_eval_insight (1..N contributing insights)
+    → source outcome_events
+```
+
+Change control: as with Appendix C.
+
+---
+
+## Appendix E — Explainability Explorer module
+
+The Explainability Explorer is the **cross-cutting audit UI**. It is invoked from every workspace's "Trace" link and provides a unified view onto the outcome_events chain.
+
+### Purpose
+
+Let an operator (or auditor) walk any decision chain from head to tail, view every intermediate row, and see the exact join keys (brain_decision_id, request_id, attribution_id, insight_id, recommendation_id) that link them.
+
+### Route + entry points
+
+* Route: `/explorer/trace/{root_event_id}` (deep-linkable)
+* Entry points: every "Trace" button in every workspace opens the Explorer prefilled with the relevant root event.
+
+### Layout — desktop
+
+Two-pane layout:
+
+**Left pane (35%) — `ChainTree`**
+* Tree view of the chain, root at top.
+* Each node: `[decision_type] · ts · target/strategy_hash · status pill`.
+* Expand/collapse subtrees.
+* Colour codes: green (pass), amber (partial/skipped), red (fail).
+* Search box filters by decision_type or ID substring.
+
+**Right pane (65%) — `EventDetails`**
+* Full JSON of the selected event, syntax-highlighted.
+* Metrics block rendered as a tabular readout.
+* Evidence block: every referenced ID is a link that loads that event into the tree (append, not replace).
+* Timeline strip at bottom shows adjacent-in-time events (±10 rows).
+
+### Layout — tablet/mobile
+
+Single-pane with tabbed switcher between `Tree` and `Details`. Deep-links (`/explorer/trace/{id}`) always open in Details view first, then reveal Tree via a swipe.
+
+### Cross-references
+
+The Explorer knows every join key in the platform:
+
+| Field | Resolves to |
+|-------|-------------|
+| `learning_run_id` | Learning cycle's outcome_events |
+| `strategy_hash` | Strategy row + lineage |
+| `parent_hash` | Parent strategy (for mutations) |
+| `brain_decision_id` | brain_decision outcome_event |
+| `request_id` | order_request row |
+| `broker_order_id` | fill_events + position |
+| `position_id` | position row |
+| `attribution_id` | execution_attribution row |
+| `evaluation_id` | meta_learning_evaluation |
+| `recommendation_id` | meta_learning or factory_eval recommendation |
+| `insight_id` | factory_eval_insight |
+| `report_id` | factory_eval_report |
+| `cycle_id` | Every cycle's start/end events |
+| `structural_change_id` | structural_changes row |
+
+Clicking any of these in the details view **navigates the tree** to that node.
+
+### Motion
+
+* Tree expand/collapse: 200ms height animation.
+* Details fade+slide when selection changes (150ms).
+* When a new node is appended to the tree via a link, it flashes for 800ms.
+
+### Sound
+
+None. The Explorer is a serious-mode UI; sound would be intrusive here.
+
+### Data-testids
+
+* `explorer-workspace-root`
+* `explorer-chain-tree`
+* `explorer-tree-node-{outcome_event_id}`
+* `explorer-details-panel`
+* `explorer-event-json`
+* `explorer-timeline-strip`
+* `explorer-search`
+* `explorer-link-{join_key}`
+
+### Accessibility
+
+* Tree is `role="tree"`, nodes are `role="treeitem"` with `aria-expanded`.
+* Details JSON is copy-selectable, `aria-label`ed.
+* Keyboard: arrow keys navigate the tree, `Enter` opens details, `Cmd/Ctrl+Click` on a join key opens in a new sub-tree.
+
+### Performance
+
+* Tree virtualised — 10,000 nodes render at 60fps.
+* JSON syntax highlight on-demand; no highlight for events > 100KB payload (fall back to plain text).
+
+### Empty states
+
+* **Root event not found**: "This event has been TTL'd out of outcome_events. Some events retain longer than others; check the specific engine's TTL."
+* **No children**: "This event is a leaf — no downstream events reference it yet."
+
+---
+
+## Appendix F — Command OS Global Wireframe additions (2026-02-16)
+
+### Nav rail final ordering
+
+Top to bottom (icon + label on hover, keyboard shortcuts shown):
+
+1. Mission Control (`M`)
+2. Factory Pipeline (`P`)
+3. Strategies (`S`)
+4. Portfolios (`O`)
+5. Trading Brain (`B`)
+6. Market Intelligence (`I`)
+7. Execution (`X`)
+8. Knowledge (`K`)
+9. Meta-Learning (`L`)
+10. **Factory Self-Eval (`F`)** — new
+11. **Explainability Explorer (`E`)** — new, no persistent workspace; opens as overlay
+12. Ops (`P`)
+13. Settings (`,`)
+
+### Global header additions
+
+* **Mode summary chip cluster**: shows all engine modes at a glance (`ORCH: on · MI: on · EXEC: paper · ML: observe · FE: observe`). Click any chip to open that engine's config workspace.
+* **Global alerts icon**: aggregates severity-high insights from Meta-Learning + Factory-Eval + risk monitor. Numeric badge counts unresolved.
+
+### Global keyboard shortcuts
+
+* `Cmd/Ctrl + K` — global search (across strategies, master bots, decisions, recommendations)
+* `Cmd/Ctrl + .` — invoke Explorer at last-selected event
+* `Cmd/Ctrl + /` — toggle keyboard shortcut cheat sheet overlay
+* `Cmd/Ctrl + Shift + M` — cycle global theme (dark → high-contrast → light-if-supported)
+
+### Change control
+
+Wireframe additions must land here before code implementation. Change requests go through the same appendix pattern.
+
