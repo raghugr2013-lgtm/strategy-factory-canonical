@@ -1,0 +1,92 @@
+{
+  "verdict": "PASS",
+  "backend": "memory",
+  "duration_hours": 24.0,
+  "n_iterations": 10,
+  "n_passed": 10,
+  "n_failed": 0,
+  "started_at": "2026-07-16T15:05:34.144413+00:00",
+  "finished_at": "2026-07-16T15:05:49.467643+00:00",
+  "iterations": [
+    {
+      "i": 1,
+      "ts": "2026-07-16T15:05:34.144413+00:00",
+      "duration_s": 1.71,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 2,
+      "ts": "2026-07-16T15:05:35.859605+00:00",
+      "duration_s": 1.72,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 3,
+      "ts": "2026-07-16T15:05:37.570762+00:00",
+      "duration_s": 1.71,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 4,
+      "ts": "2026-07-16T15:05:39.267987+00:00",
+      "duration_s": 1.7,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 5,
+      "ts": "2026-07-16T15:05:40.966292+00:00",
+      "duration_s": 1.7,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 6,
+      "ts": "2026-07-16T15:05:42.665739+00:00",
+      "duration_s": 1.7,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 7,
+      "ts": "2026-07-16T15:05:44.364257+00:00",
+      "duration_s": 1.7,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 8,
+      "ts": "2026-07-16T15:05:46.057994+00:00",
+      "duration_s": 1.69,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 9,
+      "ts": "2026-07-16T15:05:47.759558+00:00",
+      "duration_s": 1.7,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    },
+    {
+      "i": 10,
+      "ts": "2026-07-16T15:05:49.467595+00:00",
+      "duration_s": 1.71,
+      "ok": true,
+      "returncode": 0,
+      "stderr_tail": ""
+    }
+  ]
+}

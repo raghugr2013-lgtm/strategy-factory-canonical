@@ -1,0 +1,132 @@
+{
+  "verdict": "PASS",
+  "config": {
+    "orders": 500,
+    "symbols": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "XAUUSD"
+    ],
+    "latency_ms": 20.0,
+    "reject_rate": 0.0,
+    "partial_rate": 0.0,
+    "slippage_pips": 0.2,
+    "seed": 42,
+    "account_id": "DRILL_ACC",
+    "strategy_hash": "drill_strategy_hash",
+    "stress_scenarios": true,
+    "backend": "memory",
+    "verbose": false
+  },
+  "started_at": "2026-07-16T15:04:28.582025+00:00",
+  "finished_at": "2026-07-16T15:04:31.931856+00:00",
+  "duration_s": 3.35,
+  "n_validations": 9,
+  "n_passed": 9,
+  "n_failed": 0,
+  "validations": [
+    {
+      "name": "order_lifecycle",
+      "passed": true,
+      "detail": "terminal 500/500 \u00b7 filled 500 \u00b7 rejected 0 (expected ~0\u00b12) \u00b7 partial-still-open 0",
+      "metrics": {
+        "n_orders": 500,
+        "n_terminal": 500,
+        "n_filled": 500,
+        "n_rejected": 0,
+        "expected_rejects": 0,
+        "reject_tolerance": 2,
+        "n_fills_processed": 500
+      },
+      "duration_ms": 5.91
+    },
+    {
+      "name": "position_lifecycle",
+      "passed": true,
+      "detail": "open 4 \u00b7 closed 248",
+      "metrics": {
+        "n_open": 4,
+        "n_closed": 248
+      },
+      "duration_ms": 2.61
+    },
+    {
+      "name": "journal_integrity",
+      "passed": true,
+      "detail": "2000 events \u00b7 monotonic \u00b7 gap-free",
+      "metrics": {
+        "n_events": 2000,
+        "event_types": {
+          "order_state_change": 1500,
+          "fill_event": 500
+        }
+      },
+      "duration_ms": 26.52
+    },
+    {
+      "name": "replay_consistency",
+      "passed": true,
+      "detail": "500/500 match \u00b7 clean",
+      "metrics": {
+        "n_orders": 500,
+        "n_mismatches": 0
+      },
+      "duration_ms": 25.17
+    },
+    {
+      "name": "pnl_correctness",
+      "passed": true,
+      "detail": "n_closed=248 \u03a3realised=-9.92",
+      "metrics": {
+        "n_closed": 248,
+        "total_realised": -9.92,
+        "mean_realised": -0.04
+      },
+      "duration_ms": 2.61
+    },
+    {
+      "name": "explainability_chain",
+      "passed": true,
+      "detail": "first_orders 500 \u00b7 missing_request_id 0 \u00b7 missing_strategy_hash 0 \u00b7 missing_brain_decision_id 0",
+      "metrics": {
+        "n_first_orders": 500,
+        "missing_request_id": 0,
+        "missing_strategy_hash": 0,
+        "missing_brain_decision_id": 0
+      },
+      "duration_ms": 19.76
+    },
+    {
+      "name": "execution_quality",
+      "passed": true,
+      "detail": "n_fills=500 \u00b7 mean_latency=20.0ms \u00b7 max_slippage=0.2pips",
+      "metrics": {
+        "n_fills": 500,
+        "mean_latency_ms": 20.0,
+        "max_slippage_pips": 0.2
+      },
+      "duration_ms": 4.66
+    },
+    {
+      "name": "deterministic_replay",
+      "passed": true,
+      "detail": "20 fills identical across two runs",
+      "metrics": {
+        "n_fills": 20
+      },
+      "duration_ms": 257.55
+    },
+    {
+      "name": "stress_scenarios",
+      "passed": true,
+      "detail": "submitted 50 \u00b7 rejected 9 (~18%) \u00b7 journal 225 events gap-free",
+      "metrics": {
+        "submitted": 50,
+        "rejected": 9,
+        "n_journal": 225
+      },
+      "duration_ms": 703.92
+    }
+  ]
+}

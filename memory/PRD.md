@@ -245,6 +245,21 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
   - **Boot log**: `factory_eval engine ready (mode=observe, cadence=3600s)`.
   - **API-level verified**: OBSERVE mode `approve` returns HTTP 409. Force refresh cycle: 12 insights, 1 recommendation, 0 applied, 0 overrides written — **OBSERVE invariant intact** (858ms cycle).
   - Design doc: `docs/V1.2.0_ALPHA2_PHASE_J_DESIGN.md` (715 lines) with all Q1–Q10 answered via recommended defaults.
+
+## 2026-02-16 — Backend Feature Freeze declared
+
+**Freeze tag:** `v1.2.0-alpha2-feature-freeze` (to be created after `Save to GitHub`).
+
+- **`docs/BACKEND_FEATURE_FREEZE_v1.2.0-alpha2.md`** — freeze scope, baseline captured, permitted post-freeze changes (bug fixes, deployment fixes, performance improvements, docs, tests only).
+- **`docs/RELEASE_TAGGING_GUIDE.md`** — operator-runnable steps to create the annotated tag on the freeze commit and push it upstream.
+- **`docs/POST_FREEZE_DEPLOYMENT_CHECKLIST.md`** — 11-step VPS go-live sequence (env prep → first boot smoke → boot-log invariants → orchestrator task count → engine mode verification → supervisord wiring → TLS proxy → firewall → baseline snapshot → green-light).
+- **`docs/PRODUCTION_SIGN_OFF.md`** — template capturing deployment identity, boot verification, paper broker validation, 24h + 72h Tier 5, findings resolution log, rollback plan, operator signature.
+- **Local pod verification (proxy for VPS steps 3.1–3.4)**: 100 routers online · 17 orchestrator tasks registered (all Phase A–J including `meta_learning_evaluation` + `factory_evaluation`) · both Meta-Learning and Factory-Eval in OBSERVE · both `approve` endpoints return HTTP 409 · zero overrides + zero applications across both engines (OBSERVE structural invariants).
+- **Paper Broker Validation (all workloads PASS)**:
+  - 100 orders: 9/9 scenarios, 2.00s, journal gap-free — `/app/audit/paper_flow_100_orders.json`
+  - 500 orders: 9/9 scenarios, 3.35s, journal gap-free — `/app/audit/paper_flow_500_orders.json`
+  - 1000 orders: 9/9 scenarios, 5.52s, journal gap-free — `/app/audit/paper_flow_1000_orders.json`
+- **Tier 5 harness smoke** — 10 iterations at 3s interval, 100-order drill each, memory backend → 10/10 PASS with stable 1.7s per-iteration duration — `/app/audit/tier5_smoke_10iter.json`. Harness ready for 24h/72h VPS runs.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
