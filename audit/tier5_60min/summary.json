@@ -1,0 +1,36 @@
+{
+  "run_id": "tier5_60min_preview",
+  "verdict_from_harness": "PASS",
+  "started_at": "2026-07-16T15:18:03.661199+00:00",
+  "finished_at": "2026-07-16T16:18:09.296247+00:00",
+  "duration_hours": 1.0,
+  "iterations": {
+    "total": 202,
+    "pass": 202,
+    "fail": 0
+  },
+  "rss_kb": {
+    "initial": 21404,
+    "min": 20208,
+    "max": 21404,
+    "final": 20208,
+    "drift_pct": -5.59
+  },
+  "iteration_duration_s": {
+    "avg": 2.871,
+    "min": 2.68,
+    "max": 5.73,
+    "median": 2.69,
+    "stddev": 0.364
+  },
+  "exceptions_in_log": 0,
+  "orchestrator_stalls_gt3x_median": 0,
+  "journal_seq_gaps": 0,
+  "journal_accounts": 10,
+  "meta_learning_cycle_count": 0,
+  "factory_eval_cycle_count": 0,
+  "meta_learning_overrides_written": 0,
+  "meta_learning_applications_written": 0,
+  "factory_eval_overrides_written": 0,
+  "factory_eval_applications_written": 0
+}

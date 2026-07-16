@@ -260,6 +260,18 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
   - 500 orders: 9/9 scenarios, 3.35s, journal gap-free — `/app/audit/paper_flow_500_orders.json`
   - 1000 orders: 9/9 scenarios, 5.52s, journal gap-free — `/app/audit/paper_flow_1000_orders.json`
 - **Tier 5 harness smoke** — 10 iterations at 3s interval, 100-order drill each, memory backend → 10/10 PASS with stable 1.7s per-iteration duration — `/app/audit/tier5_smoke_10iter.json`. Harness ready for 24h/72h VPS runs.
+
+## 2026-02-16 — Tier 5 60-minute upstream-filter validation (preview pod)
+
+- **Verdict:** PASS — **READY FOR VPS DEPLOYMENT: YES**
+- **Iterations:** 202/202 (100%), zero fails
+- **Backend RSS:** initial 21,404 KB → final 20,208 KB (drift **−5.59%**, no leak)
+- **Iteration duration:** avg 2.87s / median 2.69s / max 5.73s / min 2.68s / stddev 0.36s
+- **Exceptions in log:** 0 · **Orchestrator stalls:** 0 · **Journal seq gaps:** 0
+- **OBSERVE-mode invariants:** 0 overrides + 0 applications across both Meta-Learning and Factory-Eval — structural safety intact
+- **Caveat:** orchestrator not enabled during preview run → Meta-Learning + Factory-Eval cycle count in window = 0; those cycles must be validated on the VPS with `ORCHESTRATOR_ENABLED=true` during the 24h/72h runs
+- **Full decision record:** `/app/audit/tier5_60min/DECISION_RECORD.md`
+- **Attachments:** `/app/audit/tier5_60min/{report,summary,stdout,rss_track,baseline}`
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.

@@ -1,0 +1,13 @@
+=== Baseline (pre-run) ===
+2026-07-16T15:17:48Z
+root          10  2.1  0.9 1457264 310232 ?      Sl   11:19   5:03 /opt/plugins-venv/bin/python /opt/plugins-venv/bin/uvicorn plugins.tools.agent.server:app --host 0.0.0.0 --port 8010 --workers 1 --no-access-log
+root          18  0.0  0.0  40316 25548 ?        S    11:19   0:13 /opt/plugins-venv/bin/python /opt/plugins-venv/bin/e1_monitor 20b7ea30-d125-4d52-8bf1-30e18de132f7 https://demobackend.emergentagent.com --interval 1
+root          41  0.0  0.0  37400 23312 ?        Ss   11:19   0:07 /usr/bin/python3 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+root       20749  0.0  0.0 103768 21404 ?        Sl   14:42   0:00 /root/.venv/bin/python /root/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
+root       20750  0.0  0.0  15952  7800 ?        S    14:42   0:00 /root/.venv/bin/python -c from multiprocessing.resource_tracker import main;main(4)
+               total        used        free      shared  buff/cache   available
+Mem:           32043       28471         722          47        3286        3571
+Swap:              0           0           0
+--- backend RSS ---
+     10 310232 /opt/plugins-venv/bin/python /opt/plugins-venv/bin/uvicorn plugins.tools.agent.server:app --host 0.0.0.0 --port 8010 --workers 1 --no-access-log
+  20749 21404 /root/.venv/bin/python /root/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
