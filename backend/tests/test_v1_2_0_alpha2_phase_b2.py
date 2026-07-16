@@ -289,9 +289,9 @@ class TestBootLogRouterCount:
         matches = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches, "no mount log line found"
-        # Phase B.2 adds `orchestrator_engine` → 93. Strictly additive.
-        assert matches[-1] == "93", (
-            f"latest boot reports {matches[-1]} routers (expected 93 — "
+        # Phase B.2 adds orchestrator_engine → 93; Phase C adds intelligence_engine → 94.
+        assert matches[-1] in ("93", "94"), (
+            f"latest boot reports {matches[-1]} routers (expected 93 or 94 — "
             "Phase B.2 adds orchestrator_engine)"
         )
 
