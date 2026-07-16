@@ -305,7 +305,7 @@ class TestBackwardCompatibility:
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
         # Accept 97 (pre-H9) or 98 (post-H9) during transition.
-        assert m[-1] in ("97", "98", "99"), f"boot reports {m[-1]}"
+        assert m[-1] in ("97", "98", "99", "100"), f"boot reports {m[-1]}"
 
     def test_no_execution_api_yet(self, admin):
         # H9 has landed. Instead of expecting 404, we now verify the

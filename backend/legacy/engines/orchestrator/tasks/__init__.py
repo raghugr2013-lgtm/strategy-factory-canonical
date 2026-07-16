@@ -26,4 +26,5 @@ from . import (              # noqa: F401 — side-effect: registration
     broker_health_check,
     execution_attribution,
     meta_learning_evaluation,
+    factory_evaluation,
 )

@@ -305,5 +305,5 @@ class TestBootLogRouterCount:
         matches = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches, "no mount log line found"
-        assert matches[-1] in ('92','93','94','95','96','97','98','99'), (
+        assert matches[-1] in ('92','93','94','95','96','97','98','99','100'), (
             f"latest boot reports {matches[-1]} routers (expected 94..95)")

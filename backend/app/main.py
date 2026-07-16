@@ -217,6 +217,25 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("meta_learning engine bootstrap failed (non-fatal)")
 
+        # v1.2.0-alpha2 Phase J — bootstrap factory-eval Mongo indexes
+        # (6 new collections). Non-fatal. Runs even in OBSERVE (default)
+        # so read endpoints work immediately.
+        try:
+            from engines.factory_eval import (
+                ensure_indexes as _fe_ensure_indexes,
+                config as _fe_cfg,
+            )
+            if _fe_cfg.mode() != "disabled":
+                await _fe_ensure_indexes()
+                logger.info(
+                    "factory_eval engine ready (mode=%s, cadence=%ss)",
+                    _fe_cfg.mode(), _fe_cfg.cadence_sec())
+            else:
+                logger.info("factory_eval engine dormant on boot "
+                            "(FACTORY_EVAL_MODE=disabled)")
+        except Exception:  # noqa: BLE001
+            logger.exception("factory_eval engine bootstrap failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -276,6 +295,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "market_intelligence_engine",  # v1.2.0-alpha2 Phase G — /api/market-intelligence/{state,changes,intelligence,refresh,...}
         "execution_engine",     # v1.2.0-alpha2 Phase H9 — /api/execution/{orders,fills,positions,quality,attribution,risk,replay,journal,...}
         "meta_learning_engine", # v1.2.0-alpha2 Phase I — /api/meta-learning/{config,evaluations,recommendations,pending,applications,overrides,refresh,approve,reject,revert,...}
+        "factory_eval_engine",  # v1.2.0-alpha2 Phase J — /api/factory-eval/{config,reports,kpis,insights,recommendations,pending,applications,overrides,providers/leaderboard,strategies/top-contributors,...}
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",

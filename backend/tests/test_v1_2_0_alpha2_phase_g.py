@@ -482,7 +482,7 @@ class TestRouterAndTaskCount:
         m = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
-        assert m[-1] in ("97", "98", "99"), (
+        assert m[-1] in ("97", "98", "99", "100"), (
             f"latest boot reports {m[-1]} routers "
             f"(expected 97 or 98 — Phase G adds market_intelligence_engine; Phase H9 adds execution_engine)")
 
