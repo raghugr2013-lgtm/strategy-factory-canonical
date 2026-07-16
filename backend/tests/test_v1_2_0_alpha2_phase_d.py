@@ -348,7 +348,7 @@ class TestOrchestratorIntegration:
         assert r.status_code == 200
         names = {t["name"] for t in r.json()["tasks"]}
         assert "self_rebuild" in names
-        assert r.json()["count"] in (12, 13, 14)   # 11 + self_rebuild; +1 Phase G MI; +1 Phase H5 broker_health
+        assert r.json()["count"] in (12, 13, 14, 15)   # 11 + self_rebuild; +1 Phase G MI; +1 Phase H5 broker_health; +1 Phase H7 attribution
 
     def test_self_rebuild_is_passive_by_default(self, admin):
         r = admin.get(f"{BASE_URL}/api/orchestrator/tasks")
@@ -418,7 +418,7 @@ class TestBootLogRouterCount:
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert matches
         # Phase D adds `portfolio_engine` → 95.
-        assert matches[-1] in ('92','93','94','95','96','97'), (
+        assert matches[-1] in ('92','93','94','95','96','97','98'), (
             f"latest boot reports {matches[-1]} routers (expected 95 — "
             "Phase D adds portfolio_engine)"
         )

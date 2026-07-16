@@ -57,3 +57,7 @@ from .broker_health import (      # noqa: F401
     sample_broker_health, read_latest_health,
     is_broker_healthy_for_new_orders, compute_health_score,
 )
+from .quality import measure_execution_quality  # noqa: F401
+from .attribution import attribute_closed_positions  # noqa: F401
+from .risk_monitor import evaluate_guards  # noqa: F401
+from .replay import replay_range, ReplayReport  # noqa: F401

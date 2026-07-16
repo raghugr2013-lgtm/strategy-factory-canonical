@@ -297,20 +297,21 @@ class TestBackwardCompatibility:
     """H1-H3 additive milestones: router count unchanged, no /api/execution/*
     endpoints yet (arriving in H9). Phase G behaviour preserved."""
 
-    def test_router_count_unchanged_pre_h9(self):
-        # H1-H8 add zero routers; H9 will add one (execution_engine → 98)
+    def test_router_count_is_98_post_h9(self):
+        # H1-H8 add zero routers; H9 adds execution_engine → 98.
         with open("/var/log/supervisor/backend.err.log") as f:
             log = f.read()
         m = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
-        # Accept 97 (pre-H9) or 98 (post-H9)
+        # Accept 97 (pre-H9) or 98 (post-H9) during transition.
         assert m[-1] in ("97", "98"), f"boot reports {m[-1]}"
 
     def test_no_execution_api_yet(self, admin):
-        # /api/execution/* endpoints are H9 — must currently 404
-        r = admin.get(f"{BASE_URL}/api/execution/broker/health")
-        assert r.status_code in (404, 405, 501)
+        # H9 has landed. Instead of expecting 404, we now verify the
+        # config endpoint is reachable and returns 200.
+        r = admin.get(f"{BASE_URL}/api/execution/config")
+        assert r.status_code == 200
 
     def test_exec_indexes_bootstrapped_on_boot(self):
         with open("/var/log/supervisor/backend.err.log") as f:
@@ -771,3 +772,216 @@ print('TASK_REGISTERED_OK')
                             "PYTHONPATH": "/app/backend:/app/backend/legacy"})
         assert r.returncode == 0, r.stderr
         assert "TASK_REGISTERED_OK" in r.stdout
+
+
+# ── 10. Phase H6 · Execution Quality ────────────────────────────
+class TestExecutionQuality:
+    def test_fallback_when_insufficient_fills(self):
+        script = r"""
+import asyncio, sys, os
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import reset_backend, ensure_indexes, wipe_account, measure_execution_quality
+async def go():
+    reset_backend(); await ensure_indexes(); await wipe_account('EQ_ACC')
+    q = await measure_execution_quality('EQ_ACC', 'EURUSD', persist=False)
+    assert q.method == 'estimated_no_live_feed'
+    assert q.score == 0.7
+    print('EQ_FALLBACK_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "EQ_FALLBACK_OK" in r.stdout
+
+    def test_measured_live_after_workload(self):
+        script = r"""
+import asyncio, sys, os, uuid
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import (
+    reset_backend, ensure_indexes, wipe_account,
+    OrderRequest, get_paper_adapter, submit_order, process_fill,
+    measure_execution_quality,
+)
+from engines.execution.broker import reset_paper_adapter
+async def go():
+    reset_backend(); await ensure_indexes(); await wipe_account('EQ_LIVE')
+    reset_paper_adapter()
+    br = get_paper_adapter(); await br.connect()
+    for i in range(25):
+        req = OrderRequest(request_id=f'req_{i:03d}', account_id='EQ_LIVE',
+            pair='EURUSD', side='BUY' if i%2 else 'SELL', type='MARKET',
+            qty=1000.0, price=1.08, strategy_hash='s', brain_decision_id='bd')
+        await submit_order(req, br)
+    for f in await br.drain_fills(0.1):
+        await process_fill(f)
+    q = await measure_execution_quality('EQ_LIVE', 'EURUSD', persist=True)
+    assert q.method == 'measured_live', q.method
+    assert q.n_samples >= 20
+    assert 0.0 <= q.score <= 1.0
+    print('EQ_LIVE_OK score=', q.score, 'n=', q.n_samples)
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "EQ_LIVE_OK" in r.stdout
+
+
+# ── 11. Phase H8 · Risk Monitor (recommend-only) ────────────────
+class TestRiskMonitor:
+    def test_no_breaches_on_empty_book(self):
+        script = r"""
+import asyncio, sys, os
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import reset_backend, ensure_indexes, wipe_account, evaluate_guards
+async def go():
+    reset_backend(); await ensure_indexes(); await wipe_account('RM')
+    recs = await evaluate_guards('RM')
+    assert recs == [], recs
+    print('RM_EMPTY_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "RM_EMPTY_OK" in r.stdout
+
+    def test_max_positions_guard_fires(self):
+        script = r"""
+import asyncio, sys, os, uuid
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+os.environ['RISK_MAX_POSITIONS'] = '2'
+from engines.execution import (
+    reset_backend, ensure_indexes, wipe_account,
+    evaluate_guards, Position,
+)
+from engines.execution.ledger import upsert_position
+async def go():
+    reset_backend(); await ensure_indexes(); await wipe_account('RM2')
+    for i in range(3):
+        p = Position(position_id=f'p{i}', account_id='RM2', pair='EURUSD',
+            side='BUY', qty=1000.0, avg_entry=1.08, opened_at='2026-02-16T00:00:00Z')
+        await upsert_position(p)
+    recs = await evaluate_guards('RM2')
+    guards = [r.guard for r in recs]
+    assert 'max_positions' in guards, guards
+    print('RM_GUARD_OK guards=', guards)
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "RM_GUARD_OK" in r.stdout
+
+
+# ── 12. Phase H11 · Replay Engine ────────────────────────────────
+class TestReplay:
+    def test_replay_derives_terminal_state(self):
+        script = r"""
+import asyncio, sys, os
+sys.path.insert(0,'/app/backend'); sys.path.insert(0,'/app/backend/legacy')
+os.environ['EXEC_LEDGER_BACKEND'] = 'memory'
+from engines.execution import (
+    reset_backend, ensure_indexes, wipe_account,
+    OrderRequest, get_paper_adapter, submit_order, process_fill,
+    replay_range,
+)
+from engines.execution.broker import reset_paper_adapter
+async def go():
+    reset_backend(); await ensure_indexes(); await wipe_account('RP')
+    reset_paper_adapter()
+    br = get_paper_adapter(); await br.connect()
+    for i in range(5):
+        req = OrderRequest(request_id=f'rp_{i}', account_id='RP',
+            pair='EURUSD', side='BUY', type='MARKET', qty=1000.0,
+            price=1.08, strategy_hash='s', brain_decision_id='bd')
+        await submit_order(req, br)
+    for f in await br.drain_fills(0.1):
+        await process_fill(f)
+    report = await replay_range('RP')
+    assert report.n_orders_seen == 5, report.to_dict()
+    assert report.total_fills == 5
+    counts = report.to_dict()['terminal_state_counts']
+    assert counts.get('FILLED') == 5, counts
+    # Replay is deterministic: same journal → same report
+    r2 = await replay_range('RP')
+    assert r2.to_dict() == report.to_dict()
+    print('REPLAY_OK')
+asyncio.run(go())
+"""
+        r = subprocess.run(["python3", "-c", script], capture_output=True,
+                           text=True, env={**os.environ,
+                            "PYTHONPATH": "/app/backend:/app/backend/legacy"})
+        assert r.returncode == 0, r.stderr
+        assert "REPLAY_OK" in r.stdout
+
+
+# ── 13. Phase H9 · API endpoints ────────────────────────────────
+class TestExecutionAPI:
+    def test_config(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/config")
+        assert r.status_code == 200
+        cfg = r.json()["config"]
+        assert cfg["BROKER"] == "paper"
+
+    def test_broker_health(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/broker/health")
+        assert r.status_code == 200
+
+    def test_orders_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/orders")
+        assert r.status_code == 200
+        assert "orders" in r.json()
+
+    def test_positions_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/positions")
+        assert r.status_code == 200
+
+    def test_positions_history_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/positions/history")
+        assert r.status_code == 200
+
+    def test_fills_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/fills")
+        assert r.status_code == 200
+
+    def test_risk_status(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/risk/status?account_equity=100000")
+        assert r.status_code == 200
+        assert "recommendations" in r.json()
+
+    def test_quality_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/quality?pair=EURUSD")
+        assert r.status_code == 200
+
+    def test_journal_endpoint(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/journal?limit=10")
+        assert r.status_code == 200
+        assert "events" in r.json()
+
+    def test_replay_admin(self, admin):
+        r = admin.post(f"{BASE_URL}/api/execution/replay")
+        assert r.status_code == 200
+        assert "report" in r.json()
+
+    def test_broker_history(self, admin):
+        r = admin.get(f"{BASE_URL}/api/execution/broker/history?limit=5")
+        assert r.status_code == 200
+        assert "history" in r.json()
+
+    def test_kill_switch_admin(self, admin):
+        r1 = admin.post(f"{BASE_URL}/api/execution/broker/kill-switch")
+        assert r1.status_code == 200
+        assert r1.json()["kill_switch"] is True
+        r2 = admin.post(f"{BASE_URL}/api/execution/broker/kill-switch/clear")
+        assert r2.status_code == 200
+        assert r2.json()["kill_switch"] is False

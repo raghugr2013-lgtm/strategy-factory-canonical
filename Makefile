@@ -118,3 +118,11 @@ tier5-72h: ## Tier 5 (production): paper broker, 72h validation
 .PHONY: pyramid
 pyramid: tier1 tier2 tier3 ## Run tiers 1-3 sequentially (fast → deeper)
 	@echo "▸ Regression pyramid complete (tiers 1-3)"
+
+
+.PHONY: ci-verdict
+ci-verdict: ## CI verdict: Tier 1 + Tier 2, one-line PASS/FAIL summary
+	@$(MAKE) tier1 > /tmp/ci_tier1.log 2>&1 && \
+	 $(MAKE) tier2 > /tmp/ci_tier2.log 2>&1 && \
+	 echo "CI_VERDICT=PASS" || \
+	 { echo "CI_VERDICT=FAIL"; tail -30 /tmp/ci_tier1.log /tmp/ci_tier2.log; exit 1; }

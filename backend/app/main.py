@@ -255,6 +255,7 @@ def _mount_legacy_routers(app: FastAPI) -> None:
         "portfolio_engine",     # v1.2.0-alpha2 Phase D — /api/portfolio/*
         "brain_engine",         # v1.2.0-alpha2 Phase F — /api/brain/*
         "market_intelligence_engine",  # v1.2.0-alpha2 Phase G — /api/market-intelligence/{state,changes,intelligence,refresh,...}
+        "execution_engine",     # v1.2.0-alpha2 Phase H9 — /api/execution/{orders,fills,positions,quality,attribution,risk,replay,journal,...}
         "ai_workforce",  # v1.2.0-alpha2 provider health + telemetry — /api/ai-workforce/*
         "lifecycle", "live_tracking", "llm_diagnostics", "llm_health",
         "master_bot", "monitoring", "multi_cycle", "mutation",

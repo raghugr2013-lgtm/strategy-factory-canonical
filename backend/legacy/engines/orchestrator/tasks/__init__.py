@@ -24,4 +24,5 @@ from . import (              # noqa: F401 — side-effect: registration
     self_rebuild,
     market_intelligence_refresh,
     broker_health_check,
+    execution_attribution,
 )

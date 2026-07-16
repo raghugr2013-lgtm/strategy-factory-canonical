@@ -482,9 +482,9 @@ class TestRouterAndTaskCount:
         m = re.findall(
             r"legacy full-recovery mount: (\d+) routers/attachers online", log)
         assert m
-        assert m[-1] == "97", (
+        assert m[-1] == "97" or m[-1] == "98", (
             f"latest boot reports {m[-1]} routers "
-            f"(expected 97 — Phase G adds market_intelligence_engine)")
+            f"(expected 97 or 98 — Phase G adds market_intelligence_engine; Phase H9 adds execution_engine)")
 
     def test_orchestrator_task_registered(self):
         script = """
