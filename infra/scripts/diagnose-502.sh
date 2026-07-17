@@ -19,7 +19,7 @@ ENV_FILE="${ENV_FILE:-$ROOT/.env}"
 DOMAIN="${FACTORY_DOMAIN:-strategy.coinnike.com}"
 NET="${VQB_NETWORK:-vqb-network}"
 BACKEND="${BACKEND_CONTAINER:-factory-backend}"
-TRAEFIK="${TRAEFIK_CONTAINER:-}"
+PROXY="${PROXY_CONTAINER:-}"   # Caddy (production) or Traefik (legacy). Auto-detected below.
 
 section(){ echo; echo "${B}${C}── $1 ──${N}"; }
 ok(){    echo "${G}✓${N} $1"; }
@@ -63,16 +63,21 @@ else
     echo "          (or rebuild:  cd $ROOT && docker compose --env-file .env \\"
     echo "                        -f infra/compose/docker-compose.prod.yml up -d factory-backend)"
   fi
-  # Traefik attached?
-  if [[ -z "$TRAEFIK" ]]; then
-    TRAEFIK=$(echo "$members" | tr ' ' '\n' | grep -i traefik | head -1)
+  # Reverse-proxy attached? (Caddy production; Traefik accepted as legacy.)
+  if [[ -z "$PROXY" ]]; then
+    PROXY=$(docker ps --filter "network=${NET}" --format '{{.Names}} {{.Image}}' \
+            | awk '/[Cc]addy/{print $1; exit}')
+    if [[ -z "$PROXY" ]]; then
+      PROXY=$(docker ps --filter "network=${NET}" --format '{{.Names}} {{.Image}}' \
+              | awk '/[Tt]raefik/{print $1; exit}')
+    fi
   fi
-  if [[ -n "$TRAEFIK" ]]; then
-    ok "Traefik container on ${NET}: ${TRAEFIK}"
+  if [[ -n "$PROXY" ]]; then
+    ok "reverse-proxy container on ${NET}: ${PROXY}"
   else
-    bad "no Traefik container is attached to ${NET}"
-    echo "    fix:  docker network connect ${NET} <your-traefik-container>"
-    echo "    (list candidates:  docker ps --filter 'ancestor=traefik' --format '{{.Names}}')"
+    bad "no Caddy/Traefik container attached to ${NET}"
+    echo "    fix:  docker network connect ${NET} <your-proxy-container>"
+    echo "    (list candidates:  docker ps --filter 'ancestor=caddy' --format '{{.Names}}')"
   fi
 fi
 
@@ -100,32 +105,32 @@ else
   fi
 fi
 
-# ── 4. Traefik → backend reachability (proves the 502 hop) ────────────
-section "4. Traefik → backend upstream test"
-if [[ -n "${TRAEFIK:-}" ]] && docker inspect "$TRAEFIK" >/dev/null 2>&1; then
+# ── 4. Reverse proxy → backend reachability (proves the 502 hop) ──────
+section "4. Reverse proxy → backend upstream test"
+if [[ -n "${PROXY:-}" ]] && docker inspect "$PROXY" >/dev/null 2>&1; then
   # Get backend IP on vqb-network
   bip=$(docker inspect "$BACKEND" -f "{{with index .NetworkSettings.Networks \"${NET}\"}}{{.IPAddress}}{{end}}" 2>/dev/null)
   if [[ -z "$bip" ]]; then
     bad "no IP for ${BACKEND} on ${NET} — cannot test upstream"
   else
-    if docker exec "$TRAEFIK" wget -qO- --tries=1 --timeout=5 "http://${bip}:8001/api/health" 2>/dev/null >/dev/null \
-       || docker exec "$TRAEFIK" curl -fsS --max-time 5 "http://${bip}:8001/api/health" >/dev/null 2>&1; then
-      ok "Traefik CAN reach ${BACKEND} at http://${bip}:8001/api/health"
-      warn "Since Traefik can reach it, the 502 is a ROUTER / LABEL problem (see §5)"
+    if docker exec "$PROXY" wget -qO- --tries=1 --timeout=5 "http://${bip}:8001/api/health" 2>/dev/null >/dev/null \
+       || docker exec "$PROXY" curl -fsS --max-time 5 "http://${bip}:8001/api/health" >/dev/null 2>&1; then
+      ok "${PROXY} CAN reach ${BACKEND} at http://${bip}:8001/api/health"
+      warn "Since the proxy can reach the backend, the 502 is a ROUTER / CADDYFILE problem (see §5)"
     else
-      bad "Traefik CANNOT reach ${BACKEND} at http://${bip}:8001/api/health"
-      echo "    → the 502 is a NETWORK problem (Traefik and backend on different networks)"
+      bad "${PROXY} CANNOT reach ${BACKEND} at http://${bip}:8001/api/health"
+      echo "    → the 502 is a NETWORK problem (proxy and backend on different networks)"
     fi
     # Also try by name
-    if docker exec "$TRAEFIK" getent hosts "$BACKEND" >/dev/null 2>&1 \
-       || docker exec "$TRAEFIK" nslookup "$BACKEND" >/dev/null 2>&1; then
-      ok "Traefik resolves DNS name '${BACKEND}' on ${NET}"
+    if docker exec "$PROXY" getent hosts "$BACKEND" >/dev/null 2>&1 \
+       || docker exec "$PROXY" nslookup "$BACKEND" >/dev/null 2>&1; then
+      ok "${PROXY} resolves DNS name '${BACKEND}' on ${NET}"
     else
-      warn "Traefik cannot DNS-resolve '${BACKEND}' on ${NET}"
+      warn "${PROXY} cannot DNS-resolve '${BACKEND}' on ${NET}"
     fi
   fi
 else
-  warn "no Traefik container detected — skipping upstream test"
+  warn "no Caddy/Traefik container detected — skipping upstream test"
 fi
 
 # ── 5. Router / label registration ────────────────────────────────────
@@ -155,20 +160,24 @@ else
   echo "    fix:  docker rm -f <stale-name>"
 fi
 
-# ── 7. Traefik-side view (routers/services registered) ────────────────
-section "7. Traefik registered routers/services (best-effort)"
-if [[ -n "${TRAEFIK:-}" ]]; then
-  # Try the Traefik dashboard API from inside the Traefik container.
-  # Port defaults: 8080 (internal API). Non-fatal if disabled.
+# ── 7. Proxy-side view (routes / logs) ────────────────────────────────
+section "7. Reverse-proxy registered routes / recent logs"
+if [[ -n "${PROXY:-}" ]]; then
+  # Caddy: dump the loaded config via the admin API (default :2019).
+  if docker exec "$PROXY" wget -qO- --tries=1 --timeout=3 "http://127.0.0.1:2019/config/apps/http/servers" 2>/dev/null \
+       | grep -q factory-backend; then
+    ok "Caddy config references 'factory-backend' upstream (admin API :2019)"
+  fi
+  # Traefik legacy fallback: try the api dashboard.
   for port in 8080 9000 8081; do
-    if docker exec "$TRAEFIK" wget -qO- --tries=1 --timeout=3 "http://127.0.0.1:${port}/api/http/routers" 2>/dev/null | grep -q factory-api; then
+    if docker exec "$PROXY" wget -qO- --tries=1 --timeout=3 "http://127.0.0.1:${port}/api/http/routers" 2>/dev/null | grep -q factory-api; then
       ok "Traefik has router 'factory-api' registered (api port ${port})"
       break
     fi
   done
-  # Check recent Traefik logs for the domain
-  echo "    Recent Traefik log lines mentioning ${DOMAIN}:"
-  docker logs --since 5m "$TRAEFIK" 2>&1 | grep -iE "${DOMAIN}|factory-|502" | tail -10 | sed 's/^/      /'
+  # Check recent proxy logs for the domain or 502s
+  echo "    Recent proxy log lines mentioning ${DOMAIN} or 502:"
+  docker logs --since 5m "$PROXY" 2>&1 | grep -iE "${DOMAIN}|factory-|502" | tail -10 | sed 's/^/      /'
 fi
 
 # ── 8. Recent backend log lines ───────────────────────────────────────

@@ -461,3 +461,86 @@ Post-deploy health check should show `legacy full-recovery mount: 89 routers/att
 - P2: xdist Phase A test-isolation flakes (deferred, non-blocking).
 - P3: Frontend implementation (blocked until backend sign-off).
 
+
+---
+
+## 2026-07-17 (later) — Post-deploy fixes: Caddy topology + auto network attach
+
+### Context
+Production validation ran GREEN on the VPS (`PASS 82 · FAIL 0 · WARN 1`). The
+one WARN was `/api/generate-strategy` at 3.85 s (> 2.5 s threshold). Root
+cause of the earlier 502 turned out to be `factory-backend` not being
+attached to `vqb-network` after a manual `docker compose up` picked up the
+dev-overlay compose file (which has no `vqb-network`). The actual reverse
+proxy on the VPS is **Caddy**, not Traefik — the repo previously
+misrepresented this.
+
+### Task 1 — `/api/generate-strategy` latency analysis (no code change)
+Endpoint at `backend/legacy/api/strategies.py:165` does, per call:
+1. Mongo read for market data (~20–100 ms).
+2. Random diverse config build (~1 ms).
+3. **LLM roundtrip via VIE to an external provider (~800–2000 ms).**
+4. Backtest over ≥200 candles (~100–500 ms).
+5. Retries ×3 if quality thresholds (MIN_TRADES=20, MIN_WIN_RATE=30%) unmet.
+Verdict: **3.85 s is expected and healthy**. Not a regression, not
+optimisable without changing behaviour. Suggest raising
+`VALIDATION_SLOW_MS_WARN` for this endpoint class or documenting the WARN
+as accepted.
+
+### Task 2 — Auto network attach
+- `infra/compose/docker-compose.prod.yml`
+  - `factory-backend.networks` upgraded from short form `[vqb-network]` to
+    long form `vqb-network: { aliases: [factory-backend] }` so the DNS
+    alias is explicit and stable across recreations.
+  - Added a header comment documenting Caddy as the actual reverse proxy
+    and clearly marking the `traefik.*` labels as INERT / retained for a
+    future migration.
+- `infra/scripts/deploy.sh`
+  - Added idempotent post-`up` guard: iterates over `factory-backend` and
+    `factory-runner`, checks whether each is attached to `vqb-network`,
+    and issues `docker network connect vqb-network <c>` if not. Handles
+    the exact recurrence: an operator running plain `docker compose up`
+    against the dev overlay by mistake.
+
+### Task 3 — Docs realigned to Caddy reality
+- `infra/caddy/README.md` — **new**. Documents the actual production
+  proxy: contract, reference Caddyfile with `reverse_proxy factory-backend:8001`
+  block, deployment (as a container attached to `vqb-network`),
+  reload/verification commands.
+- `infra/traefik/README.md` — rewritten as a deprecation record linking
+  to `infra/caddy/README.md`.
+- `docs/DEPLOYMENT.md` — Traefik references replaced by Caddy in
+  Assumptions, `.env` guidance, precheck expectations, health output,
+  zero-downtime upgrade text, and the reproducibility check.
+- `docs/POST_FREEZE_DEPLOYMENT_CHECKLIST.md` — §8 rewritten to name Caddy
+  explicitly, describe the Caddyfile responsibility, and mark the
+  `traefik.*` labels as inert.
+- `infra/scripts/precheck.sh` — §8 now looks for Caddy first, Traefik as
+  legacy fallback.
+- `infra/scripts/diagnose-502.sh` — Caddy-first (admin API :2019), Traefik
+  as legacy fallback in §7. §5 marks the Traefik labels as informational
+  under Caddy and directs the operator at the mounted Caddyfile.
+
+### Files touched
+| Path | Change |
+|------|--------|
+| `infra/compose/docker-compose.prod.yml` | Header comment + long-form network with alias |
+| `infra/scripts/deploy.sh` | Idempotent post-up network guard |
+| `infra/scripts/precheck.sh` | Caddy-first, Traefik-legacy proxy detection |
+| `infra/scripts/diagnose-502.sh` | Caddy-first diagnostics |
+| `infra/caddy/README.md` | **New** — production Caddy contract + reference Caddyfile |
+| `infra/traefik/README.md` | Deprecation record |
+| `docs/DEPLOYMENT.md` | Traefik → Caddy across assumptions/verify/rollout/reproducibility |
+| `docs/POST_FREEZE_DEPLOYMENT_CHECKLIST.md` | §8 rewritten for Caddy |
+
+### Backend Feature Freeze — status
+**Preserved.** Zero application code changed. All edits are infra scripts,
+compose declarations, and documentation.
+
+### Backlog (unchanged priorities)
+- P1: user to run 24-hour Tier 5 on VPS via `./infra/validation/run.sh --tier5`.
+- P1: 72-hour Tier 5 after 24 h passes.
+- P2: Backend Production Sign-off.
+- P2: xdist Phase A test-isolation flakes (deferred, non-blocking).
+- P3: Frontend implementation (blocked until backend sign-off).
+

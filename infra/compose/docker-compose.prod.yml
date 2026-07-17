@@ -1,9 +1,18 @@
 # ──────────────────────────────────────────────────────────────────
 # Strategy Factory — Production Docker Compose
 # Consolidated stack: backend + vie + frontend + (external shared
-# Traefik, MongoDB, Redis, Prometheus, Grafana, Loki, Promtail).
+# Caddy reverse proxy, MongoDB, Redis, Prometheus, Grafana, Loki, Promtail).
 #
 # Target: Ubuntu 24.04 VPS on `vqb-network` (external).
+#
+# Reverse proxy: The VPS runs **Caddy** (not Traefik). Caddy terminates
+# TLS on :443 and reverse-proxies /api/* to factory-backend:8001 via
+# the `vqb-network`. Caddy must be attached to `vqb-network` so it can
+# resolve the `factory-backend` DNS alias. See `infra/caddy/README.md`.
+#
+# The `traefik.*` labels emitted per service are RESERVED for a
+# possible future Traefik migration — they are INERT under Caddy and
+# have no runtime effect on the current deployment.
 #
 # Bring up:
 #   docker compose --env-file .env -f infra/compose/docker-compose.prod.yml build
@@ -44,7 +53,9 @@ services:
       BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
       BUILD_DATE: ${BUILD_DATE:-unknown}
     networks:
-      - vqb-network
+      vqb-network:
+        aliases:
+          - factory-backend
     expose:
       - "8001"
     healthcheck:

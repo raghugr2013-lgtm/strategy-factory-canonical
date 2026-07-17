@@ -121,9 +121,18 @@ environment=PYTHONPATH="/path/to/backend/legacy:/path/to/backend"
 
 ## 8. Fronting proxy
 
-- [ ] TLS terminator (Traefik / Nginx / Caddy) proxies `/api/*` → `:8001`.
+**Production reverse proxy: Caddy** (see `infra/caddy/README.md`).
+
+- [ ] Caddy is on Docker network `vqb-network` and can resolve
+      `factory-backend` and `factory-frontend`.
+- [ ] Caddyfile reverse-proxies `/api/*` → `factory-backend:8001`
+      and everything else → `factory-frontend:80`.
+- [ ] TLS is terminated by Caddy on `:443` (auto-cert via Let's Encrypt).
 - [ ] Health probe hitting `/api/health` every 30s.
-- [ ] Rate limit `/api/auth/login` (≤10/min per IP recommended).
+- [ ] Rate limit `/api/auth/login` (≤10/min per IP recommended — configure
+      via Caddy `rate_limit` directive or the shared network policy).
+- [ ] `docker-compose.prod.yml` emits `traefik.*` labels; these are INERT
+      under Caddy and do not need to be removed.
 
 ## 9. Firewall
 

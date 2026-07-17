@@ -1,7 +1,7 @@
 # Strategy Factory — Deployment Guide (VPS, Ubuntu 24.04)
 
 **Target:** Contabo VPS · Ubuntu 24.04 · 12 vCPU / 48 GB RAM.
-**Assumptions:** Docker + Docker Compose plugin, an existing Traefik v3 on the shared `vqb-network`, a shared MongoDB reachable on that network, and DNS pointing at the VPS for the target domain.
+**Assumptions:** Docker + Docker Compose plugin, an existing **Caddy** reverse proxy on the shared `vqb-network` (terminates TLS on :443), a shared MongoDB reachable on that network, and DNS pointing at the VPS for the target domain. See `infra/caddy/README.md` for the Caddyfile contract.
 
 **Reproducibility contract:** running the steps below from a clean checkout on a clean Ubuntu 24.04 host produces a working stack with zero manual code modifications. If any step fails, `deploy.sh` and `health.sh` will surface the reason — no hidden activation gates exist.
 
@@ -40,7 +40,7 @@ $EDITOR .env
 ```
 
 **Minimum values that MUST be changed in `.env`:**
-- `FACTORY_DOMAIN` — the FQDN Traefik terminates TLS on
+- `FACTORY_DOMAIN` — the FQDN Caddy terminates TLS on
 - `JWT_SECRET` — 64-char hex; generate with `openssl rand -hex 32`
 - `ADMIN_EMAIL` and `ADMIN_PASSWORD`
 - `SHARED_MONGO_URL` — includes user, password, `?authSource=admin`
@@ -48,7 +48,7 @@ $EDITOR .env
 - Any provider API keys you want VIE to use (missing keys → provider disabled, no crash)
 
 Optional:
-- `TRAEFIK_CERT_RESOLVER`, `TRAEFIK_WEBSECURE_ENTRYPOINT` — align with your Traefik config
+- `TRAEFIK_CERT_RESOLVER`, `TRAEFIK_WEBSECURE_ENTRYPOINT` — INERT under Caddy (retained only for a future Traefik migration; see `infra/traefik/README.md`)
 - Provider model overrides (`OPENAI_MODEL`, `ANTHROPIC_MODEL`, …)
 
 ```bash
@@ -74,7 +74,7 @@ Two commands:
 - `SHARED_MONGO_URL` reachable via `mongosh` ping
 - `SHARED_REDIS_URL` reachable if configured
 - DNS resolves `FACTORY_DOMAIN`
-- Traefik container detected on `vqb-network`
+- Caddy container detected on `vqb-network` (the actual production reverse proxy — see `infra/caddy/README.md`)
 
 If any check fails, deploy refuses to proceed and prints the exact failure. No half-built state.
 
@@ -100,7 +100,7 @@ Green output = production ready. It checks:
 - Backend → VIE reachability (`http://factory-vie:8100/health`)
 - Frontend nginx `/healthz`
 - Aggregated `GET /api/readiness` — reports Mongo, VIE, and **Redis** status separately (`green` / `yellow` / `red` / `skipped`)
-- **Public** `https://${FACTORY_DOMAIN}/api/health` (through Traefik + TLS)
+- **Public** `https://${FACTORY_DOMAIN}/api/health` (through Caddy + TLS)
 - **Public** `https://${FACTORY_DOMAIN}/` (SPA index)
 
 Redis is optional — if `SHARED_REDIS_URL` is not set, readiness reports `skipped` and the overall status stays green.
@@ -139,7 +139,7 @@ git pull
 ./infra/scripts/deploy.sh
 ```
 
-Docker Compose rebuilds and rolls the containers one-by-one. Traefik drains an unhealthy container automatically once the Docker healthcheck flips.
+Docker Compose rebuilds and rolls the containers one-by-one. Caddy drains an unhealthy container automatically once the Docker healthcheck flips (Caddy's `reverse_proxy` treats a container without a healthy answer as unavailable and retries the next attempt).
 
 ---
 
@@ -180,14 +180,14 @@ print(pymongo.MongoClient(os.environ['MONGO_URL'], serverSelectionTimeoutMS=3000
 - No Mongo container (uses shared)
 - No Redis container (unused today; wired through the env variable for future features)
 - No Prometheus/Grafana/Loki containers (reused from the shared monitoring stack; our containers carry `prometheus.scrape=true` + `logging=promtail` labels)
-- No certbot/letsencrypt (Traefik owns TLS)
+- No certbot/letsencrypt (Caddy owns TLS — auto-cert via Let's Encrypt)
 - No `factory-runner` sibling scheduler in Phase 1 (Stage 2 module preserved in `backend/legacy/`)
 - No Emergent runtime hooks anywhere
 
 **Reproducibility check on a clean VPS:**
 1. Fresh Ubuntu 24.04 + Docker
 2. `docker network create vqb-network`
-3. Shared Mongo + Traefik started separately
+3. Shared Mongo + Caddy started separately (Caddy attached to `vqb-network`)
 4. Clone repo, `cp .env.example .env`, edit values, run `./infra/scripts/deploy.sh` → green.
 
 No source patches. No hidden ENV activation steps. No documentation-only setup. If it doesn't just work, `health.sh` tells you exactly what failed.

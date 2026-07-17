@@ -101,19 +101,22 @@ else
   bad "DNS lookup failed for $FACTORY_DOMAIN (add an A/AAAA record before deploy)"
 fi
 
-# --- 8. Traefik container running on vqb-network ---
+# --- 8. Reverse-proxy container running on vqb-network (Caddy in production;
+#         Traefik is retained as an accepted alternative for legacy VPSes) ---
 if docker info >/dev/null 2>&1; then
-  # Traefik container name is not standardised — look for any container with label traefik.docker.network=vqb-network OR image starting with traefik/
-  traefik_id=$(docker ps --filter "network=vqb-network" --format '{{.ID}} {{.Image}}' | awk '/traefik/{print $1; exit}')
-  if [[ -n "$traefik_id" ]]; then
-    ok "Traefik container found on vqb-network: $traefik_id"
+  # Prefer Caddy (the actual production proxy). Also accept Traefik for
+  # legacy/staging VPSes still on the older topology.
+  proxy_id=$(docker ps --filter "network=vqb-network" --format '{{.ID}} {{.Image}} {{.Names}}' \
+             | awk '/[Cc]addy|[Tt]raefik/{print $1" "$2" "$3; exit}')
+  if [[ -n "$proxy_id" ]]; then
+    ok "reverse-proxy container found on vqb-network: $proxy_id"
   else
-    warn "No Traefik container detected on vqb-network — public routing will not work until Traefik is running"
+    warn "No Caddy (or Traefik) container detected on vqb-network — public routing will not work until one is running (see infra/caddy/README.md)"
   fi
 fi
 
-# --- 9. Ports 80/443 unlikely to conflict with backend/frontend (they don't bind — via Traefik) ---
-ok "backend/frontend bind on internal ports only (via Traefik) — no host-port conflicts"
+# --- 9. Ports 80/443 unlikely to conflict with backend/frontend (they don't bind — via Caddy) ---
+ok "backend/frontend bind on internal ports only (routed via Caddy) — no host-port conflicts"
 
 echo
 if [[ $fail -gt 0 ]]; then

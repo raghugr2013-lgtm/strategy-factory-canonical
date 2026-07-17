@@ -35,6 +35,25 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE" build
 echo "[deploy] starting stack"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE" up -d
 
+# ── Belt-and-suspenders: guarantee factory-backend + factory-runner are
+# on vqb-network even if a previous manual `docker compose up` (using
+# the dev overlay at repo-root ./docker-compose.yml) attached them to a
+# compose-local bridge. `network connect` is idempotent — if the
+# container is already on the network, docker prints a harmless notice
+# and returns non-zero, which we ignore.
+echo "[deploy] ensuring containers are attached to vqb-network"
+for c in factory-backend factory-runner; do
+  if docker inspect "$c" >/dev/null 2>&1; then
+    on_net=$(docker inspect "$c" -f '{{if index .NetworkSettings.Networks "vqb-network"}}yes{{end}}' 2>/dev/null || echo "")
+    if [[ "$on_net" != "yes" ]]; then
+      echo "[deploy]   $c missing from vqb-network — attaching"
+      docker network connect vqb-network "$c" || true
+    else
+      echo "[deploy]   $c already on vqb-network"
+    fi
+  fi
+done
+
 echo "[deploy] waiting for health"
 sleep 8
 "$HERE/health.sh" || {
