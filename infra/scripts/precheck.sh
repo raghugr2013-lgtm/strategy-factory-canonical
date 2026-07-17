@@ -69,52 +69,74 @@ else
 fi
 
 # --- 5. Shared Mongo reachable ---
+# Uses ONLY containers already attached to vqb-network — this avoids the
+# `docker run --network vqb-network mongo:7.0` failure mode where the
+# ephemeral container hits `EAI_AGAIN factory-mongo` because Docker's
+# embedded DNS resolver hasn't yet published DNS entries for peer
+# containers on user-defined networks.
+#
 # Preference order (all container-based; host `mongosh` NOT required):
-#   a) `docker exec` on an already-running mongo container on vqb-network
-#      (fast: no image pull, works offline).
-#   b) `docker run --rm mongo:7.0 mongosh ...` (slower, requires image pull).
-#   c) Skip with WARN if neither works — actual DB connectivity is
-#      re-verified by the backend healthcheck immediately after deploy.
+#   a) `docker exec factory-backend python -c '<pymongo ping>'` — the
+#      canonical application path; if this succeeds Mongo definitionally
+#      works for the real workload.
+#   b) `docker exec <mongo-container> mongosh` — where <mongo-container>
+#      is discovered by *image* (`ancestor=mongo`) not by name.
+#   c) Skip with WARN if neither container is running — backend
+#      healthcheck will re-verify connectivity immediately after deploy.
 mongo_ping() {
-  # $1 = URI ; prints ok/reason on stdout ; returns 0 on success.
-  local uri="$1"
-  local out rc
+  local uri="$1" out rc
 
-  # (a) exec inside a running mongo container on vqb-network.
-  local running
-  running=$(docker ps --filter "network=vqb-network" --format '{{.Names}} {{.Image}}' \
-            | awk '/[Mm]ongo/{print $1; exit}')
-  if [[ -n "$running" ]]; then
-    if out=$(timeout 10 docker exec "$running" \
+  # (a) via the backend container (canonical). It already has pymongo.
+  if docker inspect factory-backend >/dev/null 2>&1 \
+     && [[ "$(docker inspect -f '{{.State.Running}}' factory-backend 2>/dev/null)" == "true" ]]; then
+    if out=$(timeout 10 docker exec factory-backend python -c "
+import os, sys
+try:
+    from pymongo import MongoClient
+    MongoClient(os.environ['MONGO_URL'], serverSelectionTimeoutMS=5000).admin.command('ping')
+    print('PONG')
+except Exception as e:
+    print('ERROR:', e, file=sys.stderr); sys.exit(1)
+" 2>&1); then
+      if echo "$out" | grep -q '^PONG$'; then
+        echo "ok via docker exec factory-backend (pymongo ping)"; return 0
+      fi
+    fi
+    echo "docker exec factory-backend pymongo ping failed:"; echo "$out"
+    # fall through to (b) rather than fail — the backend may still be
+    # coming up during a fresh deploy.
+  fi
+
+  # (b) via a mongo-image container attached to vqb-network. Match by
+  # image ancestry (strict), not by container name substring.
+  local mongo_ctr
+  mongo_ctr=$(docker ps --filter "ancestor=mongo" --filter "network=vqb-network" \
+              --format '{{.Names}}' | head -1)
+  if [[ -z "$mongo_ctr" ]]; then
+    # Some deployments run a specific tag — search all mongo:* ancestors.
+    mongo_ctr=$(docker ps --filter "network=vqb-network" --format '{{.Names}} {{.Image}}' \
+                | awk '$2 ~ /^mongo(:|$)/ {print $1; exit}')
+  fi
+  if [[ -n "$mongo_ctr" ]]; then
+    if out=$(timeout 10 docker exec "$mongo_ctr" \
               mongosh "$uri" --quiet --eval 'db.adminCommand({ping:1}).ok' 2>&1); then
       if echo "$out" | tail -1 | grep -q '^1$'; then
-        echo "ok via docker exec $running"; return 0
+        echo "ok via docker exec $mongo_ctr (mongosh ping)"; return 0
       fi
-      echo "docker exec $running mongosh returned unexpected output:"; echo "$out"
-      return 2   # ran, but rejected — likely bad URI/credentials
+      echo "docker exec $mongo_ctr mongosh returned unexpected output:"; echo "$out"
+      return 2  # ran but rejected — bad URI/credentials
     fi
-    echo "docker exec $running mongosh failed:"; echo "$out"
+    rc=$?
+    echo "docker exec $mongo_ctr mongosh failed (exit=$rc):"; echo "$out"
+    return 1
   fi
 
-  # (b) ephemeral container. Suppress image-pull progress but keep errors.
-  local pull_err
-  if ! pull_err=$(docker image inspect mongo:7.0 >/dev/null 2>&1 \
-                  || docker pull mongo:7.0 2>&1 >/dev/null); then
-    echo "cannot obtain mongo:7.0 image (needed to run mongosh); pull output:"
-    echo "$pull_err"
-    return 3   # infrastructure problem — cannot verify
-  fi
-  if out=$(timeout 15 docker run --rm --network vqb-network mongo:7.0 \
-             mongosh "$uri" --quiet --eval 'db.adminCommand({ping:1}).ok' 2>&1); then
-    if echo "$out" | tail -1 | grep -q '^1$'; then
-      echo "ok via ephemeral mongo:7.0 container"; return 0
-    fi
-    echo "ephemeral mongosh returned unexpected output:"; echo "$out"
-    return 2
-  fi
-  rc=$?
-  echo "ephemeral mongosh failed (exit=$rc):"; echo "$out"
-  return 1
+  # (c) nothing to piggy-back on. Do NOT launch an ephemeral container
+  # because Docker DNS on user-defined networks intermittently fails
+  # (EAI_AGAIN) for short-lived peers. WARN and defer to the backend
+  # healthcheck.
+  echo "no factory-backend or mongo container on vqb-network to exec through"
+  return 3
 }
 
 if docker info >/dev/null 2>&1; then
@@ -123,9 +145,8 @@ if docker info >/dev/null 2>&1; then
     0)  ok    "SHARED_MONGO_URL reachable — ${detail#ok via }" ;;
     2)  bad   "SHARED_MONGO_URL is set but Mongo rejected the ping — check URI, user, password, authSource:"
         echo "$detail" | sed 's/^/    /' ;;
-    3)  warn  "SHARED_MONGO_URL check skipped — cannot obtain mongo:7.0 image (no host mongosh required; run 'docker pull mongo:7.0' once when the VPS has network access). Backend healthcheck will still verify connectivity post-deploy."
-        echo "$detail" | sed 's/^/    /' ;;
-    *)  bad   "SHARED_MONGO_URL check failed — see error below (check that mongo container is on vqb-network):"
+    3)  warn  "SHARED_MONGO_URL check skipped — no factory-backend or mongo container currently running on vqb-network. Backend healthcheck will re-verify connectivity immediately after deploy." ;;
+    *)  bad   "SHARED_MONGO_URL check failed — see error below:"
         echo "$detail" | sed 's/^/    /' ;;
   esac
 else
