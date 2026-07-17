@@ -1,0 +1,13 @@
+Validation Summary  (20260717T103745Z)
+  started:   2026-07-17T10:37:45.649207+00:00
+  finished:  2026-07-17T10:37:49.953772+00:00
+  duration:  4.30s
+  base_url:  http://localhost:8001
+
+  PASS       83
+  FAIL       0
+  WARN       0
+  avg_ms     50.24
+  p95_ms     13.71
+  slowest    1549.5ms  POST /api/factory-eval/refresh?force=true
+  fastest    1.0ms  GET /api/market-intelligence/config

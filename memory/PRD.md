@@ -423,3 +423,41 @@ docker compose --env-file .env -f infra/compose/docker-compose.prod.yml up -d fa
 ```
 
 Post-deploy health check should show `legacy full-recovery mount: 89 routers/attachers online` in the backend container log.
+
+---
+
+## 2026-07-17 — Production Validation Suite Delivered (Feature Freeze compliant)
+
+- Additive-only infrastructure under `/app/infra/validation/` (no backend code
+  modified). Fixes 8 hardcoded probe paths that were 404’ing against the
+  actual FastAPI mounted routes:
+  - `health`: replaced non-existent `router_count_ok` (misused deployment
+    registry `count`) with `orchestrator_tasks_ok` (17-task invariant).
+  - `portfolio`: `/api/portfolio_engine/*` → `/api/portfolio-intelligence/*`
+    + `/api/master-bot`.
+  - `market_intelligence`: `status`/`structural-changes`/`observers` →
+    `rankings`/`state/history`/`changes`/`observers/config`.
+  - `execution_intelligence`: `replay/config` → `paper/config`.
+- **Suite is GREEN**: 83 probes, PASS 83, FAIL 0, WARN 0, exit 0.
+- README added: `/app/infra/validation/README.md` — prerequisites, config,
+  CLI usage (default / `--full` / `--module <alias>` / `--tier5` /
+  `--report-only`), report locations, exit codes, failure-interpretation.
+- Backend Feature Freeze preserved — application code untouched.
+
+### Files changed / added
+| Path | Change |
+|------|--------|
+| `infra/validation/modules/health.py` | Replaced router-count probe with orchestrator-task-count invariant |
+| `infra/validation/modules/portfolio.py` | Fixed 3 non-existent probe paths |
+| `infra/validation/modules/market_intelligence.py` | Fixed 3 non-existent probe paths; added `state_history` probe |
+| `infra/validation/modules/execution_intelligence.py` | Fixed `replay_config` → `paper_config` |
+| `infra/validation/README.md` | **New** — full usage documentation |
+
+### Backlog (unchanged priorities)
+- P1: 24-hour Tier 5 validation on VPS (user-executed via
+  `python -m infra.validation.run_validation --tier5`).
+- P1: 72-hour Tier 5 validation on VPS.
+- P2: Backend Production Sign-off after Tier 5.
+- P2: xdist Phase A test-isolation flakes (deferred, non-blocking).
+- P3: Frontend implementation (blocked until backend sign-off).
+
