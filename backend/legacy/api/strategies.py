@@ -15,6 +15,29 @@ from engines.param_extractor import extract_params
 from engines.db import get_db
 
 router = APIRouter()
+# ── Phase-1 canonical routing ──────────────────────────────────────
+# `/api/strategies` (list), `/api/strategies/{strategy_id}` (GET+DELETE)
+# are owned by the Phase-1 core router (`backend/app/api/strategies.py`),
+# which uses the `strategy_id` field as the canonical identifier.
+#
+# The legacy handlers for those three paths used MongoDB `_id` (ObjectId)
+# as their identifier, which conflicted with Phase-1's `strategy_id` and
+# caused deployed responses to be inconsistent when both routers mounted.
+#
+# Fix (canonical bundle architecture): keep every non-conflicting legacy
+# endpoint on `router` at its historical path so all advanced functionality
+# (`/api/generate-strategy`, `/api/run-backtest`, `/api/rank-strategies`,
+#  `/api/strategies/compare`, `/api/mutate-strategy`, `/api/monte-carlo`,
+#  `/api/portfolio-analyze`, `/api/rebalance/*`, etc.) is preserved
+# verbatim, and move ONLY the 3 conflicting canonical CRUD paths to
+# `legacy_router` under `/legacy/strategies*`. This preserves the
+# `_id`-based legacy behaviour for anyone who explicitly needs it while
+# freeing `/api/strategies*` for Phase-1 CRUD.
+#
+# Both routers are auto-mounted by `_mount_legacy_routers()` in
+# `app/main.py` (it iterates `vars(mod)` looking for `APIRouter`
+# instances), so no change to `main.py` is required.
+legacy_router = APIRouter(prefix="/legacy")
 logger = logging.getLogger(__name__)
 
 
@@ -359,7 +382,7 @@ async def save_strategy(req: SaveRequest):
     }
 
 
-@router.get("/strategies")
+@legacy_router.get("/strategies")
 async def get_strategies(
     symbol: Optional[str] = None,
     timeframe: Optional[str] = None,
@@ -415,7 +438,7 @@ async def get_strategies(
     return {"strategies": results2[:200]}
 
 
-@router.get("/strategies/{strategy_id}")
+@legacy_router.get("/strategies/{strategy_id}")
 async def get_strategy_detail(strategy_id: str):
     from bson import ObjectId
     db = get_db()
@@ -430,7 +453,7 @@ async def get_strategy_detail(strategy_id: str):
     return {"strategy": d}
 
 
-@router.delete("/strategies/{strategy_id}")
+@legacy_router.delete("/strategies/{strategy_id}")
 async def delete_strategy(strategy_id: str):
     from bson import ObjectId
     db = get_db()
