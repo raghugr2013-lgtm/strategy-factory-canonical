@@ -272,6 +272,23 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
 - **Caveat:** orchestrator not enabled during preview run → Meta-Learning + Factory-Eval cycle count in window = 0; those cycles must be validated on the VPS with `ORCHESTRATOR_ENABLED=true` during the 24h/72h runs
 - **Full decision record:** `/app/audit/tier5_60min/DECISION_RECORD.md`
 - **Attachments:** `/app/audit/tier5_60min/{report,summary,stdout,rss_track,baseline}`
+
+## 2026-02-17 — Strategy routing conflict fix (deployed-backend finding)
+
+- **Reported:** Overlapping route registrations between `backend/app/api/strategies.py` (Phase-1 canonical CRUD, `strategy_id` identifier) and `backend/legacy/api/strategies.py` (legacy advanced functionality, MongoDB `_id`). Deployed API was serving legacy responses for `GET /api/strategies`, `GET /api/strategies/{id}`, and `DELETE /api/strategies/{id}` — identifier mismatch.
+- **Fix (canonical bundle architecture):** split `legacy/api/strategies.py` into two routers within the same file. Kept `router = APIRouter()` for all 28 non-conflicting legacy endpoints unchanged at their original paths. Added `legacy_router = APIRouter(prefix="/legacy")` and moved only the 3 conflicting decorators to it (`GET /strategies`, `GET /strategies/{id}`, `DELETE /strategies/{id}`). `POST /strategies/compare` stays on `router` (different HTTP method, no conflict). The auto-mount loop in `app/main.py::_mount_legacy_routers` already iterates `vars(mod).items()` picking up every `APIRouter` instance — zero change required to `main.py`.
+- **Result:**
+  - Phase-1 CRUD owns `/api/strategies*` canonical paths (returns bare JSON array, `strategy_id` field, 16-char hex id).
+  - Legacy `_id`-based CRUD reachable at `/api/legacy/strategies*` (wrapper `{strategies:[...]}`, `id` field, 24-char ObjectId hex).
+  - All 17 advanced legacy endpoints (`generate-strategy`, `run-backtest`, `rank-strategies`, `save-strategy`, `validate-strategy`, `monte-carlo`, `mutate-strategy`, `portfolio-analyze`, `rebalance/*`, `challenge-firms`, `optimize-strategy`, `safety-check`, `estimate-probability`, `match-strategy`, `profile-strategy`, `simulate-challenge`, `strategies/compare`) preserved verbatim at original paths.
+  - Router count 100 → **101** (one new `legacy_router`).
+- **Verification (testing_agent_v3_fork iteration_3):**
+  - **Backend success rate: 100%** (31/31 route-split tests passing in 3.53s)
+  - Zero critical, zero minor backend issues; `retest_needed=False`.
+  - Full CRUD lifecycle verified (POST → GET list → GET by id → DELETE → GET 404) with matching 16-char `strategy_id`.
+  - Meta-Learning + Factory-Eval OBSERVE invariants preserved (mode=observe, approve=>409).
+  - Boot log confirms `legacy full-recovery mount: 101 routers/attachers online`.
+- **Regression suite added:** `/app/backend/tests/test_strategy_route_split.py` (31 tests, ~3.5s). Runs under Phase A–J sweep.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
