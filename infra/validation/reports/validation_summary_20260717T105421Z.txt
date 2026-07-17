@@ -1,0 +1,13 @@
+Validation Summary  (20260717T105421Z)
+  started:   2026-07-17T10:54:21.083954+00:00
+  finished:  2026-07-17T10:54:21.327273+00:00
+  duration:  0.24s
+  base_url:  http://localhost:8001
+
+  PASS       4
+  FAIL       0
+  WARN       0
+  avg_ms     2.02
+  p95_ms     2.58
+  slowest    2.7ms  GET /api/deployment/registry
+  fastest    1.1ms  GET /api/health

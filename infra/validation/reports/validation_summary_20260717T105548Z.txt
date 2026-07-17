@@ -1,0 +1,13 @@
+Validation Summary  (20260717T105548Z)
+  started:   2026-07-17T10:55:48.664299+00:00
+  finished:  2026-07-17T10:55:48.904115+00:00
+  duration:  0.24s
+  base_url:  http://localhost:8001
+
+  PASS       4
+  FAIL       0
+  WARN       0
+  avg_ms     1.97
+  p95_ms     2.33
+  slowest    2.7ms  GET /api/orchestrator/tasks
+  fastest    1.1ms  GET /api/health

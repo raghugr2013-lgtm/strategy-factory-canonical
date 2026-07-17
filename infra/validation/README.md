@@ -9,18 +9,40 @@ It only issues HTTP requests to public + authenticated endpoints.
 
 ---
 
-## 1. Prerequisites
+## 1. Where does this run? (READ FIRST)
 
-- Python 3.11+
-- `requests` (already in `backend/requirements.txt`)
-- `psutil` (**optional** — only used for Tier 5 system-metrics collection)
-- A running backend reachable at `VALIDATION_BASE_URL`
-  (defaults to `REACT_APP_BACKEND_URL` and finally `http://localhost:8001`)
+**On the host (or a jump box) — NOT inside the backend container.**
+
+The suite lives at `<repo-root>/infra/validation/`, which sits **outside**
+the `backend/` Docker build context. That is intentional: it is host-side
+production infrastructure that probes the deployed public URL through
+Traefik, exactly the same surface a real client sees. As a result:
+
+- `infra/validation/` is **not shipped** inside the `factory-backend` image.
+- Running `python3 -m infra.validation.run_validation` from inside the
+  container will fail with `ModuleNotFoundError: No module named
+  'infra.validation'`. This is expected.
+- The command **must be executed from the repository root** (the directory
+  produced by `git clone` / `git pull`, e.g. `/opt/strategy-factory` on the
+  VPS) so that Python can resolve `infra` as a top-level package.
+
+If you invoke from any other directory, use the launcher (see §3) — it
+`cd`s to the correct root for you.
+
+---
+
+## 2. Prerequisites
+
+- Python 3.11+ **on the host that will run the suite** (VPS shell,
+  workstation, or CI runner — anywhere with network access to the deployed
+  backend URL). It does **not** need to run on the same host as the
+  containers.
+- `requests` — install with `pip3 install -r infra/validation/requirements.txt`
+  (also installs the optional `psutil` for Tier 5 system-metrics).
+- Reachable backend at `VALIDATION_BASE_URL` (e.g. `https://strategy.coinnike.com`).
 - Admin credentials (default: seeded `admin@strategy-factory.local`
-  / `admin123` per `/app/memory/test_credentials.md`)
-
-No extra installation is required: the suite is a pure-Python package under
-`/app/infra/validation/`.
+  / `admin123` per `/app/memory/test_credentials.md`; overridable via
+  `VALIDATION_ADMIN_EMAIL` / `VALIDATION_ADMIN_PASSWORD`).
 
 ---
 
@@ -43,39 +65,71 @@ All settings are environment-driven; every one has a safe default:
 
 ## 3. How to run
 
+### 3a. On the VPS (deployed environment)
+
+```bash
+# From the repository checkout root (the same dir where `git pull` runs).
+cd /opt/strategy-factory       # adjust to your checkout path
+
+# One-time: install runtime deps on the host Python (not in the container).
+pip3 install -r infra/validation/requirements.txt
+
+# Point at the deployed public URL and provide admin credentials.
+export VALIDATION_BASE_URL="https://${FACTORY_DOMAIN}"
+export VALIDATION_ADMIN_EMAIL="${ADMIN_EMAIL}"
+export VALIDATION_ADMIN_PASSWORD="${ADMIN_PASSWORD}"
+
+# Run the full suite once (recommended smoke check post-deploy).
+python3 -m infra.validation.run_validation --full
+
+# Or use the convenience launcher, which cd's to the repo root for you
+# so it works no matter where you invoke it from:
+./infra/validation/run.sh --full
+```
+
+### 3b. Local / preview environment
+
+```bash
+# From the repo root; base URL defaults to http://localhost:8001.
+python3 -m infra.validation.run_validation
+```
+
+### 3c. All supported commands
+
 ```bash
 # Default: run every module once, write reports, exit 0 if no FAILs.
-python -m infra.validation.run_validation
+python3 -m infra.validation.run_validation
 
 # Explicit "full" run — equivalent to default.
-python -m infra.validation.run_validation --full
+python3 -m infra.validation.run_validation --full
 
 # Single module (accepts either the alias or the full module name):
-python -m infra.validation.run_validation --module health
-python -m infra.validation.run_validation --module auth
-python -m infra.validation.run_validation --module strategy
-python -m infra.validation.run_validation --module portfolio
-python -m infra.validation.run_validation --module propfirm
-python -m infra.validation.run_validation --module market
-python -m infra.validation.run_validation --module execution
-python -m infra.validation.run_validation --module meta
-python -m infra.validation.run_validation --module factory
+python3 -m infra.validation.run_validation --module health
+python3 -m infra.validation.run_validation --module auth
+python3 -m infra.validation.run_validation --module strategy
+python3 -m infra.validation.run_validation --module portfolio
+python3 -m infra.validation.run_validation --module propfirm
+python3 -m infra.validation.run_validation --module market
+python3 -m infra.validation.run_validation --module execution
+python3 -m infra.validation.run_validation --module meta
+python3 -m infra.validation.run_validation --module factory
 
 # Print the last stored plain-text summary:
-python -m infra.validation.run_validation --report-only
+python3 -m infra.validation.run_validation --report-only
 
 # Continuous run (Tier 5). Defaults: 24 h at 5-minute cadence.
-python -m infra.validation.run_validation --tier5
-python -m infra.validation.run_validation --tier5 \
+python3 -m infra.validation.run_validation --tier5
+python3 -m infra.validation.run_validation --tier5 \
     --tier5-hours 24 --tier5-interval-s 300
 ```
 
 VPS example (background, 24-hour Tier 5):
 ```bash
+cd /opt/strategy-factory
 tmux new -d -s tier5 \
-  'cd /app && VALIDATION_BASE_URL=https://<your-vps> \
-    /root/.venv/bin/python -m infra.validation.run_validation \
-    --tier5 --tier5-hours 24 --tier5-interval-s 300'
+  "VALIDATION_BASE_URL=https://\${FACTORY_DOMAIN} \
+   python3 -m infra.validation.run_validation \
+     --tier5 --tier5-hours 24 --tier5-interval-s 300"
 ```
 
 ---
@@ -137,6 +191,41 @@ Grading rules applied by `modules/__init__.py::probe()`:
   `VALIDATION_SLOW_MS_WARN` on cold cache runs, or investigate a slow handler.
 - **`WARN` — unexpected HTTP <N> (warn-listed)**: expected transient state
   (e.g. `503` when a downstream broker/market feed is briefly unavailable).
+
+---
+
+## 6b. Troubleshooting invocation errors
+
+- **`ModuleNotFoundError: No module named 'infra.validation'`**
+  You are running from the wrong working directory (or from inside the
+  backend container, which does not ship this suite). Fix:
+  ```bash
+  cd /opt/strategy-factory        # repo root, where `infra/` is visible
+  python3 -m infra.validation.run_validation --full
+  # …or use the launcher which cd's for you:
+  ./infra/validation/run.sh --full
+  ```
+
+- **`ModuleNotFoundError: No module named 'requests'`**
+  Install runtime deps on the host Python (not in the container):
+  ```bash
+  pip3 install -r infra/validation/requirements.txt
+  ```
+
+- **`[FATAL] authentication failed: login failed: HTTP 401`**
+  The default admin credentials do not match the deployed environment.
+  Export the correct ones before running:
+  ```bash
+  export VALIDATION_ADMIN_EMAIL="${ADMIN_EMAIL}"
+  export VALIDATION_ADMIN_PASSWORD="${ADMIN_PASSWORD}"
+  ```
+
+- **`[FATAL] authentication failed: ConnectionError`**
+  `VALIDATION_BASE_URL` is unreachable. Verify with:
+  ```bash
+  curl -fsS "${VALIDATION_BASE_URL}/api/health"
+  ```
+  On the VPS the deployed URL is `https://${FACTORY_DOMAIN}` via Traefik.
 
 ---
 
