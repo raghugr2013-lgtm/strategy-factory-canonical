@@ -289,6 +289,14 @@ Production stack at `strategy.coinnike.com` is healthy at the container / HTTP l
   - Meta-Learning + Factory-Eval OBSERVE invariants preserved (mode=observe, approve=>409).
   - Boot log confirms `legacy full-recovery mount: 101 routers/attachers online`.
 - **Regression suite added:** `/app/backend/tests/test_strategy_route_split.py` (31 tests, ~3.5s). Runs under Phase A–J sweep.
+
+## 2026-02-17 — MongoDB Recovery Runbook (VPS incident)
+
+- **Situation:** RC1 deployment at VPS hit MongoDB `AuthenticationFailed (code 18)` because current `strategy-factory_factory_mongo_data` volume (2026-07-15) contains only `admin/config/local/READ_ME_TO_RECOVER_YOUR_DATA` — a known automated-ransomware marker (Mongo-Lock/Meow family). Older `strategy-factory-v110-56545c65e6f3_factory_mongo_data` (2026-07-12) contents unknown.
+- **Deliverable:** `/app/docs/MONGO_RECOVERY_RUNBOOK.md` — canonical 6-phase procedure covering: Phase 0 forensics preservation (both volumes snapshotted, hashed, `chattr +i`), Phase 1 read-only isolated-network inspection of older volume (Mongo on port 27099, `--noauth --bind_ip 127.0.0.1 --network none`), Phase 2 decision tree (A: golden older volume → reattach; B: partial → mongorestore selective; C: nothing → fresh init), Phase 3 fresh initialisation, Phase 4 mandatory hardening BEFORE restart (Mongo `--auth`, credential rotation including JWT_SECRET+ADMIN_PASSWORD+provider keys, port-27017 firewall + docker-compose ports removal), Phase 5 post-restore boot-invariant + canonical/legacy routing verification, Phase 6 incident record signed to PRODUCTION_SIGN_OFF.md.
+- **Root cause of intrusion:** Mongo was exposed publicly (`27017` published or bound to `0.0.0.0`) with `--noauth`. Fix mandated in Phase 4: never publish 27017; always run `--auth` with rotated 32+ char password; UFW audit; backend reaches Mongo via internal Docker network hostname only.
+- **Not to do:** don't pay ransom; don't delete either volume during triage; don't restore `users` collection from older dump (rehash admin fresh); don't restart stack until hardening complete.
+- **No code change in this session** — runbook is pure ops guidance; the routing fix from earlier today remains intact.
 - **P1**: Make `dukascopy_python` truly optional (done — startup clean).
 - **P1 (alpha3)**: Dashboard Mosaic — `GET /api/dashboard/health-mosaic` + `MosaicRail` frontend consuming the new learning/ai-workforce metrics endpoints.
 - **P1 (alpha3)**: Portfolio Intelligence injection block (`engines/knowledge/portfolio_block.py`) hooked into `strategy_engine._try_llm_generation` above the prior-knowledge block.
