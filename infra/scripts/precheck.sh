@@ -69,13 +69,67 @@ else
 fi
 
 # --- 5. Shared Mongo reachable ---
-if docker info >/dev/null 2>&1; then
-  if timeout 15 docker run --rm --network vqb-network mongo:7.0 \
-       mongosh "$SHARED_MONGO_URL" --quiet --eval 'db.adminCommand({ping:1})' >/dev/null 2>&1; then
-    ok "SHARED_MONGO_URL reachable (mongosh ping ok)"
-  else
-    bad "SHARED_MONGO_URL not reachable (check URI, credentials, and that mongo is on vqb-network)"
+# Preference order (all container-based; host `mongosh` NOT required):
+#   a) `docker exec` on an already-running mongo container on vqb-network
+#      (fast: no image pull, works offline).
+#   b) `docker run --rm mongo:7.0 mongosh ...` (slower, requires image pull).
+#   c) Skip with WARN if neither works — actual DB connectivity is
+#      re-verified by the backend healthcheck immediately after deploy.
+mongo_ping() {
+  # $1 = URI ; prints ok/reason on stdout ; returns 0 on success.
+  local uri="$1"
+  local out rc
+
+  # (a) exec inside a running mongo container on vqb-network.
+  local running
+  running=$(docker ps --filter "network=vqb-network" --format '{{.Names}} {{.Image}}' \
+            | awk '/[Mm]ongo/{print $1; exit}')
+  if [[ -n "$running" ]]; then
+    if out=$(timeout 10 docker exec "$running" \
+              mongosh "$uri" --quiet --eval 'db.adminCommand({ping:1}).ok' 2>&1); then
+      if echo "$out" | tail -1 | grep -q '^1$'; then
+        echo "ok via docker exec $running"; return 0
+      fi
+      echo "docker exec $running mongosh returned unexpected output:"; echo "$out"
+      return 2   # ran, but rejected — likely bad URI/credentials
+    fi
+    echo "docker exec $running mongosh failed:"; echo "$out"
   fi
+
+  # (b) ephemeral container. Suppress image-pull progress but keep errors.
+  local pull_err
+  if ! pull_err=$(docker image inspect mongo:7.0 >/dev/null 2>&1 \
+                  || docker pull mongo:7.0 2>&1 >/dev/null); then
+    echo "cannot obtain mongo:7.0 image (needed to run mongosh); pull output:"
+    echo "$pull_err"
+    return 3   # infrastructure problem — cannot verify
+  fi
+  if out=$(timeout 15 docker run --rm --network vqb-network mongo:7.0 \
+             mongosh "$uri" --quiet --eval 'db.adminCommand({ping:1}).ok' 2>&1); then
+    if echo "$out" | tail -1 | grep -q '^1$'; then
+      echo "ok via ephemeral mongo:7.0 container"; return 0
+    fi
+    echo "ephemeral mongosh returned unexpected output:"; echo "$out"
+    return 2
+  fi
+  rc=$?
+  echo "ephemeral mongosh failed (exit=$rc):"; echo "$out"
+  return 1
+}
+
+if docker info >/dev/null 2>&1; then
+  detail=$(mongo_ping "$SHARED_MONGO_URL"); rc=$?
+  case $rc in
+    0)  ok    "SHARED_MONGO_URL reachable — ${detail#ok via }" ;;
+    2)  bad   "SHARED_MONGO_URL is set but Mongo rejected the ping — check URI, user, password, authSource:"
+        echo "$detail" | sed 's/^/    /' ;;
+    3)  warn  "SHARED_MONGO_URL check skipped — cannot obtain mongo:7.0 image (no host mongosh required; run 'docker pull mongo:7.0' once when the VPS has network access). Backend healthcheck will still verify connectivity post-deploy."
+        echo "$detail" | sed 's/^/    /' ;;
+    *)  bad   "SHARED_MONGO_URL check failed — see error below (check that mongo container is on vqb-network):"
+        echo "$detail" | sed 's/^/    /' ;;
+  esac
+else
+  warn "docker daemon not reachable — skipping Mongo connectivity check"
 fi
 
 # --- 6. Redis reachable (only if configured) ---
