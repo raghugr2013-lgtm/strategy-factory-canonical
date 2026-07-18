@@ -37,6 +37,109 @@ REPO_URL="https://github.com/raghugr2013-lgtm/strategy-factory-canonical.git"
 REPO_BRANCH="main"
 REPO_DIR="/opt/strategy-factory"
 
+# ── Rollback snapshot ─────────────────────────────────────────────
+# Captured BEFORE anything is deployed. Purely informational — no
+# state anywhere is modified by this block. If the deploy fails, the
+# ERR trap prints the exact commands needed to return the system to
+# the state recorded here.
+TS="$(date -u +%Y%m%d_%H%M%SZ)"
+SNAP_ROOT="/opt/factory-rollback"
+SNAP_DIR="$SNAP_ROOT/$TS"
+mkdir -p "$SNAP_DIR"
+chmod 700 "$SNAP_ROOT"
+
+echo "▸ [0/5] recording rollback snapshot → $SNAP_DIR"
+
+# 0.1 — repo git SHA + branch (only if the repo is present)
+if [[ -d "$REPO_DIR/.git" ]]; then
+  ( cd "$REPO_DIR"
+    git rev-parse HEAD                > "$SNAP_DIR/repo.head.sha"        2>/dev/null || true
+    git rev-parse --abbrev-ref HEAD   > "$SNAP_DIR/repo.branch"          2>/dev/null || true
+    git status --short --branch       > "$SNAP_DIR/repo.status"          2>/dev/null || true
+    git log -1 --pretty=fuller        > "$SNAP_DIR/repo.head.commit.txt" 2>/dev/null || true
+  )
+else
+  echo "(no /opt/strategy-factory checkout yet)" > "$SNAP_DIR/repo.head.sha"
+fi
+
+# 0.2 — running containers + their image IDs (used for image rollback)
+docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.ID}}' \
+  > "$SNAP_DIR/containers.txt" 2>/dev/null || true
+docker inspect --format \
+  '{{.Name}} {{.Config.Image}} {{.Image}}' $(docker ps -aq) 2>/dev/null \
+  | sed 's|^/||' > "$SNAP_DIR/containers.image_sha.txt" || true
+
+# 0.3 — image list (for `docker image tag` rollback if needed)
+docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}' \
+  > "$SNAP_DIR/images.txt" 2>/dev/null || true
+
+# 0.4 — checksums of the three .env files (never their contents)
+for e in /opt/factory-mongo/.env /opt/caddy/Caddyfile "$REPO_DIR/.env"; do
+  [[ -f "$e" ]] && sha256sum "$e" >> "$SNAP_DIR/env.sha256" || true
+done
+
+# 0.5 — docker network membership snapshot
+docker network inspect vqb-network > "$SNAP_DIR/vqb-network.json" 2>/dev/null || true
+
+# 0.6 — write a ready-to-paste rollback script (informational only)
+cat > "$SNAP_DIR/ROLLBACK.sh" <<'ROLLBACK_EOF'
+#!/usr/bin/env bash
+# Rollback commands captured at snapshot time.
+# Nothing here runs automatically — read it, then run pieces you want.
+set -euo pipefail
+SNAP_DIR="$(cd "$(dirname "$0")" && pwd)"
+echo "Snapshot: $SNAP_DIR"
+echo
+echo "── Recorded repo state ──────────────────────────────────────"
+[[ -s "$SNAP_DIR/repo.head.sha" ]] && cat "$SNAP_DIR/repo.head.sha"
+[[ -s "$SNAP_DIR/repo.branch"   ]] && cat "$SNAP_DIR/repo.branch"
+cat "$SNAP_DIR/repo.status" 2>/dev/null || true
+echo
+echo "── To restore the repo to the captured commit ───────────────"
+if [[ -s "$SNAP_DIR/repo.head.sha" ]]; then
+  sha="$(cat "$SNAP_DIR/repo.head.sha")"
+  echo "  cd /opt/strategy-factory && git fetch origin"
+  echo "  cd /opt/strategy-factory && git checkout $sha"
+fi
+echo
+echo "── To restore container images (per row: name image image_sha) ─"
+echo "  See containers.image_sha.txt in this directory."
+echo "  Redeploy after retagging with:  ./infra/scripts/deploy.sh --skip-precheck"
+echo
+echo "── To bring the whole stack down (leaves Mongo data intact) ──"
+echo "  docker compose --project-directory /opt/strategy-factory \\"
+echo "    -f /opt/strategy-factory/infra/compose/docker-compose.prod.yml down"
+echo
+echo "── Canonical repo rollback script (if you prefer) ───────────"
+echo "  /opt/strategy-factory/infra/scripts/rollback.sh"
+ROLLBACK_EOF
+chmod +x "$SNAP_DIR/ROLLBACK.sh"
+
+# 0.7 — ERR trap: on ANY failure below, print the rollback pointer.
+#        This does NOT roll anything back automatically — it only tells
+#        the operator where the snapshot lives and how to use it.
+trap '
+  rc=$?
+  echo
+  echo "══════════════════════════════════════════════════════════════"
+  echo "  DEPLOY FAILED (exit=$rc)"
+  echo "  Rollback snapshot:  '"$SNAP_DIR"'"
+  echo "  Recorded:"
+  echo "    • repo HEAD  : $(cat '"$SNAP_DIR"'/repo.head.sha 2>/dev/null || echo n/a)"
+  echo "    • branch     : $(cat '"$SNAP_DIR"'/repo.branch   2>/dev/null || echo n/a)"
+  echo "    • containers : '"$SNAP_DIR"'/containers.txt"
+  echo "    • images     : '"$SNAP_DIR"'/images.txt"
+  echo "    • env sha256 : '"$SNAP_DIR"'/env.sha256"
+  echo "  Print rollback commands:"
+  echo "    bash '"$SNAP_DIR"'/ROLLBACK.sh"
+  echo "  Nothing has been rolled back automatically."
+  echo "══════════════════════════════════════════════════════════════"
+  exit $rc
+' ERR
+
+echo "  snapshot ready"
+# ──────────────────────────────────────────────────────────────────
+
 echo "▸ [1/5] ensuring vqb-network exists"
 docker network inspect vqb-network >/dev/null 2>&1 || docker network create vqb-network
 
@@ -137,6 +240,8 @@ echo "▸ [5/5] final verification"
 echo
 echo "══════════════════════════════════════════════════════════════"
 echo "  Production deploy complete."
+echo "  Rollback snapshot: $SNAP_DIR"
+echo "    Print rollback commands:  bash $SNAP_DIR/ROLLBACK.sh"
 echo "  Verify externally:"
 echo "    curl -fsS https://strategy.coinnike.com/api/health"
 echo "    open   https://strategy.coinnike.com/"
