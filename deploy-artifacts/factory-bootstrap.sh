@@ -3,6 +3,14 @@
 # Strategy Factory — one-shot production bootstrap.
 # Target: strategy.coinnike.com  (VPS 144.91.78.175)
 #
+# Verified against canonical commit:
+#   raghugr2013-lgtm/strategy-factory-canonical @ main
+#   546d0a9cbd9af0fced373b7aac3d893255febeae  (2026-07-18T15:18:45Z)
+#
+# The bootstrap does NOT pin this SHA — it fetches origin/main and
+# fast-forwards. The SHA above is recorded so you know which commit
+# these artifacts were regenerated against.
+#
 # What it does (idempotent):
 #   1. Ensures the shared `vqb-network` exists.
 #   2. Brings up self-hosted MongoDB at /opt/factory-mongo.
