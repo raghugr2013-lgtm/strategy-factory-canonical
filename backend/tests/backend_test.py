@@ -12,7 +12,7 @@ import uuid
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://vie-router.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://strategy-prod-main.preview.emergentagent.com").rstrip("/")
 VIE_LOCAL = "http://127.0.0.1:8100"
 ADMIN_EMAIL = "admin@strategy-factory.local"
 ADMIN_PASS = "Jahnav@2018"

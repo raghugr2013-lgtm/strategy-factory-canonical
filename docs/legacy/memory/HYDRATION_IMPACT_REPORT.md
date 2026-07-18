@@ -216,7 +216,7 @@ ENABLE_DYNAMIC_MARKET_UNIVERSE=1
 Operator decree §5.2 = YES. No change. Current contents (verbatim):
 
 ```
-REACT_APP_BACKEND_URL=https://autonomous-lab-1.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://strategy-prod-main.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 ENABLE_HEALTH_CHECK=false
 ```

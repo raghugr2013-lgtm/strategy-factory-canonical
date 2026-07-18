@@ -1,0 +1,57 @@
+# /opt/factory-mongo/docker-compose.yml
+#
+# Self-hosted production MongoDB for Strategy Factory.
+# Runs OUTSIDE the canonical repo (per the same "externally managed
+# shared service" pattern used for Caddy). Attaches to `vqb-network`
+# with DNS alias `factory-mongo` so factory-backend and factory-runner
+# can resolve it exactly like the dev-overlay bundled Mongo.
+#
+# Bring up:
+#   cd /opt/factory-mongo
+#   docker network inspect vqb-network >/dev/null 2>&1 || docker network create vqb-network
+#   docker compose --env-file /opt/factory-mongo/.env up -d
+#
+# Health:
+#   docker exec factory-mongo mongosh --quiet --eval "db.runCommand('ping').ok"
+#
+# Backup (host-side, ad-hoc):
+#   docker exec factory-mongo mongodump --uri="mongodb://root:${MONGO_ROOT_PASSWORD}@127.0.0.1:27017/?authSource=admin" \
+#     --archive=/data/backup/factory-$(date +%F).gz --gzip
+
+services:
+  factory-mongo:
+    image: mongo:7
+    container_name: factory-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - factory_mongo_data:/data/db
+      - factory_mongo_backup:/data/backup
+    networks:
+      vqb-network:
+        aliases:
+          - factory-mongo
+    # Do NOT publish 27017 to the host. Mongo is reachable only via the
+    # internal docker network, so it cannot be brute-forced from the
+    # public internet. Backend containers reach it as `factory-mongo:27017`.
+    expose:
+      - "27017"
+    command: ["--bind_ip_all", "--auth"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  factory_mongo_data:
+    driver: local
+  factory_mongo_backup:
+    driver: local
+
+networks:
+  vqb-network:
+    external: true

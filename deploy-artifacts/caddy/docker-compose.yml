@@ -1,0 +1,45 @@
+# /opt/caddy/docker-compose.yml
+#
+# Production reverse proxy for strategy.coinnike.com.
+# Runs OUTSIDE the canonical repo (per infra/caddy/README.md in the
+# canonical repository). Terminates TLS on :443 and reverse-proxies
+# /api/*  → factory-backend:8001
+# /*      → factory-frontend:80
+# via the shared `vqb-network`.
+#
+# Bring up:
+#   cd /opt/caddy
+#   docker network inspect vqb-network >/dev/null 2>&1 || docker network create vqb-network
+#   docker compose up -d
+#
+# Reload after Caddyfile changes:
+#   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"     # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    networks:
+      - vqb-network
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+  caddy_logs:
+    driver: local
+
+networks:
+  vqb-network:
+    external: true

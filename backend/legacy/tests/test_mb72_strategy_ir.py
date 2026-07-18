@@ -19,7 +19,7 @@ import pytest
 import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL",
-                          "https://master-bot-dev.preview.emergentagent.com").rstrip("/")
+                          "https://strategy-prod-main.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
 ADMIN_EMAIL = "admin@test.local"

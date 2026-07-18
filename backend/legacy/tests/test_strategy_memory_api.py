@@ -17,7 +17,7 @@ import requests
 
 BASE_URL = os.environ.get(
     "REACT_APP_BACKEND_URL",
-    "https://hello-connect-768.preview.emergentagent.com",
+    "https://strategy-prod-main.preview.emergentagent.com",
 ).rstrip("/")
 
 SEED_RSI = "a649abeabefcc045cc9ef2dc2ec04e1f3f2b55da"   # RSI Reversion, 5 runs, PF 1.60

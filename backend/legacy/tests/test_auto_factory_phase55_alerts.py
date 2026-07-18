@@ -10,7 +10,7 @@ import requests
 import pytest
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/") or \
-           "https://hello-connect-768.preview.emergentagent.com"
+           "https://strategy-prod-main.preview.emergentagent.com"
 
 SAVED = f"{BASE_URL}/api/auto-factory/saved"
 RUN = f"{BASE_URL}/api/auto-factory/run"
