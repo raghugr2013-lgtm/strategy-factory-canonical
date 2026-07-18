@@ -75,9 +75,52 @@ if [[ ! -d "$REPO_DIR/.git" ]]; then
   git clone --branch "$REPO_BRANCH" "$REPO_URL" "$REPO_DIR"
 fi
 cd "$REPO_DIR"
-git fetch origin
-git checkout "$REPO_BRANCH"
-git reset --hard "origin/$REPO_BRANCH"
+
+# Safety: never destroy local production changes automatically.
+# 1. Fetch new refs from origin (read-only).
+# 2. Show current status.
+# 3. If the working tree is clean AND on the expected branch, continue.
+# 4. If there are ANY local modifications / untracked files / a
+#    different branch checked out, STOP and require operator sign-off.
+echo "  fetching latest refs from origin (read-only)"
+git fetch origin --prune
+
+current_branch="$(git rev-parse --abbrev-ref HEAD)"
+echo "  current branch: $current_branch  (expected: $REPO_BRANCH)"
+echo "  git status:"
+git status --short --branch | sed 's/^/    /'
+
+dirty=""
+if [[ "$current_branch" != "$REPO_BRANCH" ]]; then
+  dirty="on branch '$current_branch', expected '$REPO_BRANCH'"
+elif [[ -n "$(git status --porcelain)" ]]; then
+  dirty="working tree has local modifications or untracked files"
+fi
+
+if [[ -n "$dirty" ]]; then
+  cat <<EOF
+
+  ⚠  Refusing to auto-advance the repo — $dirty.
+     Nothing has been discarded. Bootstrap will now stop.
+
+     Review the changes:  cd $REPO_DIR && git status && git diff
+     If safe to discard:  cd $REPO_DIR && git checkout $REPO_BRANCH \\
+                          && git reset --hard origin/$REPO_BRANCH
+     Then re-run:         sudo bash /opt/factory-bootstrap.sh
+
+EOF
+  exit 2
+fi
+
+# Clean tree on the right branch — a plain fast-forward is safe.
+local_sha="$(git rev-parse HEAD)"
+remote_sha="$(git rev-parse "origin/$REPO_BRANCH")"
+if [[ "$local_sha" != "$remote_sha" ]]; then
+  echo "  fast-forwarding $current_branch: $local_sha → $remote_sha"
+  git merge --ff-only "origin/$REPO_BRANCH"
+else
+  echo "  repo already at origin/$REPO_BRANCH ($local_sha) — no update needed"
+fi
 
 if [[ ! -f "$REPO_DIR/.env" ]]; then
   echo "  ERROR: $REPO_DIR/.env is missing. Copy the production .env into place first."
