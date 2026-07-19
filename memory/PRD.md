@@ -84,6 +84,26 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 **NO code changes yet.** Awaiting operator sign-off on `PHASE_2_IMPLEMENTATION_MASTER_PLAN.md` before Stage 1 begins.
 
+## Stage 1 Execution (Session 5, 2026-02-19 — COMPLETE, awaiting Gate-1 sign-off)
+
+**Delivered:**
+- `/app/backend/legacy/engines/health/` — Universal Health Contract (`HealthSnapshot` dataclass + providers registry + FastAPI router)
+- `/app/backend/legacy/engines/coe/workload_request.py` — canonical `WorkloadRequest` envelope with `Lane` (P0/P1/P2) + `RetryPolicy` enums
+- `WorkloadClass` extended from 5 → 10 classes with **conservative reservation floors** per operator directive (EXECUTION=2, MARKET_DATA=1, backgrounds=0)
+- `Task.HARD_TIMEOUT_S` + `RETRY_POLICY` added to Protocol; wired via `asyncio.wait_for` in orchestrator dispatch (flag-gated)
+- All **17 task adapters** carry class-appropriate `HARD_TIMEOUT_S` values
+- CPU pool crash budget + auto-recycle (flag-gated)
+- `BudgetTracker` Mongo persistence (`budget_state` collection); boot-time rehydration in `app/main.py` lifespan
+- VIE hardening: 5 new UKIE-parser tasks in `DEFAULT_TASK_MAP`, `provider_hint` propagation, central budget-tracker recording
+- **34/34 Stage-1 pytest tests passing**
+- **Rollback verified live** in ~35 s: all 7 flags flipped OFF → backend byte-identical to Phase-1 → flipped back ON → `platform_health_score=100`
+
+**Documents produced this session:**
+- `/app/memory/BID_CANDLE_STORAGE_REVIEW.md` (553 lines) — architecture review of BID historical candle data. **Option D approved** (Canonical M1 + materialised HTF caches). Introduces the **Canonical Timeframe Service (CTS)** as a dedicated Stage-2 component; event-driven cache invalidation; monthly advisory-only provider-HTF verification; per-instrument `canonical_mode` for M1-history exceptions.
+- `/app/memory/PHASE_2_VALIDATION_GATE_1_REPORT.md` — comprehensive Gate-1 assessment: features implemented, flag registry, validation results, performance impact, health metrics, risks, rollback verification, files changed. **Recommendation: PASS Validation Gate 1.**
+
+**Awaiting:** operator sign-off on `PHASE_2_VALIDATION_GATE_1_REPORT.md` before Stage 2 begins.
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

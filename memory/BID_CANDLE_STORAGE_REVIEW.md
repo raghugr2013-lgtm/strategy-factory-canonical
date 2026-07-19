@@ -428,7 +428,7 @@ adds the HTF cache and cross-source consistency guarantees.
 
 ## 9. Sign-off
 
-- ⏳ **This review** — pending operator approval
+- ✅ **This review** — approved by operator on 2026-02-19 with refinements (see §10)
 - On approval: **the Phase 2 Stage 2 plan folds this in as-is** (the BI5 read-side refactor extends to cover BID candles under Option D).
 - No Phase-1 code changes.
 - No BI5 tick behaviour change.
@@ -444,4 +444,190 @@ adds the HTF cache and cross-source consistency guarantees.
 `PHASE_2_CONSOLIDATED_REVIEW.md`,
 `PHASE_2_IMPLEMENTATION_MASTER_PLAN.md`.
 
-*Status:* **Architecture review only. No code changes proposed. Approval required before this design supersedes the BID paragraph in PHASE_2B.**
+*Status:* **Option D approved 2026-02-19. Design now supersedes the BID paragraph in PHASE_2B. Implementation deferred until Phase 2 Stage 2.**
+
+---
+
+## 10. Approved refinements (operator, 2026-02-19)
+
+### 10.1 Cache invalidation — event-driven, not time-driven
+
+Cache freshness is triggered by observable events, not TTL. Time-based
+expiry is a **safety fallback only**.
+
+**Invalidation events:**
+| Event | Effect |
+|---|---|
+| New M1 candles arrive (append-only insert) | Invalidate HTF cache windows overlapping the appended range |
+| Historical repair (`fix_gaps`, `data_manager.repair`) | Invalidate all HTF cache windows overlapping the repair range |
+| Gap-repair completion (`gap_analyzer` fills a hole) | Same as above |
+| Provider correction detected (weekly HTF diff exceeds `major` threshold) | Governance alert + mark HTF cache windows `stale=true` (no auto-rebuild) |
+| Operator forces rebuild (admin API) | Truncate + rebuild specified windows |
+| Secondary safety: cache age > `BID_HTF_CACHE_MAX_AGE_DAYS` (default 365) | Re-materialise on next read |
+
+**Consequence for `market_data_htf_cache` schema:**
+Each cache row now carries `source_range: {first_ts, last_ts}` +
+`generated_at` + `stale: bool`. Invalidation is a metadata flip, not
+a delete — the row stays readable until the re-materialised row lands
+(hot-swap discipline).
+
+### 10.2 Cache sharding — three-axis composite key
+
+Shard by **(symbol, timeframe, date_range_bucket)** — where
+`date_range_bucket` is a monthly or quarterly window (recommend
+monthly for M15 and below, quarterly for H1+).
+
+**Benefits:**
+- Rebuilds are per-bucket → small, bounded work units
+- Distribution-ready: buckets are natural units of parallel work
+- Cache miss on the trailing edge doesn't invalidate historical buckets
+- Cross-node placement in COE γ+ is trivial (bucket-hash routing)
+
+**Mongo shape:**
+```
+market_data_htf_cache {
+    _id: "<symbol>|<tf>|<yyyy-mm>",   # e.g. "EURUSD|H1|2025-06"
+    symbol, timeframe, bucket_start, bucket_end,
+    source_range: { first_ts, last_ts },
+    generated_at, stale: false,
+    candles: [ { ts, o, h, l, c, v }, ... ]
+}
+```
+
+Bucket boundaries are aligned to natural session cut-offs (Sunday
+17:00 ET open for FX) to avoid straddling.
+
+### 10.3 Provider HTF verification — periodic, advisory, tiered
+
+**Cadence:** monthly (not weekly, not continuous). One
+`MARKET_DATA` task per instrument-TF pair per month, running during
+a low-traffic window.
+
+**Never automatically overwrites** the canonical M1 or the derived
+HTF cache. Divergence outcomes are **governance alerts**, not
+corrective actions.
+
+**Tiered divergence classifier:**
+| Tier | Meaning | Action |
+|---|---|---|
+| `informational` | Divergence below the minor threshold | Record in `provider_htf_check_log`; no alert |
+| `warning` | Divergence between minor and moderate thresholds | Alert operator dashboard; do not touch data |
+| `governance_review` | Divergence exceeds moderate threshold | Mark cache bucket `stale=true` for the affected range; require operator sign-off before rebuild |
+
+**Threshold values are DELIBERATELY unspecified in this document.** They
+will be calibrated using production observation once the check runs
+for one full month against real provider drift. Placeholders:
+`BID_HTF_DIVERGENCE_MINOR_BPS`, `BID_HTF_DIVERGENCE_MODERATE_BPS`
+(env-overridable).
+
+### 10.4 M1-fallback for instruments without M1 history
+
+Support both models under one architecture. Per-instrument opt-out
+via the `instrument_registry` collection (new — Phase-2 scope):
+
+```
+instrument_registry {
+    symbol:              "EURUSD",
+    canonical_mode:      "m1" | "native_tf",
+    native_only_reason:  "no_m1_history_before_2015" | "provider_limit" | null,
+    fallback_tfs:        [ "15m", "1h" ],     # only when canonical_mode="native_tf"
+    added_at, notes
+}
+```
+
+**Default:** every instrument is `canonical_mode="m1"`. The `native_tf`
+mode is the explicit exception, documented per instrument, requiring
+operator approval to add.
+
+`data_access.load_candles()` becomes:
+```
+if instrument.canonical_mode == "m1":
+    → M1 canonical read + resample + cache (Option D)
+else:
+    → native TF row read from market_data (legacy Option A path)
+```
+
+**No exotic-instrument case blocks the primary architecture.** The
+canonical path stays clean.
+
+### 10.5 The Canonical Timeframe Service (CTS) — new dedicated component
+
+The operator-introduced abstraction that centralises aggregation
+logic. Rather than sprinkling resample calls across `data_access.py`,
+backtest engines, and knowledge domains, all HTF derivation goes
+through **one** service.
+
+**Responsibilities (per operator directive):**
+1. Aggregate M1 into higher timeframes (single canonical resampler)
+2. Materialise HTF caches (write to `market_data_htf_cache`)
+3. Validate aggregation integrity (checksum M1 window ↔ derived HTF row)
+4. Rebuild caches after repairs / invalidation events
+5. Serve historical timeframe requests (the sole `load_candles()` implementer)
+6. Report cache health (via `HealthSnapshot` — Universal Health Contract)
+
+**Interface (Protocol — driver-agnostic per distribution invariant §11):**
+```python
+class CanonicalTimeframeService(Protocol):
+    async def load_candles(
+        self, symbol: str, timeframe: str,
+        start: datetime, end: datetime, *,
+        use_cache: bool = True,
+    ) -> List[Candle]: ...
+
+    async def invalidate(
+        self, symbol: str, timeframe: Optional[str] = None,
+        start: Optional[datetime] = None, end: Optional[datetime] = None,
+        reason: str = "manual",
+    ) -> InvalidationReport: ...
+
+    async def rebuild_bucket(
+        self, symbol: str, timeframe: str, bucket_key: str,
+    ) -> RebuildReport: ...
+
+    async def verify_against_provider(
+        self, symbol: str, timeframe: str, window_days: int = 7,
+    ) -> VerificationReport: ...
+
+    def health_snapshot(self) -> HealthSnapshot: ...
+```
+
+**Placement:** `backend/engines/cts/` (new module, Phase 2 Stage 2).
+Registered as a subsystem in `engines.health.providers` on boot.
+
+**Governance:** the CTS is the **sole implementer** of
+`data_access.load_candles()` once Stage 2 lands. This becomes
+platform invariant #16 (extends §5 of `PHASE_2_CONSOLIDATED_REVIEW.md`):
+> **Invariant #16 (2026-02-19):** All historical candle reads for any
+> timeframe go through the Canonical Timeframe Service. No engine
+> reads `market_data` directly for HTF data.
+
+**Failure isolation:** CTS runs entirely on the `MARKET_DATA` COE
+workload class (with reservation ≥ 1 per Stage-1 conservative
+floors) — a backtesting burst cannot starve CTS reads.
+
+### 10.6 Cross-source consistency check — advisory only
+
+Per operator directive: monthly BID ↔ BI5-derived candle diff, run
+as a `META_LEARNING` task (heavy, monthly, non-blocking). Outputs
+recorded in `outcome_events` with severity tier. **Never auto-overwrites.**
+
+Governance dashboard surface: a single card showing "Cross-source
+divergence — last 30 days" with severity breakdown. Operator
+inspects; operator decides.
+
+### 10.7 Updated feature-flag catalogue (supersedes §6.8)
+
+| Flag | Default | Owner | Effect when ON |
+|---|---|---|---|
+| `BID_CANONICAL_M1_READ_MODE` | `false` | CTS | Route `load_candles()` through M1 + resample path |
+| `BID_HTF_CACHE_ENABLED` | `false` | CTS | Materialise `market_data_htf_cache` on demand |
+| `BID_CACHE_EVENT_INVALIDATION` | `false` | CTS | Enable event-driven cache invalidation (default) |
+| `BID_HTF_CACHE_MAX_AGE_DAYS` | `365` | CTS | Secondary safety time-based expiry |
+| `BID_LEGACY_TF_ROWS_READ_ONLY` | `false` | Migration | Deprecate per-TF rows in `market_data` |
+| `BID_PROVIDER_HTF_CHECK_ENABLED` | `false` | CTS | Monthly provider-native HTF diff task |
+| `BID_HTF_DIVERGENCE_MINOR_BPS` | *TBD* | CTS | Threshold — informational tier |
+| `BID_HTF_DIVERGENCE_MODERATE_BPS` | *TBD* | CTS | Threshold — warning → governance-review tier |
+| `BID_CROSS_SOURCE_CHECK_ENABLED` | `false` | Meta-Learning | Monthly BID↔BI5 consistency check |
+| `INSTRUMENT_REGISTRY_ENABLED` | `false` | Data | Enable per-instrument `canonical_mode` (m1 / native_tf) |
+
+Every flag is default OFF; rollback = flag flip.
