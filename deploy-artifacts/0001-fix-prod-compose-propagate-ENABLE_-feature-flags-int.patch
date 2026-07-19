@@ -1,0 +1,89 @@
+From e873af365b833b031a85286462fadc47ba7bdfad Mon Sep 17 00:00:00 2001
+From: raghugr2013-lgtm <raghu@coinnike.com>
+Date: Sun, 19 Jul 2026 04:14:02 +0000
+Subject: [PATCH] fix(prod-compose): propagate ENABLE_* feature flags into
+ factory-backend
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Root cause
+----------
+docker-compose `--env-file` supplies variables only for YAML
+interpolation. To reach the container's os.environ they must be
+enumerated under the service's `environment:` block. The
+factory-backend service in infra/compose/docker-compose.prod.yml
+was missing ENABLE_LEGACY_ROUTERS, ENABLE_FACTORY_RUNNER and
+ENABLE_DYNAMIC_MARKET_UNIVERSE, so backend/app/core/config.py's
+_bool_env(default=False) returned False regardless of what the
+production .env said.
+
+Observable symptom (v1.1.0 deploy, commit 546d0a9)
+--------------------------------------------------
+  legacy routers dormant (ENABLE_LEGACY_ROUTERS=false)
+  OpenAPI advertised only 19 paths (Phase-1 core)
+  /api/governance/*, /api/deployment/registry, /api/dashboard/* → 404
+  Dashboard Governance + Universe widgets empty
+
+Fix
+---
+Enumerate the three ENABLE_* flags under
+services.factory-backend.environment with the same defaults as the
+dev overlay compose (docker-compose.yml lines 83-85) and the
+factory-runner service in this same file (lines 176-177). No other
+change; only the 15-key allow-list grows to 18.
+
+Verification (run on the VPS after redeploy)
+--------------------------------------------
+  docker exec factory-backend printenv ENABLE_LEGACY_ROUTERS  # → true
+  docker logs factory-backend | grep 'legacy full-recovery mount'
+  docker exec factory-backend curl -s http://127.0.0.1:8001/api/openapi.json \
+    | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["paths"]))'
+  # → 600+ (was 19)
+  curl -fsS https://strategy.coinnike.com/api/governance/survivor-registry \
+    -H "Authorization: Bearer <token>"  # → 200
+
+Drift analysis
+--------------
+Full comparison of factory-backend.environment between dev overlay
+and prod compose shows these are the ONLY missing backend runtime
+env vars. All other differences are intentional (prod removes
+default fallbacks for MONGO_URL / JWT_SECRET / ADMIN_EMAIL /
+ADMIN_PASSWORD so boot fails fast on unset required values). No
+other feature flag is silently disabled by this class of drift.
+
+Refs
+----
+Closes deployment-config drift reported after strategy.coinnike.com
+v1.1.0 deploy. No route restoration required; existing legacy
+routers mount correctly once the flag actually reaches os.environ.
+---
+ infra/compose/docker-compose.prod.yml | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/infra/compose/docker-compose.prod.yml b/infra/compose/docker-compose.prod.yml
+index 245c8b3..614e910 100644
+--- a/infra/compose/docker-compose.prod.yml
++++ b/infra/compose/docker-compose.prod.yml
+@@ -52,6 +52,18 @@ services:
+       BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+       BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+       BUILD_DATE: ${BUILD_DATE:-unknown}
++      # ── Feature flags ────────────────────────────────────────────
++      # Must be enumerated here (not just present in `.env`) because
++      # docker-compose `--env-file` only supplies interpolation values
++      # — variables absent from this `environment:` block never enter
++      # the container's os.environ. Backend reads these via
++      # backend/app/core/config.py:_bool_env (default False), so an
++      # omitted flag silently disables the feature at boot. Kept in
++      # sync with dev overlay (docker-compose.yml, lines 83-85) and
++      # the factory-runner service in this file (lines 176-177).
++      ENABLE_LEGACY_ROUTERS: ${ENABLE_LEGACY_ROUTERS:-true}
++      ENABLE_FACTORY_RUNNER: ${ENABLE_FACTORY_RUNNER:-true}
++      ENABLE_DYNAMIC_MARKET_UNIVERSE: ${ENABLE_DYNAMIC_MARKET_UNIVERSE:-false}
+     networks:
+       vqb-network:
+         aliases:
+-- 
+2.39.5
+
