@@ -145,6 +145,23 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 **Total Phase-2 tests: 78/78 passing.** Backend healthy: `platform_health_score=100`; all 101 legacy routers still mount.
 
+- **2.ε — CTS Foundation** ✅
+  - `engines/cts/types.py` — `Candle`, `CandleWindow`, `Provenance`, `DataQualityState`, `RebuildReport`, `VerificationReport`. **Traceability invariant #17** baked in: every window carries provenance identifying canonical source, aggregation path, cache generation ts, cache version, cache bucket key, repair status, data quality state, gap count.
+  - `engines/cts/resampler.py` — pure M1 → HTF aggregator via pandas `resample(rule).ohlc()` with `label="left", closed="left"` semantics. Deterministic; unit-testable in isolation. 3-axis bucket key helper.
+  - `engines/cts/service.py` — `CanonicalTimeframeService` Protocol + `LocalCTS` implementation. `get_cts()` singleton factory (respects `CTS_DRIVER=local|distributed`). CTS registers its `HealthSnapshot` provider on import.
+  - `engines/data_access.py` — `load_ohlc_bars()` routes through CTS when `BID_CANONICAL_M1_READ_MODE=true` AND `source="bid_1m"`. Legacy fallback on error. Byte-identical when flag OFF.
+  - `app/main.py` — CTS module touched at boot so its health provider registers with the Universal Health Contract. `platform_health_score` aggregator now sees THREE subsystems: coe + vie + cts.
+
+- **2.ζ — HTF Materialised Cache** ✅
+  - `engines/cts/cache.py` — `HtfCache` reading/writing `market_data_htf_cache` collection. 3-axis sharding (`symbol|timeframe|yyyy-mm`) per §10.2. Event-driven invalidation via `HtfCache.invalidate()` (`BID_CACHE_EVENT_INVALIDATION=true`). Secondary time-based safety via `BID_HTF_CACHE_MAX_AGE_DAYS` (default 365).
+  - Cache miss reasons instrumented: `disabled`, `no_db`, `read_error`, `not_found`, `stale`, `too_old`, `schema_mismatch`. Cache hit rate and misses recorded in `Metric` counters.
+  - Write is best-effort; failure logs warning and caller still gets resampled data (never blocks the read path).
+
+- **Traceability invariant added to BID review** (§10.6b) as platform invariant #17
+- **CTS test suite** — 23 new tests covering: Provenance shape, all-field traceability, Candle roundtrip, resampler correctness for M1/M5/M15/H1, OHLC bar semantics (open=first, close=last, high=max, low=min, volume=sum), Protocol satisfaction, cache put/get/invalidate roundtrip, data_access route-through when flag ON, health snapshot shape, rebuild_bucket
+
+**Total Phase-2 tests: 101/101 passing.** Backend healthy: `platform_health_score=100`; three subsystems registered (coe, cts, vie).
+
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
 ## Backlog (P2 / cosmetic)

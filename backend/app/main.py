@@ -255,6 +255,15 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("budget_tracker rehydration failed (non-fatal)")
 
+        # Phase 2 Stage 2.ε (2026-02-19) — touch CTS module so its health
+        # provider registers with the Universal Health Contract. Zero cost
+        # at boot (module import only); no I/O.
+        try:
+            import engines.cts  # noqa: F401
+            logger.info("CTS module loaded (subsystem=cts registered with health contract)")
+        except Exception:  # noqa: BLE001
+            logger.exception("CTS module load failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 

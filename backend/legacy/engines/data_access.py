@@ -93,7 +93,22 @@ async def load_ohlc_bars(
 
     `timeframe` may be canonical (`H1`) or DB-native (`1h`). Conversion
     is done via the authoritative `TIMEFRAME_MAP` — NO local map.
+
+    Phase 2 Stage 2.ε (2026-02-19): when `BID_CANONICAL_M1_READ_MODE=true`,
+    reads route through the Canonical Timeframe Service (M1 canonical +
+    on-read resample + optional HTF cache). Byte-identical when the flag
+    is off.
     """
+    import os as _os
+    _canonical = (_os.environ.get("BID_CANONICAL_M1_READ_MODE") or "").strip().lower()
+    if _canonical in ("1", "true", "yes", "y", "on") and source == "bid_1m":
+        try:
+            from engines.cts import get_cts
+            window = await get_cts().load_candles(pair, timeframe, limit=limit)
+            return [c.to_dict() for c in window.candles]
+        except Exception as e:  # noqa: BLE001
+            logger.warning("[data_access] CTS route failed for %s/%s — falling back: %s",
+                           pair, timeframe, e)
     db = get_db()
     data_tf = TIMEFRAME_MAP.get(timeframe, timeframe.lower())
     cursor = db.market_data.find(

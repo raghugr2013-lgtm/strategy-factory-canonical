@@ -615,6 +615,41 @@ Governance dashboard surface: a single card showing "Cross-source
 divergence — last 30 days" with severity breakdown. Operator
 inspects; operator decides.
 
+### 10.6b Traceability invariant (operator directive, 2026-02-19)
+
+Every historical candle returned by CTS MUST be traceable. Each
+returned dataset (a `CandleWindow`) carries a `Provenance` record
+that identifies:
+
+| Field | Meaning |
+|---|---|
+| `canonical_source` | Which storage the M1 rows came from (e.g. `market_data.bid_1m`) |
+| `aggregation_path` | Pure fn identifier: `m1_native` \| `m1_resampled_to_H1` \| `cache:H1` \| `error` |
+| `cache_generated_at` | UTC ISO of the cache write; `null` when served from resample |
+| `cache_version` | Schema version — bumped on breaking changes to the cache row shape |
+| `cache_bucket_key` | 3-axis shard key (`EURUSD\|H1\|2026-02`) when applicable |
+| `repair_status` | `none` \| `gaps_backfilled` \| `manual_override` |
+| `data_quality_state` | `ok` \| `degraded` \| `reconstructed` \| `stale` \| `unknown` |
+| `gap_count` | Number of expected bars missing from the window |
+| `generated_at` | UTC ISO of THIS response |
+| `cts_version` | CTS module version (semver) |
+
+This becomes **platform invariant #17**:
+> **Invariant #17 (2026-02-19):** Every `CandleWindow` returned by CTS
+> carries a fully populated `Provenance` record. No caller may
+> discard, replace, or synthesise provenance metadata.
+
+Rationale: as the platform grows, backtests must be reproducible from
+provenance alone — given the same `canonical_source + aggregation_path
++ cache_generated_at + cache_version`, the same input produces the
+same output. Any drift becomes an audit trail that operators can
+walk backwards.
+
+Implementation: `engines/cts/types.py::Provenance` — a `@dataclass`
+attached to every `CandleWindow`. Enforced by the CTS Protocol's
+return type; downstream logging includes provenance dict via
+`window.to_dict()`.
+
 ### 10.7 Updated feature-flag catalogue (supersedes §6.8)
 
 | Flag | Default | Owner | Effect when ON |
