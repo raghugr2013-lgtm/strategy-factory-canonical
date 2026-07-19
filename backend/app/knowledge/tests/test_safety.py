@@ -119,14 +119,40 @@ def test_strategy_repo_injects_eligible_for_deploy():
     coll = _FakeCollection()
     repo = StrategyRepository(coll)
     list(repo.find({"pair": "XAUUSD"}))
-    assert coll.last_filter == {"pair": "XAUUSD", "eligible_for_deploy": True}
+    assert coll.last_filter == {
+        "pair": "XAUUSD",
+        "eligible_for_deploy": {"$ne": False},
+    }
 
 
 def test_strategy_repo_rejects_conflicting_override():
     coll = _FakeCollection()
     repo = StrategyRepository(coll)
+    # Caller explicitly trying to reach KB rows must be refused.
     with pytest.raises(_ImmutableError):
         list(repo.find({"eligible_for_deploy": False}))
+
+
+def test_strategy_repo_backward_compat_semantics():
+    """The safety filter uses ``$ne: False`` — a doc without the field
+    remains visible, a doc explicitly ``False`` is filtered out.
+
+    This proves the filter is deployable *before* the strategies
+    collection is backfilled with the field."""
+    from pymongo import MongoClient
+    client = MongoClient("mongodb://localhost:27017")
+    tmp = client["strategy_repo_test_ephemeral"]["strategies"]
+    tmp.drop()
+    tmp.insert_many([
+        {"strategy_id": "no_field",    "pair": "X"},                          # legacy prod
+        {"strategy_id": "true_field",  "pair": "X", "eligible_for_deploy": True},
+        {"strategy_id": "false_field", "pair": "X", "eligible_for_deploy": False},  # KB row
+    ])
+    repo = StrategyRepository(tmp)
+    visible = {d["strategy_id"] for d in repo.find({})}
+    assert visible == {"no_field", "true_field"}
+    assert "false_field" not in visible
+    tmp.database.drop_collection("strategies")
 
 
 def test_strategy_repo_passes_writes_through():

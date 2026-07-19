@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from app.auth.deps import get_current_user
 from app.db.models import UserPublic
 from app.db.mongo import get_db
+from app.knowledge.repository import StrategyRepository
 from app.vie.client import VIEUnavailable, get_vie
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -15,7 +16,9 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 async def summary(user: UserPublic = Depends(get_current_user)):
     db = get_db()
     users_count = await db.users.count_documents({})
-    strategies_count = await db.strategies.count_documents({})
+    # Route the strategies count through the safety wrapper so KB rows
+    # never inflate production metrics.
+    strategies_count = await StrategyRepository(db.strategies).count_documents({})
     research_count = await db.research_queries.count_documents({})
 
     providers_available = 0

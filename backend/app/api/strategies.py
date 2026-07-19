@@ -22,10 +22,23 @@ from app.auth.deps import get_current_user, require_roles
 from app.core.config import get_settings
 from app.db.models import UserPublic
 from app.db.mongo import get_db
+from app.knowledge.repository import StrategyRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/strategies", tags=["strategies"])
+
+
+def _repo():
+    """Return a safety-wrapped view of the strategies collection.
+
+    Every read routed through this repository transparently applies
+    ``eligible_for_deploy != False``. Historical Knowledge Base rows
+    carry ``eligible_for_deploy: False`` explicitly, so they cannot
+    leak into any production read path — even if a future change
+    consolidates the ``strategies`` collection with the KB corpus.
+    """
+    return StrategyRepository(get_db().strategies)
 
 
 class StrategyGenerateRequest(BaseModel):
@@ -70,8 +83,7 @@ def _require_legacy() -> None:
 
 @router.get("", response_model=List[StrategyOut])
 async def list_strategies(user: UserPublic = Depends(get_current_user)):
-    db = get_db()
-    cur = db.strategies.find({}, {"ir": 0}).sort("created_at", -1).limit(200)
+    cur = _repo().find({}, {"ir": 0}).sort("created_at", -1).limit(200)
     out: list[StrategyOut] = []
     async for d in cur:
         out.append(_to_out(d))
@@ -117,8 +129,7 @@ async def create_strategy(
 
 @router.get("/{strategy_id}", response_model=StrategyOut)
 async def get_strategy(strategy_id: str, user: UserPublic = Depends(get_current_user)):
-    db = get_db()
-    d = await db.strategies.find_one({"strategy_id": strategy_id})
+    d = await _repo().find_one({"strategy_id": strategy_id})
     if not d:
         raise HTTPException(status_code=404, detail="strategy not found")
     return _to_out(d)

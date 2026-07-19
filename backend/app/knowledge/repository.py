@@ -40,20 +40,28 @@ class _ImmutableError(RuntimeError):
 
 def _merge_filter(user_filter: Mapping[str, Any] | None,
                   mandatory: Mapping[str, Any]) -> dict:
+    """Merge a mandatory safety filter into a user-supplied one.
+
+    * If the caller does not constrain the safety-guarded field, the
+      mandatory clause is added verbatim.
+    * If the caller *does* constrain the field, the merge is allowed
+      only when the caller's constraint is a strict tightening
+      (i.e. equal to the mandatory clause). Any other value — most
+      importantly ``False`` for ``eligible_for_deploy`` — raises
+      :class:`_ImmutableError`. This blocks attempts to reach the KB
+      through the production repo.
+    """
     if not user_filter:
         return dict(mandatory)
     merged = dict(user_filter)
     for k, v in mandatory.items():
-        # If the caller already constrains the field, respect them
-        # unless their constraint would violate the safety invariant.
-        if k in merged:
-            if merged[k] != v:
-                raise _ImmutableError(
-                    f"forbidden filter override: caller set {k}={merged[k]!r} "
-                    f"but the safety-guard requires {k}={v!r}. Use the "
-                    f"correct repository (StrategyRepository vs "
-                    f"KnowledgeRepository) instead of overriding the guard."
-                )
+        if k in merged and merged[k] != v:
+            raise _ImmutableError(
+                f"forbidden filter override: caller set {k}={merged[k]!r} "
+                f"but the safety guard requires {k}={v!r}. Use the correct "
+                f"repository (StrategyRepository vs KnowledgeRepository) "
+                f"instead of overriding the guard."
+            )
         merged[k] = v
     return merged
 
@@ -63,18 +71,32 @@ def _merge_filter(user_filter: Mapping[str, Any] | None,
 class StrategyRepository:
     """Production-safe reads over any strategy-bearing collection.
 
-    Every ``find`` / ``find_one`` transparently injects
-    ``{"eligible_for_deploy": True}`` into the caller's filter.
-    Documents that don't carry the field are implicitly excluded — a
-    deliberate default that makes the KB corpus invisible to
-    production readers unless the schema is explicitly opted in.
+    Every ``find`` / ``find_one`` transparently injects the safety
+    filter ``{"eligible_for_deploy": {"$ne": False}}`` into the caller's
+    filter. Semantics:
+
+    * A document with ``eligible_for_deploy == True`` is visible.
+    * A document *without* the field is visible (backward compat for
+      the pre-Phase-1.6 production ``strategies`` collection).
+    * A document with ``eligible_for_deploy == False`` — i.e. every
+      Historical Knowledge Base row — is **invisible**.
+
+    This is the strongest guarantee that lets the safety net roll out
+    without a data-migration wave and without any active-pool document
+    being hidden by accident.
 
     Writes (``insert_one``, ``update_one``, ``delete_one``) are passed
     through untouched. This wrapper is a *read-side* safety net; the
     write side is protected by the existing governance pipeline.
+
+    Works transparently over both ``pymongo.collection.Collection``
+    (sync) and ``motor.motor_asyncio.AsyncIOMotorCollection`` (async)
+    — the wrapper only injects the safety filter and delegates, so
+    whichever call semantics the caller uses (``await find_one(...)``
+    or the sync equivalent) continues to work.
     """
 
-    SAFETY_FILTER = {"eligible_for_deploy": True}
+    SAFETY_FILTER = {"eligible_for_deploy": {"$ne": False}}
 
     def __init__(self, collection: Collection):
         self._c = collection
