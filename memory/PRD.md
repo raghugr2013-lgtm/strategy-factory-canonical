@@ -188,14 +188,74 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 All Stage-2 code remains DORMANT behind default-off flags — zero production behaviour change.
 
-**Sub-stages remaining before Validation Gate 2:** ✅ COMPLETE
-- 2.κ — Market Data Validation Report — `PHASE_2_STAGE_2_MARKET_DATA_VALIDATION_REPORT.md` ✅ (2026-02-19)
-- Validation Gate 2 Report — `PHASE_2_VALIDATION_GATE_2_REPORT.md` ✅ (2026-02-19)
+**Sub-stages remaining before Validation Gate 2:** ✅ COMPLETE + APPROVED
+- 2.κ — Market Data Validation Report — `PHASE_2_STAGE_2_MARKET_DATA_VALIDATION_REPORT.md` ✅
+- Validation Gate 2 Report — `PHASE_2_VALIDATION_GATE_2_REPORT.md` ✅
+- **Operator sign-off received (2026-02-19).**
 
-Both reports awaiting operator sign-off. Once approved:
-1. Enable Stage-2 observability flags in production (already ON in preview): `COE_METRICS_ENABLED`, `COE_COVERAGE_REPORT_ENABLED`, `X_COE_PRESSURE_HEADER_ENABLED`
-2. Enable data-path flags in the order documented in the Gate 2 report §12: USE_IO_POOL → COE_RESERVATIONS_ENABLED → COE_LANES_ENABLED → shadow-mode BI5↔BID diff → BI5_CTS_ROUTING → BID_CANONICAL_M1_READ_MODE + BID_HTF_CACHE_ENABLED per-symbol
-3. Begin Stage 3 planning (UKIE α + UKIE β)
+## Phase 2 Stage 3.α — UKIE Foundation (2026-02-19) ✅
+
+Foundation architecture ONLY per operator directive — no pipeline
+stages, no governance cutover, no retro-scoring.
+
+- **P2C.0 — `KnowledgeDomain` registry** ✅
+  - `engines/knowledge/domains.py` — enum with the six canonical
+    domains (`strategy`, `research`, `indicator`, `market`,
+    `execution`, `internal_history`); `KnowledgeDomainSpec` frozen
+    dataclass carrying every operator-mandated field (`display_name`,
+    `description`, `storage_collection`, `required_fields`,
+    `default_trust_floor`, `ai_context_policy`,
+    `default_retention_policy`, `searchable`, `version`); immutable
+    `KNOWLEDGE_DOMAIN_REGISTRY` module-level constant.
+  - Extensibility contract: every field has a default; adding a
+    seventh domain is one entry.
+
+- **P2C.1 — `KnowledgeConnector` Protocol + `GithubConnector`** ✅
+  - `engines/knowledge/connector.py` — `@runtime_checkable Protocol`
+    with capability metadata (`ConnectorCapabilities` dataclass:
+    `supports_discovery`, `supports_incremental_sync`,
+    `supports_versioning`, `supports_rate_limits`,
+    `supports_metadata_only`, all default False); supporting
+    dataclasses `RateLimit`, `DiscoveryQuery`, `Reference`;
+    `RawKnowledgeItem` envelope with the `domain` field + hard-rail
+    guardrails (`learning_only=True`, `eligible_for_deploy=False`).
+  - `engines/knowledge/connectors/github.py` — `GithubConnector`
+    wraps existing `strategy_ingestion.collector`. Declares
+    `supported_domains={STRATEGY}` and honest capability set.
+    **Zero behaviour change to the legacy path** — legacy
+    `ingestion_runner` continues to call `collector` directly.
+
+- **Registry + read-only API** ✅
+  - `engines/knowledge/registry.py` — combined domain re-exports +
+    connector registry with `register_connector` / `get_connector` /
+    `list_connectors` / `connectors_for_domain`. Auto-registers
+    `GithubConnector` at import time.
+  - `engines/knowledge/router.py` — `/api/knowledge/domains`,
+    `/api/knowledge/domains/{domain}`,
+    `/api/knowledge/connectors`,
+    `/api/knowledge/connectors/{name}`,
+    `/api/knowledge/domains/{domain}/connectors`. Flag-gated by
+    `UKIE_DOMAIN_REGISTRY_ENABLED=false` → HTTP 503.
+
+- **Stage 3.α tests: 50 / 50 passing.** Cumulative Phase-2 tests:
+  **158 / 158** (Stage 1: 34 + Stage 2: 74 + Stage 3.α: 50).
+
+- **Deliverable:** `/app/memory/PHASE_2_STAGE_3_ALPHA_NOTES.md`
+  documenting the foundation contract for Stage 3.β consumers.
+
+**Feature flag introduced (default OFF):**
+- `UKIE_DOMAIN_REGISTRY_ENABLED` — mounts `/api/knowledge/domains/*` +
+  `/api/knowledge/connectors/*`
+
+Live verification (preview pod, flag ON):
+- `/api/knowledge/domains` returns 6 domains with full spec shape
+- `/api/knowledge/connectors` returns `github` with declared capabilities
+- `/api/health/system` unchanged: platform_health_score=100 across coe / vie / cts
+
+**Explicit non-goals honoured** — Stage 3.α ships ONLY the domain
+registry, connector Protocol, GithubConnector adapter, registry, and
+read-only API. Pipeline stages, governance cutover, retro-scoring,
+and additional connectors are Stage 3.β / Stage 4.
 
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 

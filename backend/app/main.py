@@ -558,6 +558,15 @@ def create_app() -> FastAPI:
     except Exception as _px:  # noqa: BLE001
         logger.warning("X-COE-Pressure middleware skipped: %s", _px)
 
+    # ── UKIE foundation router (Phase 2 Stage 3.α) ───────────────
+    # Self-guarded with HTTP 503 when UKIE_DOMAIN_REGISTRY_ENABLED is off.
+    try:
+        from engines.knowledge.router import router as _ukie_router  # type: ignore
+        app.include_router(_ukie_router)
+        logger.info("mounted UKIE router: /api/knowledge/{domains,connectors}")
+    except Exception as _ux:  # noqa: BLE001
+        logger.warning("UKIE router mount skipped: %s", _ux)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,
