@@ -61,29 +61,28 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 ## Architecture Review Phase (Session 5 — COMPLETE)
 
-**All four Phase-2 architecture reviews delivered, plus consolidated cross-review:**
+**All four Phase-2 architecture reviews delivered, plus consolidated cross-review and authoritative implementation master plan:**
 
 - `PHASE_2A_AI_ARCHITECTURE_REVIEW.md` — Vendor-Independent Intelligence Engine (VIE). 634 lines. **Approved.**
 - `PHASE_2B_MARKET_DATA_REVIEW.md` — BI5 canonical-M1 read-side + coverage reports. 525 lines. **Approved.**
-- `PHASE_2C_KNOWLEDGE_INGESTION_REVIEW.md` — Universal Knowledge Ingestion Engine (UKIE), **now organised around six Knowledge Domains** (`strategy`, `research`, `indicator`, `market`, `execution`, `internal_history`) with connectors as interchangeable implementations beneath them. 582 lines. **Approved with domain-first framing (updated 2026-02-19).**
-- `PHASE_2D_COMPUTE_ORCHESTRATION_REVIEW.md` — Compute Orchestration Engine (COE): extended 10-class taxonomy, priority lanes (P0/P1/P2), reservations, `WorkloadRequest` envelope, retry + dead-letter, provider-aware admission. 780 lines. **New (2026-02-19).**
-- `PHASE_2_CONSOLIDATED_REVIEW.md` — cross-phase implementation sequence, parallelisation opportunities, integration hot-spots, cross-cutting invariants. 377 lines. **New (2026-02-19).**
+- `PHASE_2C_KNOWLEDGE_INGESTION_REVIEW.md` — UKIE organised around six **Knowledge Domains** (`strategy`, `research`, `indicator`, `market`, `execution`, `internal_history`). 582 lines. **Approved with domain-first framing (updated 2026-02-19).**
+- `PHASE_2D_COMPUTE_ORCHESTRATION_REVIEW.md` — COE: 10-class taxonomy, priority lanes, reservations, `WorkloadRequest`, retry + dead-letter, provider-aware admission, **distribution-ready from day one**. 780 lines. **Approved (2026-02-19).**
+- `PHASE_2_CONSOLIDATED_REVIEW.md` — cross-phase implementation sequence + integration hot-spots + **Universal Health Contract** (measurable health as cross-cutting principle). ~580 lines. **Approved (2026-02-19).**
+- `PHASE_2_IMPLEMENTATION_MASTER_PLAN.md` — **the authoritative Phase-2 implementation guide.** Consolidates all reviews, defines 4 staged waves with validation gates, feature-flag registry, rollback strategy, per-stage checklists, risk register. **Pending final review before Stage 1 execution.**
 
-**Recommended implementation order (per consolidated review §3):**
-1. COE α (foundations) — 5 days
-2. VIE hardening — 3 days (parallel with COE α)
-3. COE β (lanes + reservations + I/O pool) — 5 days
-4. BI5 read-side refactor — 4 days (parallel with COE β)
-5. UKIE α (domain registry + connector Protocol) — 2 days
-6. UKIE β (pipeline stages + governance cutover) — 5 days
-7. COE γ (retries + dead-letter + provider-aware admission) — 4 days
-8. UKIE γ (connector fleet — 5 connectors in parallel) — ~1 day each
-9. Consolidated observability — 2 days
+**Two operator directives baked into all documents (2026-02-19):**
+1. **Distribution-ready from day one.** No single-node assumptions may leak into any Phase 2 subsystem. `WorkloadQueue`, `BudgetTracker`, `queue_pressure`, `host_capability` all define `LocalDriver` (α/β) + `DistributedDriver` (γ+) under the same Protocol. The current VPS is the first compute node, not the permanent architecture.
+2. **Measurable health everywhere.** Every subsystem (VIE, BI5, UKIE, COE, Meta-Learning, MI, Execution, Portfolio, Factory-Eval) MUST expose the standard `HealthSnapshot` (7 fields: subsystem, ts, health_score, readiness_score, confidence_score, resource_usage, last_successful_run, failure_count, recovery_status). Contract ships in COE α (Stage 1) as `engines/health/contract.py`. Aggregated at `GET /api/health/system`.
 
-**Critical path:** ~30 days serial / ~18 days with parallel tracks.
+**Staged implementation with validation gates:**
+- **Stage 1** — COE α + VIE hardening → Validation Gate 1
+- **Stage 2** — COE β + BI5 refactor → Validation Gate 2
+- **Stage 3** — UKIE α + UKIE β (includes governance cutover) → Validation Gate 3
+- **Stage 4** — COE γ + UKIE γ + Observability → Final Validation Gate
 
-**NO code changes yet.** Awaiting operator approval on the consolidated
-implementation sequence before beginning Phase-2 implementation.
+**Estimated:** ~26 focused-days with 2-engineer parallel tracks / ~6–8 weeks calendar. 20% buffer recommended.
+
+**NO code changes yet.** Awaiting operator sign-off on `PHASE_2_IMPLEMENTATION_MASTER_PLAN.md` before Stage 1 begins.
 
 ## Backlog (P2 / cosmetic)
 

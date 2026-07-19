@@ -320,6 +320,94 @@ that violates one should be rejected in review:
 8. **`BudgetTracker` is the sole owner of USD accounting.** No engine records cost outside `orchestrator/budget_tracker.py`.
 9. **`WorkloadQueue.submit()` is the sole submitter of async work** (once COE β is on). Direct `orchestrator.dispatch_task()` calls survive only as a fallback path when `COE_LANES_ENABLED=false`.
 10. **Every write to any of the eight strategic collections** (`strategies, outcome_events, mutation_runs, factory_eval_reports, ingested_items, coverage_report, budget_state, workload_queue`) is idempotent and carries a provenance stamp.
+11. **Distribution-ready from day one** (operator directive, 2026-02-19). No layer of Phase 2 may hard-code single-node assumptions. Every counter, every queue, every budget MUST be behind an interface whose local-memory implementation is Phase-2α/β and whose distributed implementation is Phase-2γ+ — the switch is a driver swap, not a rewrite. Concretely: `WorkloadQueue`, `BudgetTracker`, `queue_pressure.snapshot()`, `host_capability` all use protocol-based backends with `local` / `distributed` implementations under the same interface. The current VPS is the **first compute node**, not the permanent architecture.
+12. **Measurable health everywhere** (operator directive, 2026-02-19). Every major subsystem MUST expose the same seven-field standardised health surface via `GET /api/<subsystem>/health`. Details in §5.1.
+
+### 5.1 The Universal Health Contract (new)
+
+Every Phase-2 subsystem (VIE, BI5, UKIE, COE, plus the existing
+Meta-Learning, Execution Intelligence, Market Intelligence, Portfolio,
+Factory-Eval subsystems) MUST expose a health endpoint returning
+**exactly this shape**:
+
+```json
+{
+  "subsystem":       "coe" | "vie" | "bi5" | "ukie" | "meta_learning" | "execution" | ...,
+  "ts":              "<UTC iso>",
+
+  "health_score":    0..100,   // aggregate health — see §5.1.1
+  "readiness_score": 0..100,   // are we prepared to accept new work?
+  "confidence_score":0..100,   // how much do we trust the recent output?
+
+  "resource_usage": {
+    "cpu_percent":       0..100,
+    "mem_mb":            <int>,
+    "in_flight":         <int>,
+    "queue_depth":       <int>,
+    "budget_headroom":   0..1     // USD remaining / daily cap
+  },
+
+  "last_successful_run": {
+    "at":       "<UTC iso>" | null,
+    "duration_ms": <int> | null,
+    "ref":      "<id / correlation>" | null
+  },
+
+  "failure_count": {
+    "last_hour":  <int>,
+    "last_day":   <int>,
+    "since_boot": <int>
+  },
+
+  "recovery_status": {
+    "state":        "ok" | "degraded" | "critical" | "recovering",
+    "reason":       "<short human-readable string>",
+    "action_required": "none"
+                    | "operator_review"
+                    | "restart_component"
+                    | "reset_budget"
+                    | "clear_dead_letter"
+                    | "wait_for_backoff"
+                    | "manual_intervention",
+    "last_recovery_at": "<UTC iso>" | null
+  }
+}
+```
+
+#### 5.1.1 Score computation contract
+
+- **`health_score`** — a WEIGHTED combination of failure_count (last hour), circuit-breaker state (if any), queue overflow events (if any), and dependency health.
+  Deterministic pure function; each subsystem publishes its formula.
+- **`readiness_score`** — how much *headroom* is available RIGHT NOW.
+  Function of `resource_usage.budget_headroom`, `queue_depth / class_capacity`, and provider circuit states (for AI-bearing subsystems).
+- **`confidence_score`** — how much do we trust the OUTPUT?
+  For VIE: recent success rate + provider agreement rate.
+  For BI5: coverage completeness + cert freshness.
+  For UKIE: trust-tier distribution + connector-health.
+  For COE: reservation-satisfaction rate.
+  For Meta-Learning: recent verdict stability.
+
+Every score is a **pure function over the last-N snapshot window**.
+No score depends on external state.
+
+#### 5.1.2 The three questions the platform must always answer
+
+The health contract exists so the platform can always answer:
+1. **What is healthy?** — any subsystem with `recovery_status.state == "ok"` and `health_score ≥ 80`.
+2. **What is degraded, and why?** — any subsystem with `state != "ok"` reports its `reason` and `failure_count`.
+3. **What action is required?** — every non-ok state carries an `action_required` from the closed enum, so operators can respond without reading logs first.
+
+#### 5.1.3 Aggregation
+
+- `GET /api/health/system` — cross-subsystem rollup. Returns an array of subsystem health blocks + a computed **platform_health_score** (weighted average, weights operator-tunable via env `PLATFORM_HEALTH_WEIGHT_<SUBSYSTEM>`).
+- Prometheus exporter (COE β) emits every field as a labelled metric.
+- Alertmanager rules can then fire on `platform_health_score < 60` or any `action_required != "none"`.
+
+#### 5.1.4 Implementation discipline
+
+- The contract lives in `engines/health/contract.py` as a `@dataclass HealthSnapshot` — every subsystem imports and populates the SAME dataclass. No bespoke shapes.
+- Subsystems produce their `HealthSnapshot` via a pure `compute_health()` function; the routing endpoint is a thin wrapper.
+- The dataclass ships in COE α (foundational — everyone depends on it). Existing subsystems (Meta-Learning, MI, Execution) retrofit their diagnostic endpoints to also emit `HealthSnapshot` in Stage 4.
 
 ---
 

@@ -166,6 +166,8 @@ Files (`backend/legacy/engines/`):
 4. **Honest refusal over silent buffering.** Every admission decision is `admit | defer(retry_after) | refuse`, journaled with a reason.
 5. **Rollback in 60 seconds.** Every new capability is a flag flip away from being dormant.
 6. **Operator authority.** Every automated decision has an env override (`ORCH_TASK_*`, `ORCH_BUDGET_*`, `WORKLOAD_PROFILE`, forthcoming `WORKLOAD_RESERVATION_*`).
+7. **Distribution-ready from day one** *(operator directive, 2026-02-19)*. The current VPS is the **first compute node**, never the permanent architecture. Every counter, queue, budget, and pressure snapshot in COE α/β lives behind a Protocol whose local implementation is single-node today and whose distributed implementation is COE γ+ — the switch is a driver swap. No single-node assumptions may leak into API surface or engine code. Concretely: `WorkloadQueue`, `BudgetTracker`, `queue_pressure`, `host_capability` all define `LocalDriver` (α/β) and `DistributedDriver` (γ+) implementations under the SAME interface. If a design decision would make it harder to distribute later, choose the other decision.
+8. **Measurable health everywhere** *(operator directive, 2026-02-19)*. Every subsystem produces a `HealthSnapshot` (see `PHASE_2_CONSOLIDATED_REVIEW.md §5.1`) — including COE itself. COE's `HealthSnapshot` aggregates queue depth, pool state, reservation satisfaction, dead-letter count, and admission-refusal rate into a single deterministic `health_score`. Ships in COE α as `engines/health/contract.py`; every downstream subsystem imports this contract.
 
 ### 1.2 Extended workload class taxonomy (10 classes)
 
