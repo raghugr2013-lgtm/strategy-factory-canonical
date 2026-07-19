@@ -52,6 +52,18 @@ services:
       BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
       BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
       BUILD_DATE: ${BUILD_DATE:-unknown}
+      # ── Feature flags ────────────────────────────────────────────
+      # Must be enumerated here (not just present in `.env`) because
+      # docker-compose `--env-file` only supplies interpolation values
+      # — variables absent from this `environment:` block never enter
+      # the container's os.environ. Backend reads these via
+      # backend/app/core/config.py:_bool_env (default False), so an
+      # omitted flag silently disables the feature at boot. Kept in
+      # sync with dev overlay (docker-compose.yml, lines 83-85) and
+      # the factory-runner service in this file (lines 176-177).
+      ENABLE_LEGACY_ROUTERS: ${ENABLE_LEGACY_ROUTERS:-true}
+      ENABLE_FACTORY_RUNNER: ${ENABLE_FACTORY_RUNNER:-true}
+      ENABLE_DYNAMIC_MARKET_UNIVERSE: ${ENABLE_DYNAMIC_MARKET_UNIVERSE:-false}
     networks:
       vqb-network:
         aliases:
