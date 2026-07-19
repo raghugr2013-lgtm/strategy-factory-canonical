@@ -28,6 +28,8 @@ class ValidationTask:
     COST_ESTIMATE_USD = 0.0
     BUSINESS_VALUE = 0.85
     PASSIVE = True   # activated in a later phase — validation runs inline today
+    HARD_TIMEOUT_S = 180.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
 
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         return Readiness(eligible=False, reason="passive", pressure=1.0)

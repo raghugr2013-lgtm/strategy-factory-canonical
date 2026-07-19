@@ -26,6 +26,8 @@ class OptimizationTask:
     BUSINESS_VALUE = 0.7
     PASSIVE = True
 
+    HARD_TIMEOUT_S = 600.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         return Readiness(eligible=False, reason="passive", pressure=1.0)
 

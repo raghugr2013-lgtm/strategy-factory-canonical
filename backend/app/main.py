@@ -236,6 +236,25 @@ async def lifespan(_app: FastAPI):
         except Exception:  # noqa: BLE001
             logger.exception("factory_eval engine bootstrap failed (non-fatal)")
 
+        # Phase 2 Stage 1 (2026-02-19) — rehydrate BudgetTracker from
+        # Mongo when BUDGET_PERSIST=true. Restart-preserved daily USD
+        # accounting is a Validation Gate 1 exit criterion.
+        # Non-fatal: Mongo failure leaves the tracker with in-memory zeros.
+        try:
+            import os as _os
+            _raw = (_os.environ.get("BUDGET_PERSIST") or "").strip().lower()
+            if _raw in ("1", "true", "yes", "y", "on"):
+                from engines.orchestrator.budget_tracker import get_budget_tracker
+                _loaded = await get_budget_tracker().load_from_mongo()
+                logger.info(
+                    "budget_tracker rehydration on boot: %s",
+                    "loaded" if _loaded else "no prior state (fresh start)",
+                )
+            else:
+                logger.info("budget_tracker persistence dormant on boot (BUDGET_PERSIST=false)")
+        except Exception:  # noqa: BLE001
+            logger.exception("budget_tracker rehydration failed (non-fatal)")
+
     yield
     logger.info("shutdown")
 
@@ -489,6 +508,22 @@ def create_app() -> FastAPI:
         logger.info("mounted knowledge router: /api/knowledge/*")
     except Exception as _kb_exc:  # noqa: BLE001
         logger.warning("knowledge router mount skipped: %s", _kb_exc)
+
+    # ── Universal Health Contract (Phase 2 Stage 1) ─────────────
+    # Mounted before legacy so /api/health/system doesn't collide with
+    # any legacy /api/health/* route. The router itself refuses all
+    # requests with HTTP 503 when COE_HEALTH_CONTRACT_ENABLED=false —
+    # so the mount is a no-op in the default configuration.
+    try:
+        import sys as _sys, os as _os
+        _lp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "legacy")
+        if _lp not in _sys.path:
+            _sys.path.insert(0, _lp)
+        from engines.health.router import router as _health_v2_router  # type: ignore
+        app.include_router(_health_v2_router)
+        logger.info("mounted universal-health router: /api/health/{system,subsystems,<name>}")
+    except Exception as _hx:  # noqa: BLE001
+        logger.warning("universal-health router mount skipped: %s", _hx)
 
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the

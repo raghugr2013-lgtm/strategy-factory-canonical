@@ -23,6 +23,8 @@ class KnowledgeIndexRefreshTask:
     BUSINESS_VALUE = 0.7
     PASSIVE = False
 
+    HARD_TIMEOUT_S = 600.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         p = freshness_pressure(self.NAME, self.MIN_INTERVAL_S)
         eligible = p >= 1.0

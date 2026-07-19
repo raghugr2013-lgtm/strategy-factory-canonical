@@ -33,6 +33,8 @@ class MasterBotBundleRefreshTask:
     COST_ESTIMATE_USD = 0.0
     BUSINESS_VALUE = 0.85
     PASSIVE = True   # operator-approved auto-refresh; deploy remains manual
+    HARD_TIMEOUT_S = 300.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
 
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         p = freshness_pressure(self.NAME, self.MIN_INTERVAL_S)

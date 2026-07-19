@@ -1,0 +1,89 @@
+{
+  "accounts": [
+    {
+      "account_id": "soak-broker-1",
+      "runner_id": "5824b232e23b4c7c9e110df48efb77fe",
+      "status": "created"
+    },
+    {
+      "account_id": "soak-broker-2",
+      "runner_id": "5824b232e23b4c7c9e110df48efb77fe",
+      "status": "created"
+    }
+  ],
+  "anchor": "2026-07-19T15:37:49.098574+00:00",
+  "definition": {
+    "master_bot_id": "b2f44f1396c8494684932e54b58a738c",
+    "revision_id": "40ad8bad512e49da8e1dd76401b19b6e",
+    "status": "created"
+  },
+  "deployments": [
+    {
+      "deployment_id": "d969f6aae47a42689984b951e6252613",
+      "pair": "EURUSD",
+      "status": "created",
+      "tf": "H1"
+    },
+    {
+      "deployment_id": "1120090e096947a282efeddd89f345a5",
+      "pair": "USDJPY",
+      "status": "created",
+      "tf": "H1"
+    }
+  ],
+  "errors": [],
+  "include_legacy": true,
+  "legacy_account": {
+    "account_id": "_legacy_single_account",
+    "runner_id": "5824b232e23b4c7c9e110df48efb77fe",
+    "status": "created"
+  },
+  "pack": {
+    "master_bot_id": "b2f44f1396c8494684932e54b58a738c",
+    "pack_id": "9095b0613f904c65a6b5ee854c5ca146",
+    "status": "created"
+  },
+  "phase1_baseline_verified": true,
+  "runners": [
+    {
+      "name": "soak_seed_runner_eurusd_h1h4",
+      "pair_filters": [
+        "EURUSD"
+      ],
+      "runner_id": "5824b232e23b4c7c9e110df48efb77fe",
+      "status": "created",
+      "timeframe_filters": [
+        "H1",
+        "H4"
+      ],
+      "token": "mbr_VEggnwr_vRVZ9QaIyXf4UqIld7VTXqutNyYP54IpQ7c"
+    },
+    {
+      "name": "soak_seed_runner_eurusd_gbpusd_h1",
+      "pair_filters": [
+        "EURUSD",
+        "GBPUSD"
+      ],
+      "runner_id": "f80cd86c6aa645ac97ec68f4f86e42a9",
+      "status": "created",
+      "timeframe_filters": [
+        "H1"
+      ],
+      "token": "mbr_rYNxhvJN1wObDfTM1vqTv_Q7r-j09nDPWWnfXmxKt54"
+    },
+    {
+      "name": "soak_seed_runner_usdjpy_m30h1",
+      "pair_filters": [
+        "USDJPY"
+      ],
+      "runner_id": "4a30907982cc42b7bd7bb1ef6f215c05",
+      "status": "created",
+      "timeframe_filters": [
+        "M30",
+        "H1"
+      ],
+      "token": "mbr_RRwLdksoObGCts-m4kL3qeWUIbydvu05FUPh70l4ijE"
+    }
+  ],
+  "seed_marker": "mb9_phase2_soak_seed"
+}

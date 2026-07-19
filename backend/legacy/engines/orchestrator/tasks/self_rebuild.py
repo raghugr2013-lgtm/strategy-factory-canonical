@@ -31,6 +31,8 @@ class SelfRebuildTask:
     BUSINESS_VALUE = 0.9
     PASSIVE = True
 
+    HARD_TIMEOUT_S = 300.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         p = freshness_pressure(self.NAME, self.MIN_INTERVAL_S)
         dep, stale = dependencies_ready(self.DEPENDS_ON, min_recent=1)

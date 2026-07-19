@@ -34,6 +34,8 @@ class MarketIntelligenceRefreshTask:
     COST_ESTIMATE_USD = 0.0
     BUSINESS_VALUE = 0.85
     PASSIVE = False           # active by default (cheap + local)
+    HARD_TIMEOUT_S = 300.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
 
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         # Master switch first — respects the MI_ENABLED env.

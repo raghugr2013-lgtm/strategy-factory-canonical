@@ -215,6 +215,19 @@ class BudgetTracker:
             self._cost_total_usd[provider] += cost_usd
             self._tokens_total[provider] += tokens
 
+        # Phase 2 Stage 1 — best-effort write-through. Uses fire-and-forget
+        # asyncio task when a loop is running; otherwise silently no-ops
+        # (record() may be called from sync engine code — sync callers
+        # rely on load_from_mongo() at boot + periodic explicit flush).
+        if self._persist_enabled():
+            try:
+                import asyncio as _asyncio
+                loop = _asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self.flush_to_mongo())
+            except Exception:  # noqa: BLE001
+                pass
+
     # ── Public: provider selection ──
     def choose_provider(
         self,
@@ -330,6 +343,104 @@ class BudgetTracker:
             self._calls_total.clear()
             self._cost_total_usd.clear()
             self._tokens_total.clear()
+
+    # ── Phase 2 Stage 1 — Mongo persistence (flag-gated) ────────────
+    #
+    # When `BUDGET_PERSIST=true`, the tracker mirrors its rolling state
+    # to `budget_state` (single-doc collection). Load at startup;
+    # write-through on every `record()`. Never raises — Mongo failure
+    # logs a warning and the in-memory path continues unchanged.
+    #
+    # Rollback: flip `BUDGET_PERSIST=false` — writes stop; existing
+    # collection is untouched (safe to keep around).
+
+    BUDGET_STATE_COLLECTION = "budget_state"
+    BUDGET_STATE_ID = "singleton"
+
+    @staticmethod
+    def _persist_enabled() -> bool:
+        raw = (os.environ.get("BUDGET_PERSIST") or "").strip().lower()
+        return raw in ("1", "true", "yes", "y", "on")
+
+    async def load_from_mongo(self) -> bool:
+        """Rehydrate rolling state from Mongo. Called once at boot when
+        `BUDGET_PERSIST=true`. Returns True on successful load, False on
+        no-row / error. Never raises."""
+        if not self._persist_enabled():
+            return False
+        try:
+            from engines.db import get_db
+            db = get_db()
+            doc = await db[self.BUDGET_STATE_COLLECTION].find_one(
+                {"_id": self.BUDGET_STATE_ID}
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("[budget_tracker] load_from_mongo failed: %s", e)
+            return False
+        if not doc:
+            return False
+        with self._lock:
+            # Daily global — only accept if the day key matches TODAY.
+            today = self._day_key()
+            g_daily = doc.get("daily_global") or {}
+            if g_daily.get("day") == today:
+                self._daily_global = (today, float(g_daily.get("spent_usd") or 0.0))
+            # Monthly global — same discipline.
+            this_month = self._month_key()
+            g_monthly = doc.get("monthly_global") or {}
+            if g_monthly.get("month") == this_month:
+                self._monthly_global = (this_month, float(g_monthly.get("spent_usd") or 0.0))
+            # Per-provider daily.
+            for p, row in (doc.get("daily_provider") or {}).items():
+                if not isinstance(row, dict):
+                    continue
+                if row.get("day") != today:
+                    continue
+                self._daily_provider[p] = (today, float(row.get("spent_usd") or 0.0))
+            # Cumulative counters (survive across days).
+            for p, n in (doc.get("cost_total_usd") or {}).items():
+                self._cost_total_usd[p] = float(n or 0.0)
+            for p, n in (doc.get("tokens_total") or {}).items():
+                self._tokens_total[p] = int(n or 0)
+            for p, n in (doc.get("calls_total") or {}).items():
+                self._calls_total[p] = int(n or 0)
+        return True
+
+    async def flush_to_mongo(self) -> bool:
+        """Best-effort write-through. Never raises."""
+        if not self._persist_enabled():
+            return False
+        try:
+            from engines.db import get_db
+            db = get_db()
+            with self._lock:
+                doc = {
+                    "daily_global": {
+                        "day": self._daily_global[0],
+                        "spent_usd": round(self._daily_global[1], 6),
+                    },
+                    "monthly_global": {
+                        "month": self._monthly_global[0],
+                        "spent_usd": round(self._monthly_global[1], 6),
+                    },
+                    "daily_provider": {
+                        p: {"day": day, "spent_usd": round(spent, 6)}
+                        for p, (day, spent) in self._daily_provider.items()
+                    },
+                    "cost_total_usd": {p: round(v, 6) for p, v in self._cost_total_usd.items()},
+                    "tokens_total": dict(self._tokens_total),
+                    "calls_total": dict(self._calls_total),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            await db[self.BUDGET_STATE_COLLECTION].update_one(
+                {"_id": self.BUDGET_STATE_ID},
+                {"$set": doc},
+                upsert=True,
+            )
+            return True
+        except Exception as e:  # noqa: BLE001
+            logger.debug("[budget_tracker] flush_to_mongo failed: %s", e)
+            return False
 
 
 # ── Singleton accessor ──────────────────────────────────────────────

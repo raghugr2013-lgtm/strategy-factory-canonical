@@ -1,0 +1,16 @@
+{
+  "actual_total": 10,
+  "anchor": "2026-07-19T15:37:49.114451+00:00",
+  "deletions": {
+    "master_bot_definitions": 1,
+    "master_bot_deployments": 2,
+    "master_bot_packs": 1,
+    "master_bot_runners": 3,
+    "runner_accounts": 3
+  },
+  "expected_total": 10,
+  "include_legacy_removed": true,
+  "seed_marker": "mb9_phase2_soak_seed",
+  "status": "complete",
+  "warnings": []
+}

@@ -27,6 +27,8 @@ class BacktestTask:
     COST_ESTIMATE_USD = 0.003
     BUSINESS_VALUE = 0.9
     PASSIVE = False
+    HARD_TIMEOUT_S = 180.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
 
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         return Readiness(eligible=True, reason="always_ready", pressure=1.0)

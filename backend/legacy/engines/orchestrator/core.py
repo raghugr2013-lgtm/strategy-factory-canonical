@@ -319,8 +319,19 @@ class Orchestrator:
         t0 = time.time()
         result: Optional[TaskResult] = None
         error: Optional[str] = None
+        # Stage 1 (Phase 2) — wrap task.run() in asyncio.wait_for when
+        # COE_HARD_TIMEOUT_ENABLED=true. Default off → byte-identical to
+        # pre-Stage-1 world.
+        timeout_s = float(getattr(task, "HARD_TIMEOUT_S", 300.0))
+        hard_timeout_on = _flag_env("COE_HARD_TIMEOUT_ENABLED", False)
         try:
-            result = await task.run(ctx)
+            if hard_timeout_on and timeout_s > 0:
+                result = await asyncio.wait_for(task.run(ctx), timeout=timeout_s)
+            else:
+                result = await task.run(ctx)
+        except asyncio.TimeoutError:
+            error = f"hard_timeout_{int(timeout_s)}s"
+            logger.warning("[orchestrator] %s hit HARD_TIMEOUT_S=%.1fs", task.NAME, timeout_s)
         except Exception as e:                                   # noqa: BLE001
             logger.exception("[orchestrator] %s.run() crashed", task.NAME)
             error = str(e)[:240]

@@ -28,6 +28,8 @@ class LearningCycleTask:
     BUSINESS_VALUE = 0.95
     PASSIVE = False
 
+    HARD_TIMEOUT_S = 300.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         return Readiness(eligible=True, reason="always_ready", pressure=1.2)
 

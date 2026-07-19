@@ -1,0 +1,85 @@
+{
+  "accounts": [
+    {
+      "account_id": "soak-broker-1",
+      "runner_id": "10d162510ef54435829ea54a7bb5fbca",
+      "status": "created"
+    },
+    {
+      "account_id": "soak-broker-2",
+      "runner_id": "10d162510ef54435829ea54a7bb5fbca",
+      "status": "created"
+    }
+  ],
+  "anchor": "2026-07-19T15:37:38.741565+00:00",
+  "definition": {
+    "master_bot_id": "021b0f72bdc5498885250614bfda1d00",
+    "revision_id": "037e2f11197846a282f858a9b471ffed",
+    "status": "created"
+  },
+  "deployments": [
+    {
+      "deployment_id": "e3b9fa9aee094d3cb4fb26371ca8ea32",
+      "pair": "EURUSD",
+      "status": "created",
+      "tf": "H1"
+    },
+    {
+      "deployment_id": "84108086544a4843a9d51aa0be8b7812",
+      "pair": "USDJPY",
+      "status": "created",
+      "tf": "H1"
+    }
+  ],
+  "errors": [],
+  "include_legacy": false,
+  "legacy_account": null,
+  "pack": {
+    "master_bot_id": "021b0f72bdc5498885250614bfda1d00",
+    "pack_id": "a71b62f908444f32891dcdac66406486",
+    "status": "created"
+  },
+  "phase1_baseline_verified": true,
+  "runners": [
+    {
+      "name": "soak_seed_runner_eurusd_h1h4",
+      "pair_filters": [
+        "EURUSD"
+      ],
+      "runner_id": "10d162510ef54435829ea54a7bb5fbca",
+      "status": "created",
+      "timeframe_filters": [
+        "H1",
+        "H4"
+      ],
+      "token": "mbr_1yC0aEVgNrxPzcVkxZayG0m1aoFVJXbY9utBmvOPmgQ"
+    },
+    {
+      "name": "soak_seed_runner_eurusd_gbpusd_h1",
+      "pair_filters": [
+        "EURUSD",
+        "GBPUSD"
+      ],
+      "runner_id": "9443b2d8395d471bb1d151168203b9ae",
+      "status": "created",
+      "timeframe_filters": [
+        "H1"
+      ],
+      "token": "mbr_GWyZttEccWlKCO1uMIYAjcu0kvXJVHYWGqbv8oTkY9E"
+    },
+    {
+      "name": "soak_seed_runner_usdjpy_m30h1",
+      "pair_filters": [
+        "USDJPY"
+      ],
+      "runner_id": "1ec254fbdc694a43a92b37dd0c27e3f7",
+      "status": "created",
+      "timeframe_filters": [
+        "M30",
+        "H1"
+      ],
+      "token": "mbr_tPeazXo33sx1iGSXYH62QyVi2RfHzpvvDbzIAr59OeI"
+    }
+  ],
+  "seed_marker": "mb9_phase2_soak_seed"
+}

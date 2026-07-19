@@ -68,6 +68,14 @@ class Task(Protocol):
     is cheap and the registry can enumerate everything without invoking
     anything. Adapters are singletons (registered as classes; instantiated
     once by the registry).
+
+    Phase 2, Stage 1 additions (2026-02-19):
+      HARD_TIMEOUT_S — orchestrator wraps `task.run(ctx)` in
+        `asyncio.wait_for(..., timeout=HARD_TIMEOUT_S)` when
+        `COE_HARD_TIMEOUT_ENABLED=true`. Default 300.0 s. Adapters
+        override with class-appropriate values per PHASE_2D §1.7.
+      RETRY_POLICY — advisory; consumed by the Stage-4 retry executor.
+        Default "default".
     """
 
     NAME:                    str
@@ -82,6 +90,12 @@ class Task(Protocol):
     COST_ESTIMATE_USD:       float
     BUSINESS_VALUE:          float          # 0..1
     PASSIVE:                 bool           # if True, never dispatched
+
+    # Stage 1 additions — defaults live on adapters via class attributes.
+    # Written here as documentation; not enforced by Protocol at runtime
+    # (getattr with default handles missing attrs).
+    # HARD_TIMEOUT_S: float
+    # RETRY_POLICY: str
 
     async def readiness(self, ctx: OrchestratorContext) -> Readiness: ...
     async def run(self, ctx: OrchestratorContext) -> TaskResult: ...

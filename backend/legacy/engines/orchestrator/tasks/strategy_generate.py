@@ -22,6 +22,8 @@ class StrategyGenerateTask:
     BUSINESS_VALUE = 0.85
     PASSIVE = False
 
+    HARD_TIMEOUT_S = 120.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         # Always eligible when there's room; freshness handled implicitly
         # via the fact that downstream tasks (backtest/mutation) consume

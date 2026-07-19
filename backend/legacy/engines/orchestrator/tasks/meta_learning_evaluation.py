@@ -29,6 +29,8 @@ class MetaLearningEvaluationTask:
     BUSINESS_VALUE = 0.80
     PASSIVE = False
 
+    HARD_TIMEOUT_S = 1800.0        # Phase 2 Stage 1
+    RETRY_POLICY = "default"      # Phase 2 Stage 1
     async def readiness(self, ctx: OrchestratorContext) -> Readiness:
         try:
             from engines.meta_learning import config as mlcfg

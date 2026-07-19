@@ -81,6 +81,51 @@ def pool_size() -> int:
 _executor: Optional[ProcessPoolExecutor] = None
 _executor_lock = asyncio.Lock()
 
+# ── Stage 1 (Phase 2, 2026-02-19) — crash budget + auto-recycle ────
+# Feature-gated via `COE_CRASH_BUDGET_ENABLED`. When enabled, if the
+# pool sees `POOL_CRASH_THRESHOLD` `BrokenProcessPool` exceptions
+# within `POOL_CRASH_WINDOW_S` seconds, it shuts down the pool. The
+# next `submit_cpu` re-creates a fresh pool. Never raises.
+_crash_events: list = []                     # list[float] — event timestamps
+_crash_count_total: int = 0                  # since boot
+
+
+def _crash_budget_enabled() -> bool:
+    raw = (os.environ.get("COE_CRASH_BUDGET_ENABLED") or "").strip().lower()
+    return raw in ("1", "true", "yes", "y", "on")
+
+
+def _crash_threshold() -> int:
+    try:
+        return max(1, int(os.environ.get("POOL_CRASH_THRESHOLD") or "5"))
+    except (TypeError, ValueError):
+        return 5
+
+
+def _crash_window_s() -> float:
+    try:
+        v = float(os.environ.get("POOL_CRASH_WINDOW_S") or "60.0")
+        return max(1.0, v)
+    except (TypeError, ValueError):
+        return 60.0
+
+
+def _record_crash() -> int:
+    """Append a crash event; prune out-of-window; return current in-window count."""
+    global _crash_count_total
+    import time as _time
+    now = _time.time()
+    _crash_events.append(now)
+    _crash_count_total += 1
+    cutoff = now - _crash_window_s()
+    while _crash_events and _crash_events[0] < cutoff:
+        _crash_events.pop(0)
+    return len(_crash_events)
+
+
+def _should_recycle() -> bool:
+    return _crash_budget_enabled() and len(_crash_events) >= _crash_threshold()
+
 
 async def _ensure_pool() -> ProcessPoolExecutor:
     global _executor
@@ -135,17 +180,42 @@ async def submit_cpu(fn: Callable, /, *args, workload_class: Any = None, **kwarg
 
 
 async def _submit_cpu_inner(fn: Callable, /, *args, **kwargs) -> Any:
-    """Inner submission body — pre-P1.D verbatim."""
+    """Inner submission body — pre-P1.D verbatim, plus Stage 1 crash budget."""
     if not is_enabled():
         return await asyncio.to_thread(fn, *args, **kwargs)
     pool = await _ensure_pool()
     loop = asyncio.get_running_loop()
     # ProcessPoolExecutor doesn't accept kwargs in run_in_executor.
     # Wrap via functools.partial if any kwargs are supplied.
-    if kwargs:
-        from functools import partial
-        return await loop.run_in_executor(pool, partial(fn, *args, **kwargs))
-    return await loop.run_in_executor(pool, fn, *args)
+    try:
+        if kwargs:
+            from functools import partial
+            return await loop.run_in_executor(pool, partial(fn, *args, **kwargs))
+        return await loop.run_in_executor(pool, fn, *args)
+    except Exception as e:                                       # noqa: BLE001
+        # Detect BrokenProcessPool without importing directly (it lives
+        # in concurrent.futures.process which is private). Match on class
+        # name to stay stdlib-version-safe.
+        etype_name = type(e).__name__
+        if etype_name in ("BrokenProcessPool", "BrokenExecutor"):
+            in_window = _record_crash()
+            logger.warning(
+                "[cpu_pool] BrokenProcessPool detected (in_window=%d, total=%d)",
+                in_window, _crash_count_total,
+            )
+            if _should_recycle():
+                logger.error(
+                    "[cpu_pool] crash budget exceeded (%d in %.0fs) — recycling pool",
+                    in_window, _crash_window_s(),
+                )
+                try:
+                    await shutdown_pool()
+                except Exception:                                # pragma: no cover
+                    pass
+                # Best-effort: clear the in-window events so the fresh
+                # pool starts with a clean budget.
+                _crash_events.clear()
+        raise
 
 
 def get_pool_state() -> Dict[str, Any]:
@@ -155,6 +225,12 @@ def get_pool_state() -> Dict[str, Any]:
         "pool_size_configured": pool_size(),
         "pool_initialized": _executor is not None,
         "worker_count": (_executor._max_workers if _executor is not None else 0),  # noqa: SLF001
+        # Stage 1 additions
+        "crash_budget_enabled": _crash_budget_enabled(),
+        "crash_threshold": _crash_threshold(),
+        "crash_window_s": _crash_window_s(),
+        "crash_count_in_window": len(_crash_events),
+        "crash_count": _crash_count_total,
     }
 
 

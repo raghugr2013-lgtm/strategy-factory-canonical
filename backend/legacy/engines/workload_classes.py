@@ -23,23 +23,70 @@ from typing import Any, Dict
 
 
 class WorkloadClass(str, Enum):
-    """The five canonical classes covering every cpu-submission site."""
+    """The workload class taxonomy.
+
+    Stage 1 (2026-02-19) extended the historical 5-class vocabulary to
+    10 to cover the full Strategy Factory workload. The five originals
+    keep their exact string values so every existing wrap site and
+    task adapter continues to work unchanged.
+    """
+    # KEEP — historical (P1.B) — semantics unchanged
     API_HOT       = "api_hot"
     BACKTEST      = "backtest"
     MUTATION      = "mutation"
     FACTORY_CYCLE = "factory_cycle"
     AGENT         = "agent"
+    # ADD — Phase 2 Stage 1 (2026-02-19)
+    MARKET_DATA   = "market_data"     # BI5/BID ingest, tick pulls
+    KNOWLEDGE     = "knowledge"       # UKIE connectors + index refresh
+    EXECUTION     = "execution"       # broker calls, order lifecycle
+    MONITORING    = "monitoring"      # dashboards, alert engines, MI observers
+    META_LEARNING = "meta_learning"   # factory-eval / policy update
 
 
-# Per-class profile defaults. Operator-tunable in P1.C; do NOT consult
-# in P1.B except via `profile_for()` (frozen contract).
+# Per-class profile defaults.
+#
+# Stage 1 (2026-02-19) added the `reservation` field per operator
+# directive: "Live execution must never be starved. Market data
+# ingestion must remain responsive. AI workloads should always yield
+# to critical trading workloads. Background learning and research
+# should use remaining capacity."
+#
+# Reservations are CONSERVATIVE for Stage 1 — calibrate later using
+# production metrics. See PHASE_2D §1.2 for the target table.
 _PROFILE_DEFAULTS: Dict[WorkloadClass, Dict[str, Any]] = {
-    WorkloadClass.API_HOT:       {"cpu_share": 0.10, "mem_cap_mb":  200, "max_parallel_hint": "unlimited"},
-    WorkloadClass.BACKTEST:      {"cpu_share": 0.50, "mem_cap_mb": 1024, "max_parallel_hint": "pool_size"},
-    WorkloadClass.MUTATION:      {"cpu_share": 0.30, "mem_cap_mb":  768, "max_parallel_hint": "pool_size"},
-    WorkloadClass.FACTORY_CYCLE: {"cpu_share": 0.05, "mem_cap_mb":  256, "max_parallel_hint": 1},
-    WorkloadClass.AGENT:         {"cpu_share": 0.05, "mem_cap_mb":  512, "max_parallel_hint": "unlimited"},
+    # Historical classes (values unchanged from P1.B) + reservation added.
+    WorkloadClass.API_HOT:       {"cpu_share": 0.10, "mem_cap_mb":  200, "max_parallel_hint": "unlimited",  "reservation": 2},
+    WorkloadClass.BACKTEST:      {"cpu_share": 0.50, "mem_cap_mb": 1024, "max_parallel_hint": "pool_size",  "reservation": 1},
+    WorkloadClass.MUTATION:      {"cpu_share": 0.30, "mem_cap_mb":  768, "max_parallel_hint": "pool_size",  "reservation": 1},
+    WorkloadClass.FACTORY_CYCLE: {"cpu_share": 0.05, "mem_cap_mb":  256, "max_parallel_hint": 1,            "reservation": 0},
+    WorkloadClass.AGENT:         {"cpu_share": 0.05, "mem_cap_mb":  512, "max_parallel_hint": "unlimited",  "reservation": 1},
+    # New classes (Stage 1).
+    WorkloadClass.MARKET_DATA:   {"cpu_share": 0.03, "mem_cap_mb":  512, "max_parallel_hint": 2,            "reservation": 1},
+    WorkloadClass.KNOWLEDGE:     {"cpu_share": 0.05, "mem_cap_mb":  768, "max_parallel_hint": 2,            "reservation": 0},
+    WorkloadClass.EXECUTION:     {"cpu_share": 0.02, "mem_cap_mb":  256, "max_parallel_hint": "unlimited",  "reservation": 2},
+    WorkloadClass.MONITORING:    {"cpu_share": 0.01, "mem_cap_mb":  128, "max_parallel_hint": "unlimited",  "reservation": 1},
+    WorkloadClass.META_LEARNING: {"cpu_share": 0.05, "mem_cap_mb":  512, "max_parallel_hint": 1,            "reservation": 0},
 }
+
+
+def reservation_for(cls: WorkloadClass) -> int:
+    """Return the reservation floor for a class.
+
+    Operator env override: `ORCH_RESERVATION_<CLASS>=<int>` — e.g.
+    `ORCH_RESERVATION_EXECUTION=3`. Non-parseable values fall back to
+    the code default. Never raises.
+    """
+    if not isinstance(cls, WorkloadClass):
+        raise TypeError(f"reservation_for expects WorkloadClass, got {type(cls).__name__}")
+    import os as _os
+    raw = _os.environ.get(f"ORCH_RESERVATION_{cls.value.upper()}")
+    if raw is not None and str(raw).strip() != "":
+        try:
+            return max(0, int(raw))
+        except (TypeError, ValueError):
+            pass
+    return int(_PROFILE_DEFAULTS[cls]["reservation"])
 
 
 def profile_for(cls: WorkloadClass) -> Dict[str, Any]:
