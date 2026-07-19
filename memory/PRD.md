@@ -59,6 +59,32 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 - ENABLE_FACTORY_RUNNER can be flipped to `true` in prod (compose already
   supports it under both services).
 
+## Architecture Review Phase (Session 5 — COMPLETE)
+
+**All four Phase-2 architecture reviews delivered, plus consolidated cross-review:**
+
+- `PHASE_2A_AI_ARCHITECTURE_REVIEW.md` — Vendor-Independent Intelligence Engine (VIE). 634 lines. **Approved.**
+- `PHASE_2B_MARKET_DATA_REVIEW.md` — BI5 canonical-M1 read-side + coverage reports. 525 lines. **Approved.**
+- `PHASE_2C_KNOWLEDGE_INGESTION_REVIEW.md` — Universal Knowledge Ingestion Engine (UKIE), **now organised around six Knowledge Domains** (`strategy`, `research`, `indicator`, `market`, `execution`, `internal_history`) with connectors as interchangeable implementations beneath them. 582 lines. **Approved with domain-first framing (updated 2026-02-19).**
+- `PHASE_2D_COMPUTE_ORCHESTRATION_REVIEW.md` — Compute Orchestration Engine (COE): extended 10-class taxonomy, priority lanes (P0/P1/P2), reservations, `WorkloadRequest` envelope, retry + dead-letter, provider-aware admission. 780 lines. **New (2026-02-19).**
+- `PHASE_2_CONSOLIDATED_REVIEW.md` — cross-phase implementation sequence, parallelisation opportunities, integration hot-spots, cross-cutting invariants. 377 lines. **New (2026-02-19).**
+
+**Recommended implementation order (per consolidated review §3):**
+1. COE α (foundations) — 5 days
+2. VIE hardening — 3 days (parallel with COE α)
+3. COE β (lanes + reservations + I/O pool) — 5 days
+4. BI5 read-side refactor — 4 days (parallel with COE β)
+5. UKIE α (domain registry + connector Protocol) — 2 days
+6. UKIE β (pipeline stages + governance cutover) — 5 days
+7. COE γ (retries + dead-letter + provider-aware admission) — 4 days
+8. UKIE γ (connector fleet — 5 connectors in parallel) — ~1 day each
+9. Consolidated observability — 2 days
+
+**Critical path:** ~30 days serial / ~18 days with parallel tracks.
+
+**NO code changes yet.** Awaiting operator approval on the consolidated
+implementation sequence before beginning Phase-2 implementation.
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

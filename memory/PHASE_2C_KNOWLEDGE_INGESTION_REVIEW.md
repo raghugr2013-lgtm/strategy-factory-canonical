@@ -77,59 +77,205 @@ toggle-able via API.
 
 ## 1. The Universal Knowledge Ingestion Engine (UKIE)
 
-### 1.1 Physical layout — same pipeline, connector abstraction added
+### 1.0 The primary organizing principle — Knowledge Domains, not Connector Types
+
+**UKIE is organised around WHAT the knowledge is about, not HOW it
+was fetched.** Connectors (GitHub, ArXiv, PDF, TradingView, forums,
+books) are interchangeable *implementations* that plug in beneath a
+domain — they are not the design axis.
+
+**Why this matters:** a paper about volatility regimes could arrive
+via ArXiv today and via a curated PDF corpus tomorrow. A Pine script
+could arrive via GitHub today and via TradingView Community
+tomorrow. The consumer (AI reasoning, similarity search, strategy
+generation) does not care which pipe the bytes flowed through — it
+cares about the **domain of the knowledge**. Organising the whole
+subsystem around domains makes new connectors trivially additive and
+keeps AI-side consumers stable as the source landscape evolves.
+
+#### 1.0.1 The six canonical domains
+
+| Domain | What it holds | Typical raw shapes | Consumers |
+|---|---|---|---|
+| **`strategy`** — Strategy Knowledge | Complete trading strategies with entries/exits/risk model | Pine scripts, cAlgo cBots, EA source, whitepaper appendices, textbook systems | Similarity search during generation; mutation seeds |
+| **`research`** — Research Knowledge | Academic + practitioner research: papers, whitepapers, book chapters, quantitative articles | PDFs, arXiv preprints, SSRN, EPubs, blog posts | AI reasoning context; regime / theory grounding |
+| **`indicator`** — Indicator Knowledge | Formal indicator definitions + parametrisations + known failure modes | Pine indicator scripts, MQL indicator libs, ta-lib references, quant handbook entries | Indicator selector; strategy IR builders |
+| **`market`** — Market Knowledge | Instrument-specific microstructure, session behaviour, regime history, correlations | Broker data notes, exchange rulebooks, symbol-behaviour studies | Regime classifier; execution model |
+| **`execution`** — Execution Knowledge | Broker specifics, prop-firm rules, slippage models, commission tables, latency profiles, order-type semantics | Prop-firm PDFs, broker docs, TCA whitepapers, prime-broker FAQ | Execution engine; prop-firm rule engine; realism sweep |
+| **`internal_history`** — Internal Historical Knowledge | Everything the Factory itself has produced: past strategies, outcome events, mutation lineage, meta-learning verdicts | Existing Mongo collections (`strategies`, `outcome_events`, `mutation_runs`, `factory_eval_reports`) | Self-improvement loop; provenance graph |
+
+**Adding a seventh domain (e.g. `sentiment`, `macro`) is one file** —
+a new `KnowledgeDomain` entry + its default vocabulary; every
+connector already knows how to declare which domain(s) it can serve.
+
+#### 1.0.2 Domains × Connectors — the two-axis matrix
 
 ```
-    Connectors (pluggable)                Pipeline (unchanged shape)
-    ────────────────────                  ─────────────────────────
-    ┌─────────────────┐
-    │ GithubConnector │──┐
-    ├─────────────────┤  │
-    │ PdfConnector    │  │
-    ├─────────────────┤  │      ┌────────────────────────────┐
-    │ ArxivConnector  │──┼─────►│  ingestion_runner           │
-    ├─────────────────┤  │      │    ↓                        │
-    │ TradingViewConn │  │      │  parser  (AI, VIE-driven)  │
-    ├─────────────────┤  │      │    ↓                        │
-    │ ForumConnector  │  │      │  validator                  │
-    ├─────────────────┤  │      │    ↓                        │
-    │ BookConnector   │──┘      │  license_gate    ← NEW      │
-    └─────────────────┘         │    ↓                        │
-        each yields             │  normalizer                 │
-        RawKnowledgeItem        │    ↓                        │
-                                │  dedup_check     ← NEW      │
-                                │    ↓                        │
-                                │  trust_scorer    ← NEW      │
-                                │    ↓                        │
-                                │  KnowledgeRepository        │
-                                │    (writes learning_only)   │
-                                └────────────────────────────┘
-                                          ↓
-                                strategy_knowledge_base DB
-                                  (isolated per Phase 1.5)
+                            ┌── Domains (WHAT) ────────────────────────────────┐
+                            │  strategy  research  indicator  market  execution  internal_history
+─────────────────────────┼──────────────────────────────────────────────────────
+Connectors (HOW)         │
+  GithubConnector        │     ●         ○          ●          ○         ○          -
+  ArxivConnector         │     -         ●          -          ○         ○          -
+  PdfConnector           │     ●         ●          ●          ●         ●          -
+  TradingViewConn        │     ●         -          ●          ○         -          -
+  ForumConnector         │     ○         ○          ○          ○         ○          -
+  BookConnector          │     ●         ●          ●          ●         ●          -
+  BrokerDocsConnector    │     -         -          -          ●         ●          -
+  PropFirmConnector      │     -         -          -          -         ●          -
+  InternalMongoConnector │     -         -          -          -         -          ●
+─────────────────────────┴──────────────────────────────────────────────────────
+                            ●  primary target
+                            ○  can contribute (secondary)
+                            -  not applicable
 ```
 
-Three new pipeline stages (`license_gate`, `dedup_check`, `trust_scorer`),
-one new abstraction (connector Protocol). Everything else is the
-existing pipeline, moved from the strategies-only path to a general
+**Reading the matrix:**
+- A **connector declares which domain(s) it can supply** via its `supported_domains` set.
+- A **domain declares its expected shape + vocabulary + validators** via a `KnowledgeDomainSpec`.
+- The **pipeline runs the same 8 stages** regardless of connector, but per-domain **specialisations** are dispatched via a small registry.
+
+**One connector can populate multiple domains** — e.g. a PDF book on
+"Building Trading Systems" might contribute chapters to `strategy`,
+paragraphs to `research`, and appendices to `execution`. The
+connector emits `RawKnowledgeItem[]` each tagged with its target
+domain; the pipeline dispatches each item to the domain-specific
+validator + normaliser + trust scorer.
+
+#### 1.0.3 The `KnowledgeDomain` registry
+
+```python
+class KnowledgeDomain(str, Enum):
+    STRATEGY          = "strategy"
+    RESEARCH          = "research"
+    INDICATOR         = "indicator"
+    MARKET            = "market"
+    EXECUTION         = "execution"
+    INTERNAL_HISTORY  = "internal_history"
+
+
+@dataclass(frozen=True)
+class KnowledgeDomainSpec:
+    domain:               KnowledgeDomain
+    canonical_shape:      type              # dataclass — the parsed item shape
+    required_fields:      tuple[str, ...]   # must be present after parsing
+    validators:           tuple[Callable, ...]
+    default_trust_floor:  int               # (see §3) minimum tier accepted
+    normaliser:           Callable          # canonicalise units, symbols, timeframes
+    embedder:             Callable          # produces the vector for similarity search
+    ai_context_policy:    Literal["verbatim", "quote", "summary", "off"]
+                          # how AI may consume this domain's items
+```
+
+Every connector's `fetch()` result is dispatched by the ingestion
+runner into the correct domain lane based on the `RawKnowledgeItem.domain`
+field. Domains keep their own storage sub-collection so consumers can
+query one domain without scanning the whole KB.
+
+### 1.1 Physical layout — domain-first pipeline, connectors underneath
+
+```
+     Connectors (interchangeable        Domains (primary axis)              Consumers
+     implementations, per source)        each with its own spec, storage,   (all cross-domain
+                                          validators, embedder)              queries)
+     ─────────────────────────           ────────────────────────────       ────────────────
+     ┌─────────────────┐
+     │ GithubConnector │──┐
+     ├─────────────────┤  │             ┌── strategy ─────────────────┐
+     │ ArxivConnector  │  │             │   validators + normaliser   │
+     ├─────────────────┤  │             │   → strategy_kb.strategies  │──┐
+     │ PdfConnector    │  │             └────────────────────────────┘  │
+     ├─────────────────┤  │                                             │
+     │ TradingViewConn │──┼─►  ┌────────────────────────────┐          │
+     ├─────────────────┤  │    │  ingestion_runner           │          │
+     │ ForumConnector  │  │    │    ↓                        │          │
+     ├─────────────────┤  │    │  parser  (AI / VIE-driven) │          │
+     │ BookConnector   │  │    │    ↓                        │          │
+     ├─────────────────┤  │    │  domain_router  ← NEW       │──┬──────┼──►  ┌── research ─────────────────┐
+     │ BrokerDocsConn  │  │    │    ↓ (dispatch by domain)   │  │      │     │   validators + normaliser  │
+     ├─────────────────┤  │    │  validator (domain-scoped)  │  │      │     │   → strategy_kb.research   │
+     │ PropFirmConn    │──┤    │    ↓                        │  │      │     └────────────────────────────┘
+     ├─────────────────┤  │    │  license_gate               │  │      │
+     │ InternalMongoC  │──┘    │    ↓                        │  │      │     ┌── indicator ────────────────┐
+     └─────────────────┘       │  normaliser (domain-scoped) │  ├──────┼────►│   validators + normaliser  │
+        each yields             │    ↓                        │  │      │     │   → strategy_kb.indicators │
+        RawKnowledgeItem        │  dedup_check                │  │      │     └────────────────────────────┘
+        tagged with target      │    ↓                        │  │      │
+        KnowledgeDomain         │  trust_scorer               │  │      │     ┌── market ───────────────────┐
+                                │    ↓                        │  ├──────┼────►│   validators + normaliser  │
+                                │  KnowledgeRepository        │  │      │     │   → strategy_kb.market     │
+                                │    (per-domain writer)      │  │      │     └────────────────────────────┘
+                                └────────────────────────────┘  │      │
+                                                                 │      │     ┌── execution ────────────────┐
+                                                                 ├──────┼────►│   validators + normaliser  │
+                                                                 │      │     │   → strategy_kb.execution  │
+                                                                 │      │     └────────────────────────────┘
+                                                                 │      │
+                                                                 │      │     ┌── internal_history ─────────┐
+                                                                 └──────┴────►│   fed by InternalMongoConn │
+                                                                              │   read-only mirror         │
+                                                                              └────────────────────────────┘
+                                                                                          ↓
+                                                                              AI reasoning context / similarity
+                                                                              search / mutation seeds / regime
+                                                                              classifier / rule engine
+```
+
+Four new pipeline stages (`domain_router`, `license_gate`,
+`dedup_check`, `trust_scorer`), two new abstractions (**`KnowledgeDomain`**
+and `KnowledgeConnector`). Everything else is the existing pipeline,
+generalised from the strategies-only path to a domain-partitioned
 knowledge path.
+
+**Storage layout** — one sub-collection per domain inside the isolated
+`strategy_knowledge_base` DB:
+
+```
+strategy_knowledge_base
+  ├── strategies            (KnowledgeDomain.STRATEGY)
+  ├── research              (KnowledgeDomain.RESEARCH)
+  ├── indicators            (KnowledgeDomain.INDICATOR)
+  ├── market                (KnowledgeDomain.MARKET)
+  ├── execution             (KnowledgeDomain.EXECUTION)
+  ├── internal_history      (KnowledgeDomain.INTERNAL_HISTORY — read-only mirror)
+  ├── ingestion_runs        (log — cross-domain)
+  ├── raw_items             (raw bytes + hash + provenance — cross-domain)
+  └── knowledge_promotions_log
+```
+
+All items retain `learning_only:True + eligible_for_deploy:False`
+regardless of domain (§5).
 
 ### 1.2 The Connector contract
 
 ```python
 class KnowledgeConnector(Protocol):
-    """Every knowledge source implements this Protocol."""
+    """Every knowledge source implements this Protocol.
 
-    name: str                  # e.g. "github", "arxiv", "tradingview"
-    source_type: str           # "code" | "paper" | "post" | "book"
-    default_trust_tier: int    # 1..5 (see §3)
+    Connectors are HOW knowledge is fetched. Each connector declares
+    which Knowledge Domain(s) it can supply — one connector can
+    populate multiple domains (e.g. a PDF book contributes to both
+    `strategy` and `research`). The domain is the primary organising
+    principle; connectors are the interchangeable fetch layer.
+    """
+
+    name: str                          # e.g. "github", "arxiv", "tradingview"
+    source_type: str                   # "code" | "paper" | "post" | "book" | "docs"
+    supported_domains: set[KnowledgeDomain]
+                                       # which domains this connector can supply
+    default_trust_tier: int            # 1..5 (see §3)
     supported_licenses: set[str] | Literal["*"]
 
     async def discover(self, query: DiscoveryQuery) -> AsyncIterator[Reference]:
         """Yield references (URLs/DOIs/etc.) without fetching content."""
 
     async def fetch(self, ref: Reference) -> RawKnowledgeItem:
-        """Fetch full content + provenance metadata."""
+        """Fetch full content + provenance metadata.
+
+        The returned item MUST carry `domain: KnowledgeDomain` set to
+        the target domain. A single fetch may split into multiple items
+        (e.g. a book → chapters) each tagged with its own domain.
+        """
 
     def rate_limit(self) -> RateLimit:
         """Declare per-source rate limits so the scheduler honours them."""
@@ -137,12 +283,17 @@ class KnowledgeConnector(Protocol):
 
 **Adding a new source is one file.** No changes to the pipeline
 orchestrator, no changes to the parser (AI is source-agnostic), no
-changes to the schema.
+changes to the schema. **Adding a new domain is one file** — a
+`KnowledgeDomainSpec` entry — plus one line in every connector that
+opts to supply it.
 
 ### 1.3 The `RawKnowledgeItem` canonical shape
 
 ```
 {
+  # domain assignment (NEW — primary organising axis)
+  domain:            "strategy" | "research" | "indicator" | "market" | "execution" | "internal_history",
+
   # provenance (Phase 1.6-mandatory)
   connector_name:    "github",
   source_url:        "https://github.com/foo/bar/blob/abc123/ema.pine",
@@ -168,9 +319,20 @@ changes to the schema.
 ```
 
 This is the shape every connector produces and every downstream stage
-consumes. It is not the *parsed* strategy — it is the *raw* item with
-full provenance. Parsing yields a `ParsedKnowledgeItem` which is the
-existing `IngestedStrategy` shape plus a `raw_ref` pointer.
+consumes. The **`domain` field is set at fetch time** — the connector
+knows which domain(s) it targets. The `domain_router` stage dispatches
+to the domain-specific validator + normaliser + trust scorer, then
+writes to that domain's sub-collection.
+
+Parsing yields a **domain-specific `ParsedKnowledgeItem` subtype**:
+- `ParsedStrategyItem` (existing `IngestedStrategy` shape)
+- `ParsedResearchItem` (title, abstract, sections, citations)
+- `ParsedIndicatorItem` (name, formula, parameters, failure modes)
+- `ParsedMarketItem` (symbol, session, regime notes)
+- `ParsedExecutionItem` (broker, rule, constraint, cost model)
+- `ParsedInternalHistoryItem` (Mongo doc reference — read-only)
+
+All parsed types share a `raw_ref` pointer back to the raw item.
 
 ---
 
@@ -325,17 +487,22 @@ this design.
 
 | Aspect | Design |
 |---|---|
-| **Sources** | Any — connector plugin per source, one file each |
-| **Connector interface** | `KnowledgeConnector` Protocol (§1.2) |
-| **Raw item shape** | `RawKnowledgeItem` (§1.3) — provenance-anchored |
+| **Primary organising axis** | **Knowledge Domains** — `strategy`, `research`, `indicator`, `market`, `execution`, `internal_history` (§1.0) |
+| **Fetch layer** | Connectors — interchangeable implementations beneath domains; one file per source, declares which domain(s) it supplies (§1.2) |
+| **Domains × Connectors** | Many-to-many matrix (§1.0.2) — a book connector supplies `strategy` + `research` + `execution`; ArXiv supplies `research` only |
+| **Domain contract** | `KnowledgeDomainSpec` — canonical shape, validators, normaliser, embedder, AI consumption policy per domain (§1.0.3) |
+| **Sources (initial)** | GitHub, ArXiv, PDF, TradingView, forums, books, broker docs, prop-firm docs, internal Mongo (§1.0.2) |
+| **Connector interface** | `KnowledgeConnector` Protocol (§1.2) — declares `supported_domains` |
+| **Raw item shape** | `RawKnowledgeItem` (§1.3) — provenance-anchored + domain-tagged |
+| **Parsed item shape** | Per-domain (`ParsedStrategyItem`, `ParsedResearchItem`, `ParsedIndicatorItem`, …) sharing a `raw_ref` (§1.3) |
 | **Provenance** | 5 anchors: connector, url, source_ref, content_hash, fetched_at (§2) |
 | **Licensing** | License gate stage; SPDX detection; 5-outcome classifier (§4) |
-| **Trust** | 5-tier ladder (§3) computed by trust_scorer |
-| **Deduplication** | canonical_hash lookup against KB before insert (§1.1) |
-| **Governance** | Writes routed through KnowledgeRepository only; production is unreachable except via the audited `/knowledge/promote` bridge (§5) |
-| **Storage** | `strategy_knowledge_base.ingested_items` (raw), `.parsed_items` (structured), `.ingestion_runs` (log) — all learning_only:True |
+| **Trust** | 5-tier ladder (§3) computed by `trust_scorer` — one score per item regardless of domain |
+| **Deduplication** | canonical_hash lookup **within the target domain** before insert (§1.1) |
+| **Governance** | Writes routed through `KnowledgeRepository` only; production is unreachable except via the audited `/knowledge/promote` bridge (§5) |
+| **Storage** | One sub-collection per domain inside `strategy_knowledge_base`; cross-domain `raw_items` + `ingestion_runs` (§1.1) |
 | **Scheduler** | Existing APScheduler, per-connector rate-limited, coverage-aware (from Phase 2B lessons) |
-| **AI consumption** | `/api/knowledge/nearest` (already exists) reads these via `KnowledgeRepository`; trust-tier filtering enabled |
+| **AI consumption** | `/api/knowledge/nearest?domain=<d>` reads per-domain; trust-tier filtering enabled; AI context policy is a **domain-level** decision (§1.0.3) |
 
 ---
 
@@ -343,25 +510,27 @@ this design.
 
 | # | Step | Prereq | Effort | Reversible? |
 |---|---|---|---|---|
-| **P2C.1** | Extract `KnowledgeConnector` Protocol + move existing GitHub logic behind it as `GithubConnector`. No behaviour change | none | 1 day | Yes |
-| **P2C.2** | Introduce `RawKnowledgeItem` canonical shape; wrap existing pipeline to produce it as an intermediate | P2C.1 | 0.5 day | Yes |
+| **P2C.0** | Land the `KnowledgeDomain` enum + `KnowledgeDomainSpec` registry with the six canonical domains. **Domains are the primary organising axis** — every downstream step consumes this registry | none | 0.5 day | Yes |
+| **P2C.1** | Extract `KnowledgeConnector` Protocol (declaring `supported_domains`) + move existing GitHub logic behind it as `GithubConnector` (default `supported_domains={STRATEGY}`). No behaviour change | P2C.0 | 1 day | Yes |
+| **P2C.2** | Introduce `RawKnowledgeItem` canonical shape (with `domain` field); wrap existing pipeline to produce it as an intermediate | P2C.1 | 0.5 day | Yes |
 | **P2C.3** | Add `content_hash`, `source_ref`, `fetched_at`, `license` fields to every new ingested_strategies write | P2C.2 | 0.5 day | Yes — additive |
-| **P2C.4** | Add `license_gate.py` — 5-outcome classifier; runs post-validator, pre-normalizer | P2C.3 | 1 day | Yes — feature flag `ENABLE_LICENSE_GATE=false` bypasses |
-| **P2C.5** | Add `trust_scorer.py` + 5-tier ladder; fill `trust_tier` on every new row | P2C.4 | 0.5 day | Yes — flag |
-| **P2C.6** | Add `dedup_check.py` using `canonical_hash` from Phase 1.6; refuse insert on hash collision unless `force=true` | P2C.5 | 0.5 day | Yes — flag |
-| **P2C.7** | Redirect injector output from mutation pipeline → `KnowledgeRepository.insert_ingested()` (new method — the single audited write endpoint). **This is the governance cutover** | P2C.6 | 1 day | Yes — flag |
-| **P2C.8** | Add `POST /api/knowledge/promote/{item_id}` — the audited bridge from KB to `strategies` (draft state only) | P2C.7 | 0.5 day | Yes |
-| **P2C.9** | New connectors — one file each. Suggested order: `ArxivConnector` (papers), `PdfConnector` (books/PDFs), `TradingViewConnector` (community scripts) | P2C.7 | 1 day per connector | Yes per connector |
-| **P2C.10** | Retro-scoring — backfill `trust_tier` + `license` on the 55 existing rows via the new gates (dry-run first, no auto-mutate) | P2C.5 | 0.5 day | Yes |
-| **P2C.11** | Dashboard surface — trust-tier breakdown + license distribution + connector-health card | P2C.5 | 1 day | Yes — pure UI |
+| **P2C.4** | Add `domain_router.py` — dispatches each raw item to its domain's validator/normaliser/embedder based on the `domain` field. Existing rows default to `domain=STRATEGY` | P2C.3 | 1 day | Yes — flag `ENABLE_DOMAIN_ROUTING=false` bypasses (single-domain fallback) |
+| **P2C.5** | Add `license_gate.py` — 5-outcome classifier; runs post-validator, pre-normaliser | P2C.4 | 1 day | Yes — flag |
+| **P2C.6** | Add `trust_scorer.py` + 5-tier ladder; fill `trust_tier` on every new row | P2C.5 | 0.5 day | Yes — flag |
+| **P2C.7** | Add `dedup_check.py` using `canonical_hash` — checks **within the target domain** (a strategy hash can coexist with an identical-hash research chapter) | P2C.6 | 0.5 day | Yes — flag |
+| **P2C.8** | Redirect injector output from mutation pipeline → `KnowledgeRepository.insert_ingested(domain, item)` — one audited write endpoint per domain. **This is the governance cutover** | P2C.7 | 1 day | Yes — flag |
+| **P2C.9** | Add `POST /api/knowledge/promote/{item_id}` — the audited bridge from `strategy` domain KB to production `strategies` (draft state only) | P2C.8 | 0.5 day | Yes |
+| **P2C.10** | New connectors — one file each. Suggested order matched to which domains most need coverage: `ArxivConnector` (research), `PdfConnector` (research + strategy + execution), `PropFirmConnector` (execution), `TradingViewConnector` (strategy + indicator), `InternalMongoConnector` (internal_history) | P2C.8 | 1 day per connector | Yes per connector |
+| **P2C.11** | Retro-scoring — backfill `domain=STRATEGY` + `trust_tier` + `license` on the 55 existing rows via the new gates (dry-run first, no auto-mutate) | P2C.6 | 0.5 day | Yes |
+| **P2C.12** | Dashboard surface — **domain breakdown** + trust-tier distribution + license distribution + connector-health card | P2C.6 | 1 day | Yes — pure UI |
 
-**Total effort:** ~7 focused days for the core pipeline (P2C.1–P2C.8);
+**Total effort:** ~7.5 focused days for the core pipeline (P2C.0–P2C.9);
 +1 day per new connector.
 
-**Critical cutover:** P2C.7. Before flipping, run a dry-run that
+**Critical cutover:** P2C.8. Before flipping, run a dry-run that
 takes the last 10 ingestion runs and verifies the new path would have
 produced the same normalised items (minus the `eligible_for_deploy:
-False` change).
+False` change and now scoped to `domain=STRATEGY`).
 
 ---
 
@@ -398,10 +567,16 @@ False` change).
 
 ## 10. Recommended next call
 
-Approve or amend §3 (trust tiers) and §7 (roadmap). Then, when Phase
-2 implementation begins, execute **P2C.1** — a 1-day step that
-extracts the connector Protocol and moves existing GitHub logic
-behind it. Zero behaviour change; the ground on which every new
-connector will be built.
+Approve or amend §1.0 (**Knowledge Domain model — the primary
+organising axis**), §3 (trust tiers), and §7 (roadmap). Then, when
+Phase 2 implementation begins, execute **P2C.0 → P2C.1** — a
+1.5-day step that lands the `KnowledgeDomain` registry + extracts the
+`KnowledgeConnector` Protocol (declaring `supported_domains`) and
+moves existing GitHub logic behind it. Zero behaviour change; the
+ground on which every new connector and every new domain will be
+built.
 
-Everything downstream depends only on the Protocol being stable.
+Everything downstream depends on the domain registry and the
+connector Protocol being stable — the domain is WHAT the knowledge
+is about; the connector is HOW it was fetched. Both axes are
+extension points.
