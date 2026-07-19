@@ -1,24 +1,32 @@
-"""Phase 2 Stage 3.α — Knowledge Domain + Connector router.
+"""Phase 2 Stage 3.α / 3.β — Knowledge Domain + Connector + Pipeline router.
 
-Read-only foundation endpoints. Every route refuses with HTTP 503 when
-`UKIE_DOMAIN_REGISTRY_ENABLED` is off — zero-cost dormant surface.
+Read-only foundation endpoints (Stage 3.α) + dry-run / pipeline
+diagnostic endpoints (Stage 3.β). Every route refuses with HTTP 503
+when `UKIE_DOMAIN_REGISTRY_ENABLED` is off — zero-cost dormant surface.
 
-Endpoints:
-  GET /api/knowledge/domains                — list all six domain specs
-  GET /api/knowledge/domains/{domain}       — one domain spec
-  GET /api/knowledge/connectors             — list registered connectors
-  GET /api/knowledge/connectors/{name}      — one connector's metadata
+Stage 3.α endpoints:
+  GET  /api/knowledge/domains                — list all six domain specs
+  GET  /api/knowledge/domains/{domain}       — one domain spec
+  GET  /api/knowledge/connectors             — list registered connectors
+  GET  /api/knowledge/connectors/{name}      — one connector's metadata
+  GET  /api/knowledge/domains/{domain}/connectors
 
-No writes. No side effects. Pure read-through of the module-level
-registries defined in `engines.knowledge.registry`.
+Stage 3.β endpoints:
+  GET  /api/knowledge/pipeline/status        — enabled stages + versions
+  GET  /api/knowledge/pipeline/last-run      — most recent pipeline summary
+  POST /api/knowledge/dry-run                — run harness in shadow mode
+
+No writes to production `strategies`. No side effects on Mongo except
+the dry-run harness reading from `ingestion_runs` when explicitly
+requested (`last_n_from_ingestion_runs > 0`).
 """
 from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 
 from .connector import KnowledgeConnector
 from .registry import (
@@ -125,3 +133,63 @@ async def get_connectors_for_domain(domain: str) -> Dict[str, Any]:
         "count":      len(matches),
         "connectors": [_connector_to_dict(c) for c in matches],
     }
+
+
+# ── Stage 3.β — Pipeline diagnostics + dry-run ────────────────────────
+
+@router.get("/pipeline/status")
+async def get_pipeline_status() -> Dict[str, Any]:
+    """Snapshot of enabled stages + pipeline version stamps."""
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="UKIE_DOMAIN_REGISTRY_ENABLED is off")
+    from .pipeline import pipeline_status
+    return pipeline_status()
+
+
+@router.get("/pipeline/last-run")
+async def get_pipeline_last_run() -> Dict[str, Any]:
+    """Return the most recent pipeline summary — dry-run or live.
+
+    Returns `{"status": "none"}` when no run has completed in this
+    process lifetime.
+    """
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="UKIE_DOMAIN_REGISTRY_ENABLED is off")
+    from .pipeline import get_last_summary
+    s = get_last_summary()
+    if s is None:
+        return {"status": "none"}
+    return s.to_dict()
+
+
+@router.post("/dry-run")
+async def post_dry_run(payload: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+    """Run the UKIE pipeline in shadow mode.
+
+    Request body (all optional):
+        {
+          "items":                       [ RawKnowledgeItem dict, ... ],
+          "last_n_from_ingestion_runs":  10,
+          "synthetic_fixture":           "stage_3_beta_default"
+        }
+
+    Response is the `PipelineSummary` shape defined in
+    `engines.knowledge.pipeline`.
+    """
+    if not _enabled():
+        raise HTTPException(status_code=503, detail="UKIE_DOMAIN_REGISTRY_ENABLED is off")
+    body = payload or {}
+    items          = body.get("items") if isinstance(body.get("items"), list) else None
+    last_n         = int(body.get("last_n_from_ingestion_runs") or 0)
+    fixture_name   = body.get("synthetic_fixture")
+    # Default: run the built-in fixture if no explicit corpus provided
+    if not items and last_n <= 0 and not fixture_name:
+        fixture_name = "stage_3_beta_default"
+
+    from .dry_run import run_dry
+    summary = await run_dry(
+        items=items,
+        last_n_from_ingestion_runs=last_n,
+        synthetic_fixture_name=fixture_name,
+    )
+    return summary.to_dict()

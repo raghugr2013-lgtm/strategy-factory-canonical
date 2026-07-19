@@ -257,6 +257,57 @@ registry, connector Protocol, GithubConnector adapter, registry, and
 read-only API. Pipeline stages, governance cutover, retro-scoring,
 and additional connectors are Stage 3.β / Stage 4.
 
+## Phase 2 Stage 3.β — UKIE Pipeline + Governance Integration (2026-02-19) ✅
+
+Focused scope per operator approval: pipeline stages + repository +
+dry-run harness. NO promotion bridge, NO retro-scoring, NO new
+connectors.
+
+**Files delivered under `/app/backend/legacy/engines/knowledge/`:**
+- `constants.py` — `PIPELINE_VERSION` (0.1.0) + `PIPELINE_CONTRACT_VERSION` (0.1.0) + `KNOWLEDGE_DB_NAME`
+- `domain_router.py` — P2C.4 — pure dispatch by domain; flag: `ENABLE_DOMAIN_ROUTING`
+- `license_gate.py` — P2C.5 — 5-outcome classifier (SPDX + heuristic); flag: `ENABLE_LICENSE_GATE`
+- `trust_scorer.py` — P2C.6 — 5-tier ladder with parser_confidence default 0.8; flag: `ENABLE_TRUST_SCORER`
+- `dedup_check.py` — P2C.7 — within-domain hash uniqueness (cross-domain allowed); flag: `ENABLE_DEDUP_CHECK`
+- `repository.py` — P2C.8 — `KnowledgeRepository.insert_ingested()` audited write; hard-rail enforcement (`learning_only=True`, `eligible_for_deploy=False` regardless of item state); idempotent upsert; version stamps on every doc; flag: `UKIE_GOVERNANCE_CUTOVER` (dormant when off)
+- `pipeline.py` — ordered composition; `PipelineOutcome` + `PipelineSummary` with version stamps
+- `dry_run.py` — shadow-mode harness; three input sources (`items` / `last_n_from_ingestion_runs` / `synthetic_fixture`); deterministic `stage_3_beta_default` fixture covers all 6 domains + all 5 license outcomes + a hash-collision case
+- `router.py` — extended with `POST /api/knowledge/dry-run`, `GET /api/knowledge/pipeline/{status,last-run}`
+
+**Version-aware from day one** — operator's architectural
+refinement: every stored doc + every outcome carries both
+`pipeline_version` (implementation) and `pipeline_contract_version`
+(semantics) + `processed_at`. Retro-processing and audit trails
+distinguish "rerun" from "semantic shift" by design.
+
+**Stage 3.β tests: 66 / 66 passing.** Cumulative Phase-2 tests:
+**224 / 224** (Stage 1: 34 + Stage 2: 74 + Stage 3.α: 50 +
+Stage 3.β: 66).
+
+**Deliverable:** `/app/memory/PHASE_2_STAGE_3_BETA_NOTES.md` documents
+implementation, evidence, dry-run results, and the pre-cutover
+checklist.
+
+**Feature flags introduced (all default OFF):**
+- `ENABLE_DOMAIN_ROUTING`
+- `ENABLE_DEDUP_CHECK`
+- `ENABLE_LICENSE_GATE`
+- `ENABLE_TRUST_SCORER`
+- `UKIE_GOVERNANCE_CUTOVER` — the critical cutover; guards Mongo writes
+
+Live verification (preview pod, `UKIE_DOMAIN_REGISTRY_ENABLED=true`,
+all other flags OFF):
+- `/api/knowledge/pipeline/status` reports 5 flags OFF, versions 0.1.0
+- `POST /api/knowledge/dry-run` (default fixture) → 7 items, all six domains, dormant=7
+- With stage flags ON (isolated test): trust distribution `T5=1, T3=3, T2=2, T1=1`; license distribution `permissive=4, strong_copyleft=1, proprietary=1, unknown=1`
+- `/api/health/system` unchanged: platform_score=100 · [coe, vie, cts]
+
+**Explicit non-goals honoured** — no promote bridge, no retro-scoring,
+no new connectors, no repository read/query surface, no changes to
+legacy `strategy_ingestion/*`. Stage 3.γ (promote bridge +
+retro-scoring) is a separate follow-up requiring its own operator
+approval.
+
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
 ## Backlog (P2 / cosmetic)

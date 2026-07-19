@@ -61,3 +61,31 @@ from .registry import (                                         # noqa: F401
     list_connectors,
     register_connector,
 )
+
+# Phase 2 Stage 3.β — pipeline + governance
+from .constants import (                                        # noqa: F401
+    PIPELINE_VERSION,
+    PIPELINE_CONTRACT_VERSION,
+    KNOWLEDGE_DB_NAME,
+)
+from .domain_router import route as domain_route, RoutingDecision   # noqa: F401
+from .license_gate import (                                     # noqa: F401
+    LicenseOutcome,
+    LicenseVerdict,
+    classify as classify_license,
+)
+from .trust_scorer import TrustScore, score as score_trust      # noqa: F401
+from .dedup_check import DedupResult, check as check_dedup      # noqa: F401
+from .repository import (                                       # noqa: F401
+    InsertResult,
+    KnowledgeRepository,
+    get_repository,
+)
+from .pipeline import (                                         # noqa: F401
+    PipelineOutcome,
+    PipelineSummary,
+    pipeline_status,
+    run_batch as run_pipeline_batch,
+    run_one as run_pipeline_one,
+)
+from .dry_run import run_dry, synthetic_fixture                 # noqa: F401
