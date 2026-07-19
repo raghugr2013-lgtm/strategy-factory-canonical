@@ -188,9 +188,14 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 All Stage-2 code remains DORMANT behind default-off flags — zero production behaviour change.
 
-**Sub-stages remaining before Validation Gate 2:**
-- 2.κ — Market Data Validation Report (evidence gathering + report writing)
-- Validation Gate 2 report
+**Sub-stages remaining before Validation Gate 2:** ✅ COMPLETE
+- 2.κ — Market Data Validation Report — `PHASE_2_STAGE_2_MARKET_DATA_VALIDATION_REPORT.md` ✅ (2026-02-19)
+- Validation Gate 2 Report — `PHASE_2_VALIDATION_GATE_2_REPORT.md` ✅ (2026-02-19)
+
+Both reports awaiting operator sign-off. Once approved:
+1. Enable Stage-2 observability flags in production (already ON in preview): `COE_METRICS_ENABLED`, `COE_COVERAGE_REPORT_ENABLED`, `X_COE_PRESSURE_HEADER_ENABLED`
+2. Enable data-path flags in the order documented in the Gate 2 report §12: USE_IO_POOL → COE_RESERVATIONS_ENABLED → COE_LANES_ENABLED → shadow-mode BI5↔BID diff → BI5_CTS_ROUTING → BID_CANONICAL_M1_READ_MODE + BID_HTF_CACHE_ENABLED per-symbol
+3. Begin Stage 3 planning (UKIE α + UKIE β)
 
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
