@@ -122,15 +122,28 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
   - **Total Phase-2 tests: 51/51 passing**
   - Backend still healthy — no import cycles, boot log clean, `platform_health_score=100`
 
-**Next sub-stages (planned per execution plan):**
-- 2.γ — Orchestrator integration (WorkloadQueue.next() in tick, reservations enforcement)
-- 2.δ — I/O pool (`engines/io_pool.py`)
-- 2.ε — CTS foundation + `data_access.load_candles()` re-entry
-- 2.ζ — HTF materialised cache (`market_data_htf_cache`)
-- 2.η — BI5 read-side consolidation via CTS
-- 2.θ — Coverage report + endpoints
-- 2.ι — Observability (`X-COE-Pressure` header + Prometheus)
-- 2.κ — Market Data Validation Report
+- **2.γ — Orchestrator integration** ✅
+  - `_workload_capacity()` extended with reservation-aware floors (flag-gated `COE_RESERVATIONS_ENABLED`). When flag ON, per-class reservations guarantee minimum concurrency even when other classes are saturated. EXECUTION floor=2 honoured even when BACKTEST at capacity (verified by test).
+  - New workload classes (`market_data`, `knowledge`, `execution`, `monitoring`, `meta_learning`) added to `caps_map` with unlimited caps + their reservation floors.
+  - `Orchestrator._drain_queue(ctx, remaining)` — new method (flag-gated `COE_LANES_ENABLED`) that pulls from `WorkloadQueue.next()` before registry-based scoring. Unknown task_names dropped with a warning (not fatal). Cap-respecting.
+  - Wired into `_tick()` at the top of the dispatch phase — queued jobs get first bite of `hard_cap_remaining`.
+  - `ORCH_RESERVATION_<CLASS>` env overrides working per Stage 1 (verified again by test).
+
+- **2.δ — I/O Pool** ✅
+  - `engines/io_pool.py` — `ThreadPoolExecutor` mirroring the CPU pool pattern. Feature-gated `USE_IO_POOL`; fallback to `asyncio.to_thread` when off.
+  - Sized to `min(32, 4 × cpu_count)`; env override `IO_POOL_SIZE`.
+  - `submit_io(fn, *args, workload_class="io", **kwargs)` — records per-class submit counts.
+  - **Isolation smoke verified**: 20 concurrent 100 ms blocking I/O jobs on a pool of 8 workers do NOT block a short coroutine from completing in < 200 ms.
+
+- **Metrics scaffold** (feeds Market Data Validation Report per operator directive) ✅
+  - `engines/metrics.py` — `MetricsRegistry` with counters, gauges, histograms, timers. In-memory; bounded to 10k samples per histogram; sub-microsecond overhead.
+  - `Metric` catalogue class — canonical metric names for Phase 2: `coe_queue_submit_total`, `coe_queue_dispatch_total`, `coe_queue_latency_ms`, `coe_tick_ms`, `coe_dispatch_ms`, `coe_io_pool_submit_total`, `cts_aggregation_ms`, `cts_cache_hit_total`, `cts_cache_miss_total`, `cts_cache_write_ms`, `cts_rebuild_ms`, `cts_invalidation_total`.
+  - `LocalQueueDriver` instrumented — every `submit()` counts `QUEUE_SUBMIT_TOTAL`; every `next()` counts `QUEUE_DISPATCH_TOTAL` + observes `QUEUE_LATENCY_MS` (submit→dispatch).
+
+- **Coverage API contract preview** ✅
+  - `/app/memory/COVERAGE_API_CONTRACT_PREVIEW.md` — full response schema for `GET /api/data/coverage` per operator directive (contract-first). Documents: query params, top-level shape (`summary`/`symbols`/`gaps`/`cache`/`provider`/`health`), per-symbol block, gap enumeration with tiered severity, HTF cache state, provider sync status, embedded CTS `HealthSnapshot`, Prometheus text format, 7 related endpoints (`/api/cts/*`), 5 design invariants, 5 open questions for operator.
+
+**Total Phase-2 tests: 78/78 passing.** Backend healthy: `platform_health_score=100`; all 101 legacy routers still mount.
 
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 

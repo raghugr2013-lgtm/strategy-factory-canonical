@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time as _time
 from collections import deque
 from typing import Any, Deque, Dict, Optional
 
@@ -55,8 +56,16 @@ class LocalQueueDriver:
         lane = req.lane if req.lane in (Lane.P0.value, Lane.P1.value, Lane.P2.value) else Lane.P1.value
         async with self._lock:
             lanes = self._ensure_class(req.class_)
+            # Attach submission monotonic time for latency measurement
+            req.__dict__["_submitted_mono"] = _time.perf_counter()
             lanes[lane].append(req)
             self._index[req.job_id] = (req.class_, lane)
+        # Metrics
+        try:
+            from engines.metrics import get_metrics, Metric
+            get_metrics().inc(Metric.QUEUE_SUBMIT_TOTAL, class_=req.class_, lane=lane)
+        except Exception:                                # pragma: no cover
+            pass
         return req.job_id
 
     async def next(self, class_: str, cap: int) -> Optional[WorkloadRequest]:
@@ -78,6 +87,17 @@ class LocalQueueDriver:
                 if dq:
                     req = dq.popleft()
                     self._index.pop(req.job_id, None)
+                    # Metrics — latency from submit → dispatch
+                    try:
+                        submitted_mono = req.__dict__.pop("_submitted_mono", None)
+                        from engines.metrics import get_metrics, Metric
+                        m = get_metrics()
+                        m.inc(Metric.QUEUE_DISPATCH_TOTAL, class_=class_, lane=lane_name)
+                        if submitted_mono is not None:
+                            latency_ms = (_time.perf_counter() - submitted_mono) * 1000.0
+                            m.observe(Metric.QUEUE_LATENCY_MS, latency_ms, class_=class_, lane=lane_name)
+                    except Exception:                    # pragma: no cover
+                        pass
                     return req
             return None
 

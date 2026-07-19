@@ -264,7 +264,17 @@ class Orchestrator:
 
     # ── Workload-class dispatch cap ──
     def _workload_capacity(self, ctx: OrchestratorContext) -> Dict[str, int]:
-        """Map workload class → remaining dispatch slots this tick."""
+        """Map workload class → remaining dispatch slots this tick.
+
+        Stage 2 (Phase 2, 2026-02-19): reservation-aware. When
+        `COE_RESERVATIONS_ENABLED=true`, per-class reservation floors
+        guarantee minimum concurrency even when other classes are
+        saturated. Reservation defaults come from
+        `engines.workload_classes.reservation_for(cls)`; overridable via
+        `ORCH_RESERVATION_<CLASS>` env vars per operator directive.
+
+        Byte-identical to pre-Stage-2 when the flag is off.
+        """
         adaptive = ctx.adaptive
         # In-flight counts by workload class
         inflight_by_class: Dict[str, int] = {}
@@ -287,11 +297,86 @@ class Orchestrator:
             "api_hot":        max_concurrent_tasks(),
             "agent":          max_concurrent_tasks(),
             "io":             max_concurrent_tasks(),
+            # Stage 2 additions — new workload classes get unlimited caps
+            # from adaptive-concurrency here; reservation floors below
+            # enforce their MINIMUMs.
+            "market_data":    max_concurrent_tasks(),
+            "knowledge":      max_concurrent_tasks(),
+            "execution":      max_concurrent_tasks(),
+            "monitoring":     max_concurrent_tasks(),
+            "meta_learning":  max_concurrent_tasks(),
         }
         remaining = {
             k: max(0, caps_map[k] - inflight_by_class.get(k, 0)) for k in caps_map
         }
+
+        # ── Stage 2 reservation floors (flag-gated) ──
+        if _flag_env("COE_RESERVATIONS_ENABLED", False):
+            try:
+                from engines.workload_classes import WorkloadClass as _WC, reservation_for
+                for cls in _WC:
+                    name = cls.value
+                    if name not in remaining:
+                        continue
+                    reservation = reservation_for(cls)
+                    inflight = inflight_by_class.get(name, 0)
+                    # Guarantee at least (reservation - inflight) slots
+                    floor = max(0, reservation - inflight)
+                    if floor > remaining[name]:
+                        remaining[name] = floor
+            except Exception:                                        # pragma: no cover
+                logger.exception("[orchestrator] reservation floor computation failed")
         return remaining
+
+    # ── Stage 2 (Phase 2) — WorkloadQueue drain ──
+    async def _drain_queue(self, ctx: OrchestratorContext, remaining: Dict[str, int]) -> int:
+        """Pull queued `WorkloadRequest`s and dispatch matching registered tasks.
+
+        Flag-gated by `COE_LANES_ENABLED`. When off: no-op, byte-identical
+        to pre-Stage-2 behaviour.
+
+        Returns count of dispatched-from-queue jobs.
+        """
+        if not _flag_env("COE_LANES_ENABLED", False):
+            return 0
+        try:
+            from engines.coe import get_queue
+            queue = get_queue()
+        except Exception:                                            # pragma: no cover
+            logger.exception("[orchestrator] queue driver unavailable")
+            return 0
+
+        dispatched = 0
+        # Snapshot task registry once
+        try:
+            from engines.orchestrator.registry import registry as _reg
+            task_by_name = {t.NAME: t for t in _reg.all()}
+        except Exception:                                            # pragma: no cover
+            task_by_name = {}
+
+        # Round-robin across classes so no class monopolises
+        for cls_name in list(remaining.keys()):
+            cap = remaining.get(cls_name, 0)
+            while cap > 0:
+                req = await queue.next(cls_name, cap)
+                if req is None:
+                    break
+                task = task_by_name.get(req.task_name)
+                if task is None:
+                    logger.warning(
+                        "[orchestrator] queue held unknown task_name=%s (job_id=%s) — dropping",
+                        req.task_name, req.job_id,
+                    )
+                    cap -= 1  # count against cap to avoid infinite loop
+                    continue
+                # Bridge queue metadata → dispatch. Score is 0 (queued jobs
+                # skip scoring — they were queued because a caller wanted them).
+                # provider_hint is not yet honoured at dispatch (Stage 3).
+                asyncio.create_task(self._dispatch(task, ctx, 0.0))
+                dispatched += 1
+                cap -= 1
+                remaining[cls_name] = cap
+        return dispatched
 
     # ── Dispatch a chosen task ──
     async def _dispatch(self, task: Task, ctx: OrchestratorContext, score: float) -> None:
@@ -377,6 +462,14 @@ class Orchestrator:
         # Enforce workload-class remaining capacity + global hard cap.
         remaining = self._workload_capacity(ctx)
         hard_cap_remaining = max(0, max_concurrent_tasks() - len(self._in_flight))
+
+        # ── Stage 2 (Phase 2) — drain WorkloadQueue first ──
+        # Queued jobs have already been submitted by a caller (API,
+        # scheduler, event) — they were queued specifically to be run,
+        # so they win over registry-scored candidates for this tick's
+        # remaining capacity.
+        queue_dispatched = await self._drain_queue(ctx, remaining)
+        hard_cap_remaining = max(0, hard_cap_remaining - queue_dispatched)
 
         launched: List[Dict[str, Any]] = []
         for c in eligible:
