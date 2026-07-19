@@ -344,6 +344,8 @@ async def bi5_maturity() -> Dict[str, Any]:
     these signals but MUST NEVER autonomously activate a phase.
     Each transition requires an explicit operator session.
     """
+    from engines import bi5_maturity as bm
+    return await bm.evaluate_all()
 
 
 # ─────────────────────────────────────────────────────────────────────
