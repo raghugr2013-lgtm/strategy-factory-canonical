@@ -477,6 +477,19 @@ def create_app() -> FastAPI:
     app.include_router(research_router)
     app.include_router(dashboard_router)
 
+    # ── Knowledge subsystem (Phase 1.6) ──────────────────────────
+    # Historical Strategy Memory under /api/knowledge/*. Reads the
+    # isolated `strategy_knowledge_base` database via KnowledgeRepository,
+    # which structurally cannot write and structurally cannot leak into
+    # any active pool (every row carries learning_only=True and every
+    # query is filtered by learning_only=True).
+    try:
+        from .knowledge.router import get_router as _kb_get_router
+        app.include_router(_kb_get_router())
+        logger.info("mounted knowledge router: /api/knowledge/*")
+    except Exception as _kb_exc:  # noqa: BLE001
+        logger.warning("knowledge router mount skipped: %s", _kb_exc)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,
