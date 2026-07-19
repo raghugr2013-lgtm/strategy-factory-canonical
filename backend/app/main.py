@@ -567,6 +567,15 @@ def create_app() -> FastAPI:
     except Exception as _ux:  # noqa: BLE001
         logger.warning("UKIE router mount skipped: %s", _ux)
 
+    # ── BI5 ↔ BID shadow-diff router (Phase 2 Stage 2 tooling) ────
+    # Admin-only + feature-gated (`BI5_BID_DIFF_ENABLED`). Read-only.
+    try:
+        from engines.bi5_bid_diff_router import router as _bi5_diff_router  # type: ignore
+        app.include_router(_bi5_diff_router)
+        logger.info("mounted BI5/BID diff router: /api/data/bi5-bid-diff (flag-gated)")
+    except Exception as _dx:  # noqa: BLE001
+        logger.warning("BI5/BID diff router mount skipped: %s", _dx)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,

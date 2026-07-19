@@ -94,6 +94,18 @@ def resample_m1_to(candles: List[Candle], target_tf: str) -> tuple[List[Candle],
         volume=("volume", "sum"),
     ).dropna(subset=["open", "high", "low", "close"])
 
+    # Trailing-partial guard (Phase 2 Stage 3.γ tooling, R3 from Market
+    # Data Validation Report §10.2). Drop the tail bar iff the last M1
+    # row is more than 1 minute short of the tail bucket close — matches
+    # the BI5 realism resampler's explicit guard so both paths converge
+    # bit-for-bit on non-power-of-tf input lengths.
+    if not agg.empty:
+        last_m1_ts = df.index[-1]
+        tail_start = agg.index[-1]
+        tail_end = tail_start + pd.Timedelta(rule)
+        if last_m1_ts < tail_end - pd.Timedelta("1min"):
+            agg = agg.iloc[:-1]
+
     out: List[Candle] = [
         Candle(
             timestamp=ts.isoformat().replace("+00:00", "+00:00") if ts.tzinfo else ts.isoformat() + "+00:00",

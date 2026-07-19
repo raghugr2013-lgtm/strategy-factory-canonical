@@ -324,6 +324,59 @@ approval.
   (4) Stage 4 kickoff (connector fleet + COE γ + observability
   finalisation); (5) backend feature freeze + VPS validation windows.
 
+## BI5 ↔ BID Shadow Validation (2026-02-19) ✅
+
+- **Analytical convergence proven** — 27/27 tests drive both legacy
+  BI5 resampler AND CTS resampler over identical M1 fixtures across
+  all six timeframes (M5/M15/M30/H1/H4/D1) and multiple input
+  lengths; **bit-identical OHLCV output** (float64-precision).
+- **Two real bugs surfaced and fixed** by the harness:
+  1. `bi5_realism._TF_TO_PANDAS` uppercase `"1H"`/`"4H"` deprecated
+     in pandas 2.x → fixed to lowercase (matches CTS)
+  2. CTS resampler lacked explicit trailing-partial guard → applied
+     Recommendation R3 (mirrored BI5's guard) — both paths now
+     agree bit-for-bit on non-power-of-timeframe M1 lengths
+- **Harness delivered**: `engines/bi5_bid_diff.py` (330 lines) +
+  `engines/bi5_bid_diff_router.py` (75 lines) — admin-only,
+  feature-gated by `BI5_BID_DIFF_ENABLED=false` (default OFF).
+  Read-only. Produces summary + per-bucket detailed audit artifact
+  (JSON or CSV) with 18-column shape covering OHLCV + basis-point
+  deltas + tier classification per bucket.
+- **24-hour production observation runbook** documented in
+  `BI5_BID_SHADOW_VALIDATION_REPORT.md §7` — pre-run checks, hourly
+  curl loop, pass/fail gates, post-observation cleanup.
+- **Pass criteria (operator's thresholds):** ≥ 99% of overlapping
+  buckets in `informational` tier (< 10 bps) AND zero
+  `governance_review` (≥ 50 bps).
+- **Live-verified**: endpoint returns 503 with `BI5_BID_DIFF_ENABLED`
+  off; `/api/health/system` unchanged.
+- **Cumulative tests: 251 / 251 passing** (previous 224 + 27 new BI5
+  diff).
+
+## Phase 2 Stage 3.γ — Implementation Plan (planning only, 2026-02-19)
+
+Document: `/app/memory/PHASE_2_STAGE_3_GAMMA_PLAN.md`
+
+Scope planned (awaiting operator approval — no code will land until
+sign-off):
+- **P2C.9 Promote Bridge**: `POST /api/knowledge/promote/{item_id}` —
+  admin + flag-gated (`UKIE_PROMOTE_BRIDGE_ENABLED`); T4+ items with
+  permissive/weak_copyleft licence; dedup-checked; hard rails
+  re-stamped at write-time; audit trail in
+  `strategy_knowledge_base.promote_events`; per-item rollback path.
+- **P2C.11 Retro-scoring**: `POST /api/knowledge/retro-score` —
+  admin + flag-gated (`UKIE_RETRO_SCORE_ENABLED`) + physical
+  `confirm_write` guard string; idempotent one-off backfill of ~55
+  legacy `ingested_strategies` rows into
+  `strategy_knowledge_base.strategies` via the Stage-3.β pipeline;
+  dry-run default; per-run rollback path; ALSO gated by
+  `UKIE_GOVERNANCE_CUTOVER` for the actual write (retro-scoring
+  cannot bypass the governance cutover by design).
+- **Non-goals**: no health-provider retrofit, no query API, no new
+  connectors, no bulk auto-promote (all Stage 4).
+- **Rollback SLA**: individual per-item + global `deleteMany`
+  filters + flag flip — all within the 60-s platform SLA.
+
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
 ## Backlog (P2 / cosmetic)
