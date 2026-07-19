@@ -299,11 +299,37 @@ async def _load_bi5_bars(pair: str, timeframe: str) -> Dict[str, Any]:
     through ``_load_and_resample_bi5`` so the realism evaluator only
     ever consumes the canonical 1m stream (resampled on demand).
 
-    The previous implementation called
-    ``data_access.load_with_recovery(source='bi5', timeframe=<strategy_tf>)``
-    directly, which fragmented the realism stream across timeframe
-    buckets. That path is no longer used.
+    Phase 2 Stage 2.η (2026-02-19): when `BI5_CTS_ROUTING=true`, delegate
+    to CTS so BI5 realism uses the SAME resampler as BID canonical. This
+    closes the "two truths" gap between BI5-derived and BID-derived HTF.
+    Zero behaviour change when flag off — legacy `_load_and_resample_bi5`
+    path continues.
     """
+    import os as _os
+    _cts_route = (_os.environ.get("BI5_CTS_ROUTING") or "").strip().lower()
+    if _cts_route in ("1", "true", "yes", "y", "on"):
+        try:
+            from engines.cts import get_cts
+            window = await get_cts().load_candles(pair, timeframe)
+            bars = [c.to_dict() for c in window.candles]
+            return {
+                "bars": bars,
+                "resample": {
+                    "from_tf": "1m",
+                    "to_tf": timeframe,
+                    "rows_in": 0,
+                    "rows_out": len(bars),
+                    "engine": "cts",
+                    "provenance": window.provenance.__dict__,
+                },
+            }
+        except Exception as e:  # noqa: BLE001
+            # Fall through to legacy path on any error
+            import logging as _lg
+            _lg.getLogger(__name__).warning(
+                "[bi5_realism] CTS route failed for %s/%s — falling back to legacy: %s",
+                pair, timeframe, e,
+            )
     return await _load_and_resample_bi5(pair, timeframe)
 
 

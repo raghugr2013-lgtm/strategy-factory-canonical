@@ -534,6 +534,30 @@ def create_app() -> FastAPI:
     except Exception as _hx:  # noqa: BLE001
         logger.warning("universal-health router mount skipped: %s", _hx)
 
+    # ── COE Metrics + Coverage (Phase 2 Stage 2.ι + 2.θ) ─────────
+    # Both routers self-guard with HTTP 503 when their flags are off.
+    try:
+        from engines.coe_metrics_router import router as _coe_metrics_router  # type: ignore
+        app.include_router(_coe_metrics_router)
+        logger.info("mounted COE metrics router: /api/coe/{metrics,state}")
+    except Exception as _mx:  # noqa: BLE001
+        logger.warning("COE metrics router mount skipped: %s", _mx)
+    try:
+        from engines.coverage_router import router as _coverage_router  # type: ignore
+        app.include_router(_coverage_router)
+        logger.info("mounted coverage router: /api/data/coverage")
+    except Exception as _cx:  # noqa: BLE001
+        logger.warning("coverage router mount skipped: %s", _cx)
+
+    # ── X-COE-Pressure middleware (Phase 2 Stage 2.ι) ────────────
+    # Self-guarded via flag; zero-cost when off.
+    try:
+        from engines.coe_pressure_middleware import CoePressureMiddleware  # type: ignore
+        app.add_middleware(CoePressureMiddleware)
+        logger.info("mounted X-COE-Pressure middleware (flag-gated)")
+    except Exception as _px:  # noqa: BLE001
+        logger.warning("X-COE-Pressure middleware skipped: %s", _px)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,

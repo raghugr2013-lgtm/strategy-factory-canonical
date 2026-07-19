@@ -162,6 +162,36 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 **Total Phase-2 tests: 101/101 passing.** Backend healthy: `platform_health_score=100`; three subsystems registered (coe, cts, vie).
 
+- **2.η — BI5 through CTS ✅**
+  - `engines/bi5_realism.py::_load_bi5_bars` now honours `BI5_CTS_ROUTING=true` — when flag ON, delegates to `CTS.load_candles()`. This closes the "two truths" gap between BID and BI5 by putting them behind the SAME resampler. Legacy `_load_and_resample_bi5` path preserved as fallback on any error. Byte-identical when flag OFF.
+
+- **2.θ — Coverage API ✅**
+  - `engines/coverage_router.py` — `GET /api/data/coverage` + `GET /api/data/coverage/{symbol}` implemented against the locked contract in `COVERAGE_API_CONTRACT_PREVIEW.md`. Six top-level blocks (`summary`/`symbols`/`gaps`/`cache`/`provider`/`health`); `?include=` filter; symbol filter; JSON only in this Stage (Prometheus text-format at `/api/coe/metrics`).
+  - Aggregates from live sources: Mongo `market_data` distinct-symbol query, `HtfCache.snapshot()`, `MetricsRegistry.snapshot()`, CTS `health_snapshot()`.
+  - Feature-gated `COE_COVERAGE_REPORT_ENABLED=false` → HTTP 503.
+
+- **2.ι — Prometheus exporter + X-COE-Pressure header ✅**
+  - `engines/coe_metrics_router.py` — `GET /api/coe/metrics` in Prometheus text exposition format (counters, gauges, histograms as summaries with p50/p95/p99 quantiles). `GET /api/coe/state` — JSON snapshot.
+  - `engines/coe_pressure_middleware.py` — Starlette middleware stamping `X-COE-Pressure: <band>` header on every `/api/*` response. Reads `queue_pressure.snapshot()`. Zero-cost when flag OFF.
+  - Both mounted in `app/main.py`. Verified live: `X-COE-Pressure: idle` appears on `/api/health/coe`; `/api/coe/metrics` returns valid `# TYPE ... counter` / `# TYPE ... summary` lines with proper label sets.
+
+- **Operational Dashboard Mockup ✅**
+  - `/app/memory/OPERATIONAL_DASHBOARD_MOCKUP.md` — text-based mockup per operator directive. 8 panels in the mandated priority order (platform health → coverage → gaps → cache → provider → queue → budget → trends). Escalation-driven alerts, access model (admin full / researcher read-only / anonymous denied), refresh discipline, per-panel data-source table showing every endpoint already exists at end of Stage 2. Five open questions for operator.
+
+**Total Phase-2 tests: 111/111 passing.** Backend healthy with all Stage-2 endpoints live:
+- `/api/health/system` — 3 subsystems, platform_health_score=100
+- `/api/health/{coe,cts,vie}` — full `HealthSnapshot`
+- `/api/coe/metrics` — Prometheus text format
+- `/api/coe/state` — JSON metrics snapshot
+- `/api/data/coverage` + `/api/data/coverage/{symbol}` — locked-contract response
+- `X-COE-Pressure` header on every `/api/*` response
+
+All Stage-2 code remains DORMANT behind default-off flags — zero production behaviour change.
+
+**Sub-stages remaining before Validation Gate 2:**
+- 2.κ — Market Data Validation Report (evidence gathering + report writing)
+- Validation Gate 2 report
+
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
 ## Backlog (P2 / cosmetic)
