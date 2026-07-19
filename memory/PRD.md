@@ -308,6 +308,22 @@ legacy `strategy_ingestion/*`. Stage 3.γ (promote bridge +
 retro-scoring) is a separate follow-up requiring its own operator
 approval.
 
+## Phase 2 Validation Gate 3 Report (2026-02-19) ✅
+
+- `/app/memory/PHASE_2_VALIDATION_GATE_3_REPORT.md` — comprehensive
+  readiness assessment for Stage 3 (α + β). Result: **PASS**.
+- Live rollback verified: all 6 UKIE flags OFF → every
+  `/api/knowledge/*` endpoint returns 503; `/api/health/system`
+  unchanged (platform_score=100 across coe/vie/cts).
+- 224 / 224 cumulative Phase-2 tests passing.
+- No Stage-3 feature flag enabled in production; awaiting operator
+  sign-off on Gate 3 before coherent UKIE activation.
+- Post-approval sequence documented: (1) complete Stage-2 BI5 shadow
+  diff; (2) coherent UKIE activation per Gate 3 §5.1; (3) Stage 3.γ
+  planning (promote bridge + retro-scoring — separate approval);
+  (4) Stage 4 kickoff (connector fleet + COE γ + observability
+  finalisation); (5) backend feature freeze + VPS validation windows.
+
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
 ## Backlog (P2 / cosmetic)
