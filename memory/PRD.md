@@ -104,6 +104,36 @@ Blockers on entry: prod MongoDB, Caddy reverse proxy, prod `.env`.
 
 **Awaiting:** operator sign-off on `PHASE_2_VALIDATION_GATE_1_REPORT.md` before Stage 2 begins.
 
+## Stage 2 Execution (Session 5 continued, 2026-02-19 — IN PROGRESS)
+
+**Approved by operator on 2026-02-19.** Stage 2 execution plan documented in `/app/memory/PHASE_2_STAGE_2_EXECUTION_PLAN.md` (10 sub-stages, ~10.5 focused-days serial).
+
+**Completed sub-stages this session:**
+
+- **2.α — Prep** ✅
+  - Fixed hardcoded credentials in `tests/backend_test.py` — now reads `ADMIN_EMAIL` / `ADMIN_PASSWORD` from env with sane defaults matching `.env`. `TestHealth::test_health` + `test_version` now pass (previously all 22 tests failed).
+  - Set conservative `ORCH_BUDGET_DAILY_USD=25.00` + `ORCH_BUDGET_MONTHLY_USD=500.00` in `.env`. `budget_headroom` now reporting `1.0` on `/api/health/coe`.
+
+- **2.β — WorkloadQueue foundation** ✅
+  - `engines/coe/queue.py` — `WorkloadQueue` Protocol + `get_queue()` factory + `COE_QUEUE_DRIVER=local|distributed` selection
+  - `engines/coe/queue_local.py` — `LocalQueueDriver` in-memory implementation (3 lanes × N classes, `asyncio.Lock`-protected, cancel-safe)
+  - `engines/coe/queue_distributed.py` — `DistributedQueueDriver` stub proving the switch-point works (raises `NotImplementedError` with clear Phase-3 pointer)
+  - **17 new pytest tests passing** (`test_workload_queue.py`): P0>P1>P2 lane ordering, FIFO within lane, cancel(), peek(), snapshot(), size(), driver selection, invalid-lane fallback, Protocol compliance for both drivers
+  - **Total Phase-2 tests: 51/51 passing**
+  - Backend still healthy — no import cycles, boot log clean, `platform_health_score=100`
+
+**Next sub-stages (planned per execution plan):**
+- 2.γ — Orchestrator integration (WorkloadQueue.next() in tick, reservations enforcement)
+- 2.δ — I/O pool (`engines/io_pool.py`)
+- 2.ε — CTS foundation + `data_access.load_candles()` re-entry
+- 2.ζ — HTF materialised cache (`market_data_htf_cache`)
+- 2.η — BI5 read-side consolidation via CTS
+- 2.θ — Coverage report + endpoints
+- 2.ι — Observability (`X-COE-Pressure` header + Prometheus)
+- 2.κ — Market Data Validation Report
+
+**All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

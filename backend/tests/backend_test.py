@@ -12,10 +12,13 @@ import uuid
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://strategy-prod-main.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 VIE_LOCAL = "http://127.0.0.1:8100"
-ADMIN_EMAIL = "admin@strategy-factory.local"
-ADMIN_PASS = "Jahnav@2018"
+# Read from env with sane defaults matching /app/backend/.env; explicit env
+# override takes precedence so CI / other environments can inject their own
+# admin credentials.
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@validation.local")
+ADMIN_PASS = os.environ.get("ADMIN_PASSWORD", "Validation_Admin_9x!")
 
 session = requests.Session()
 session.headers.update({"Content-Type": "application/json"})
