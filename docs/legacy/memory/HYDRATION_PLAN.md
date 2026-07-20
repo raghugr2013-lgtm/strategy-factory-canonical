@@ -308,8 +308,8 @@ The `engines/feature_flags.py` defaults are all OFF. This means the canonical op
 
 ### Conflict 5.2 — `frontend/.env`
 
-* Current pod: `REACT_APP_BACKEND_URL=https://strategy-prod-main.preview.emergentagent.com`
-* Frontend.zip ships: `REACT_APP_BACKEND_URL=https://strategy-prod-main.preview.emergentagent.com`
+* Current pod: `REACT_APP_BACKEND_URL=https://implementation-audit-2.preview.emergentagent.com`
+* Frontend.zip ships: `REACT_APP_BACKEND_URL=https://implementation-audit-2.preview.emergentagent.com`
 
 **Operator decision required:** Which is the live preview URL? Default action is **keep current pod URL** (the zips contain stale environment-specific URLs). This is also the documented platform rule.
 

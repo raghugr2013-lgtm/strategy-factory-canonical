@@ -134,7 +134,7 @@ overall: yellow  (thin history on US100/BTC/ETH — expected and pre-existing)
 
 ## 5 · UI restoration verification (live)
 
-`https://strategy-prod-main.preview.emergentagent.com/` returns HTTP 200 with title `Emergent | Fullstack App`. Logged in with the seeded admin credentials and screenshotted at 1920×800. Observed surfaces (all required by handoff §14):
+`https://implementation-audit-2.preview.emergentagent.com/` returns HTTP 200 with title `Emergent | Fullstack App`. Logged in with the seeded admin credentials and screenshotted at 1920×800. Observed surfaces (all required by handoff §14):
 
 * **DangerRibbon** — visible across the top with a danger event (`Master Bot compile failed · signing error · master-bot.compile · 1h ago · VIEW INBOX ▸`). MOCK event from `OperatorInboxDrawer.jsx` — same as source-pod state.
 * **CommandBar** — `STRATEGY FACTORY · BUILD 30.4 · Quick command… ⌘K · PROD · UP 4d 02:11:42 · admin@strategyfactory.dev`.

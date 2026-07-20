@@ -162,7 +162,7 @@ Grouped by role (representative entries; full list authoritative on disk):
 * **Routing:** `react-router-dom` minimal: `/` and `/c/*` both render `<GatedCommandModuleApp>`; `/legacy` keeps the placeholder Home for parity testing.
 * **Theme:** `bootstrapThemeStore()` (default `dark`, light operator-elective via Command Palette).
 * **Locale:** `bootstrapLocaleStore()` + `IntlProvider` + en-US/de-DE pilot dictionaries (24 keys each).
-* **`.env`:** `REACT_APP_BACKEND_URL=https://strategy-prod-main.preview.emergentagent.com`.
+* **`.env`:** `REACT_APP_BACKEND_URL=https://implementation-audit-2.preview.emergentagent.com`.
 
 ### 2.2 Navigation architecture (current — 10-module COMMAND shell)
 

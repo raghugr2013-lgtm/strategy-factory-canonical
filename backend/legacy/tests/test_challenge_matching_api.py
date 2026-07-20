@@ -13,7 +13,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://strategy-prod-main.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://implementation-audit-2.preview.emergentagent.com").rstrip("/")
 ELIGIBLE_HASH = "a649abeabefcc045cc9ef2dc2ec04e1f3f2b55da"
 UNKNOWN_HASH = "deadbeef" * 5  # 40 chars nonsense
 

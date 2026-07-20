@@ -52,7 +52,7 @@ def _reset_motor_cache():
 
 BASE_URL = os.environ.get(
     "REACT_APP_BACKEND_URL",
-    "https://strategy-prod-main.preview.emergentagent.com",
+    "https://implementation-audit-2.preview.emergentagent.com",
 ).rstrip("/")
 ADMIN_EMAIL = "admin@local.test"
 ADMIN_PASS = "admin123"
