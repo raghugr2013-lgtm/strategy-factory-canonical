@@ -35,6 +35,7 @@ considered complete. D4 confirms:
 - [x] **Explainability** — every plan step reads *What · Why · What next* in Division voice (D2 Addendum); worker card reads *Who · Doing what · With what · Producing what*.
 - [x] **Storytelling Copy Standard (D2 Addendum)** — Division voice throughout; internal worker IDs Advanced-only.
 - [x] **Context Never Lost (Bible v2.1 §1.4.4)** — selecting a worker on the org chart preserves the selection when navigating to Timeline / Approvals / Knowledge; time-window chip cascades to plan history.
+- [x] **Purpose Before Status** — every Division section and every worker card answers *Why do I exist · What am I doing · What value do I produce · What happens next* in that order. State chips report *what is*; purpose copy reports *why it matters*.
 
 ---
 
@@ -297,10 +298,20 @@ Two more entities live outside the eight but are legible in the org chart:
 
 ### 5.2 Division section anatomy
 
+Every division section opens with a **purpose header** answering the four
+questions from §5.1.1 in Division voice.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  RESEARCH DIVISION                          ● 2 running · 1 idle    │
-│  three workers coordinating on regime-detection research            │
+│                                                                     │
+│  Why       Discovers, retrieves and validates external research     │
+│            that could seed new trading strategies.                  │
+│  Now       Coordinating on regime-detection research.               │
+│  Produces  Candidate strategies + curated knowledge items.          │
+│  Next      Handoff to Mutation Division once 3 candidates score     │
+│            above the confidence threshold.                          │
+│                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
@@ -313,39 +324,78 @@ Two more entities live outside the eight but are legible in the org chart:
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+Field style:
+- Labels `Why · Now · Produces · Next` — `--font-caption` UPPERCASE
+  spaced, `--content-lo`, mono-width column so labels align.
+- Values — `--font-body-sm`, `--content-md`, Division voice.
+- Purpose (`Why · Produces`) is *timeless* — it does not update on
+  every poll. Subject (`Now · Next`) updates live.
+- Under Advanced Lens, `Produces` adds the artefact-type chip
+  (`[artefact: strategy]`, `[artefact: kb-item]`, etc.).
+
+**Persona shortcuts:**
+- Executive: `Why` + `Produces` shown; `Now` + `Next` collapsed to a
+  single narrative sentence.
+- Operations: all four visible (default).
+- Research: `Why` shown once at module entry, then folded to a hoverable
+  tooltip to save vertical space on the researcher's active surface.
+- Developer: adds `[division: research]`, worker-count telemetry.
+
 ### 5.3 Worker card anatomy (extends D1 §7.6)
 
+Every worker card follows Purpose Before Status (§5.1.1). Its permanent
+purpose line answers *Why + Produces* in one sentence; below sit the
+transient state, current subject and next handoff.
+
 ```
-┌────────────────────────────┐
-│  research · worker-01      │  ← caption, lowercase, mono
-│  ● running                 │  ← current-state chip
-│  idle → running · 3.4 min  │  ← state-history micro-line (P23 · new v2.1)
-│                            │
-│  candidate #47             │  ← what it's producing right now
-│  regime-detection paper    │  ← subject in Division voice
-│                            │
-│  ──── last artefact ────   │
-│  strat_bb_ema_rsi_v3       │  ← mono, --content-md
-│  P validated               │  ← chip
-│                            │
-│  →  view evidence          │
-│  →  lineage graph          │  ← new (Bible v2.1 §10.2)
-│  📌  pin worker            │  ← new (Bible v2.1 §7.12)
-└────────────────────────────┘
+┌────────────────────────────────┐
+│  research · worker-01          │  ← divisional caption, mono
+│                                │
+│  Retrieves and scores fresh    │  ← PURPOSE (timeless · Why + Produces)
+│  regime-detection research.    │
+│                                │
+│  ● running                     │  ← STATE (transient)
+│  idle → running · 3.4 min      │  ← state-history micro-line (P23)
+│                                │
+│  Now  scoring arxiv:2401.09883 │  ← SUBJECT (transient)
+│                                │
+│  Next handoff to Mutation once │  ← WHAT HAPPENS NEXT
+│       score ≥ 0.70             │
+│                                │
+│  ──── last artefact ────       │
+│  strat_bb_ema_rsi_v3           │
+│  P validated                   │
+│                                │
+│  →  view evidence              │
+│  →  lineage graph              │
+│  📌  pin worker                │
+└────────────────────────────────┘
 ```
+
+**Reading order (top to bottom):** identity → purpose → state → subject
+→ next → outcome → actions. This ordering is not decorative — it is the
+Purpose Before Status principle rendered as layout.
 
 **Fields:**
 
 | Field | Simple | Advanced (adds) |
 |---|---|---|
-| Divisional caption | `research · worker-01` | + `pod-1a`, `latency p95 84 ms`, `restart count 0` |
+| Divisional caption | `research · worker-01` | + `pod-1a`, `p95 84 ms`, `restarts 0` |
+| **Purpose (Why + Produces)** | 1 sentence, timeless, Division voice | + artefact-type chip |
 | Current state chip | `● running` | + `since 12:24 UTC` |
-| **State-history micro-line** *(P23)* | `idle → running · 3.4 min` | + full transition list expandable |
-| Current subject (Division voice) | one sentence | + confidence, method chips |
+| State-history micro-line (P23) | `idle → running · 3.4 min` | + full transition list expandable |
+| **Now (Subject)** | one line, Division voice | + confidence, method chips |
+| **Next (Handoff / transition)** | one line, Division voice | + ETA, downstream division chip |
 | Last artefact | mono id + P/W/F/A chip | + provenance triple |
 | Actions | `view evidence · lineage graph · pin worker` | + `open worker inbox`, `restart worker` (governance-gated) |
 
 **Divisional accent:** 3 px top stroke in the division hue (§5.1).
+
+**Idle worker rendering.** Idle workers keep their **Purpose** and
+**Next** lines at full opacity — a resting worker still communicates
+value. State + Subject dim to `--content-lo`. This is the essence of
+Purpose Before Status — a paused worker is still a legible member of
+the organisation.
 
 ### 5.4 Worker states (5 canonical)
 
@@ -669,19 +719,28 @@ type PlanStep = {
 
 type Division = {
   name: DivisionName;                  // e.g., "Research Division"
-  headline: string;                    // Division voice: what the division is doing right now
+  purpose_why: string;                 // timeless · Division voice · "Why do I exist"
+  purpose_produces: string;            // timeless · Division voice · "What value do I produce"
+  headline_now: string;                // transient · Division voice · what the division is doing right now
+  headline_next: string;               // transient · Division voice · what happens next
   workers: Worker[];
 };
 
 type Worker = {
   id: string;                          // "worker-01"
   division: DivisionName;
+  purpose: string;                     // timeless · Division voice · Why + Produces in one sentence
   state: 'running' | 'idle' | 'degraded' | 'offline' | 'paused';
   state_since: string;                 // ISO
   state_history_line: string;          // "idle → running · 3.4 min"
-  current_subject?: {
+  current_subject?: {                  // "Now" — transient
     label: string;                     // Division voice
     href?: string;
+  };
+  next_handoff?: {                     // "Next" — transient
+    label: string;                     // Division voice, e.g., "handoff to Mutation once score ≥ 0.70"
+    downstream_division?: DivisionName;
+    eta_ms?: number;
   };
   last_artefact?: {
     id: string;
@@ -759,6 +818,7 @@ Per Bible v2.1 §1.4.4, the Factory module must preserve:
 Per Bible v2.1 §17 — Master Bot + Workforce ships only if:
 
 - ✅ 15-item Design Principles Checklist confirmed (§0)
+- ✅ Purpose Before Status (§5.1.1) rendered on every Division section and every worker card
 - ✅ Master Bot Dashboard renders §3 anatomy end-to-end
 - ✅ Plan Contract renders 6 canonical step states (§4.2)
 - ✅ HITL gate cross-links to Approval Center (§4.3) and back with context preserved
