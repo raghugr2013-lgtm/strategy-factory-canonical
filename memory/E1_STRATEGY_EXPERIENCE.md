@@ -41,6 +41,7 @@ E1 confirms:
 - [x] **State Memory (Bible §1.4.5)** — returning to an investigation restores the exact scroll, expanded panels, drawer state.
 - [x] **Purpose Before Status (D4 §5.1.1)** — every strategy card leads with *what it does* before *what stage it's in*.
 - [x] **Decision Identity (D6 §8.1a)** — the strategy's confidence, risk, evidence set, lineage are byte-identical across all four modes.
+- [x] **Strategy Passport (§6.7)** — every strategy has a permanent identity page consolidating its entire life record. This is the canonical inspection, deployment, and export surface.
 
 ---
 
@@ -848,6 +849,251 @@ Sprint 3 delivers G3 (D5 §5). A strategy's lineage renders as a subgraph
 within the wider Knowledge Graph — showing which knowledge items seeded
 it, which peers share its parameters, which descendants it spawned.
 
+### 6.7 Strategy Passport — the canonical identity page
+
+Every strategy has a **permanent identity page** at
+`/c/strategies/:id` that consolidates its complete life record.
+
+**The Passport is the canonical place from which strategies are
+inspected, deployed, or exported.** Every other surface (Timeline,
+Approval Center, Mission Control, Explorer, Portfolio) links back to
+it. From the Passport, every meaningful strategy action is available
+inline — the operator never has to leave to do anything.
+
+**Positioning:** Sprint 1 primary surface (upgrade of D8 §4.S5 Explorer
+from a list-only surface to a list + Passport-detail pair).
+
+#### 6.7.1 Passport anatomy
+
+The Passport wears the **Signature Frame** (D5 §2) with `SIG-FRAME`
+graphic type = *identity*. Divisional accent hue drawn from the
+strategy's origin division (typically Research c0 sky).
+
+Structure — **eleven sections** in a fixed vertical order:
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ▬  RESEARCH DIVISION · strat_bb_ema_rsi_v3                    ● live    │  ← Signature Frame Head
+│  Purpose  EURUSD 5m breakout using EMA-20 / RSI-2 / Bollinger-14         │  ← Purpose caption (timeless)
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  1 · IDENTITY                                                            │
+│      strat_bb_ema_rsi_v3  ·  candidate #47  ·  Research Division         │
+│      Born 2026-06-22 12:14 UTC  ·  4 h 08 min to Production             │
+│                                                                          │
+│  2 · CURRENT LIFECYCLE STAGE                                             │
+│      ● Production  ·  active 28 d 06 h  ·  next: Learning review        │
+│      PipelineStageBar: ● ● ● ● ● ● ● ●                                   │
+│                                                                          │
+│  3 · CONFIDENCE EVOLUTION                    [chart tile · §7.11.2]      │
+│      backtest 0.68 → validated 0.71 → optimised 0.83 → live-14d 0.77    │
+│                                                                          │
+│  4 · PERFORMANCE METRICS                     [metric-block cluster]      │
+│      ┌─── backtest ───┬─── walk-forward ────┬─── live ──────┐            │
+│      │ Sharpe  1.31   │ Sharpe  1.14        │ Sharpe  1.09  │            │
+│      │ dd     6.4 %   │ dd     8.2 %        │ dd     9.8 %  │            │
+│      │ WR     58 %    │ WR     54 %         │ WR     56 %   │            │
+│      └────────────────┴─────────────────────┴───────────────┘            │
+│                                                                          │
+│  5 · VALIDATION EVIDENCE                     [table tile · §7.11.3]      │
+│      · 30-day walk-forward · Sharpe 1.14 · pass                          │
+│      · 90-day walk-forward · Sharpe 1.08 · pass                          │
+│      · Regime shift test   · pass                                         │
+│      · Governance rails    · 6/6 pass                                     │
+│                                                                          │
+│  6 · LINEAGE                                                              │
+│      LineageBar (Bible §10.1) — one hop up + one hop down                │
+│      → open Lineage Graph (Bible §10.2 · Sprint 2)                       │
+│                                                                          │
+│  7 · KNOWLEDGE LINKS                          [chip strip · c4 rings]    │
+│      · arxiv:2401.09883 · regime detection · verified                    │
+│      · kb:ema-rsi-combo-2023 · verified                                  │
+│      · kb:bollinger-tuning-guide · provisional                           │
+│                                                                          │
+│  8 · TIMELINE (filtered to this strategy)                                │
+│      Filtered Timeline (D2 §8) showing strategy's chronological story    │
+│      → open in full Timeline right rail                                   │
+│                                                                          │
+│  9 · DEPLOYMENT HISTORY                       [table tile]                │
+│      · activated 2026-06-24 15:44 · 3 accounts · FTMO-100k               │
+│      · paused    2026-06-30 08:11 · reason: kill posture · 12 min        │
+│      · resumed   2026-06-30 08:23                                         │
+│      · today    active · 342 fills · +$247 realised                      │
+│                                                                          │
+│  10 · RETIREMENT INFORMATION (renders when applicable)                   │
+│       (empty when strategy is not Retired · empty state per D7)          │
+│                                                                          │
+│  11 · EXPORT & DEPLOY TARGETS                                            │
+│       [ Export CSV ]   [ Copy permalink ]   [ Deploy to broker ▾ ]       │
+│       [ Compare with peer ]   [ Pin ]        [ Route to reviewer ▾ ]     │
+│                                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│  ⇩ · ⇱ lineage · 📌 pin · [ live ▸ ]                                     │  ← Signature Frame action rail
+│  2026-07-20 12:24 UTC · adapter: services/strategy.js                    │  ← Provenance stamp
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 6.7.2 Section-by-section spec
+
+**Section 1 · Identity.** Immutable. Mono id · Division · birth
+timestamp · time-to-production duration. Never rendered as a heading;
+rendered as a *caption* strip.
+
+**Section 2 · Current lifecycle stage.** State chip (from Bible §5
+`--sig-*` tokens) + duration in current stage + Division-voice "what
+happens next" line + full PipelineStageBar (D5 §4). This is the
+strategy's Purpose Before Status header rendered in Passport form.
+
+**Section 3 · Confidence evolution.** A chart tile (§7.11.2) showing
+confidence score over the strategy's lifetime — one point per stage
+transition + rolling live-confidence for Production strategies. Trailing
+high/low annotated per Bible §14.5. Under Advanced Lens: method chip
+per point.
+
+**Section 4 · Performance metrics.** A cluster of three metric-blocks
+(§7.11.1) side-by-side: **backtest** · **walk-forward** · **live**.
+Each shows Sharpe · max drawdown · win-rate as a compact trio. When
+live column has no data (pre-Production), it renders `dormant` styling
+(muted, not error).
+
+**Section 5 · Validation evidence.** A table tile (§7.11.3) listing
+every validation run + governance-rail check + certification test.
+Row click opens the specific test's Evidence Drawer.
+
+**Section 6 · Lineage.** LineageBar (Sprint 1) showing ancestors +
+descendants; explicit `→ open Lineage Graph` link (Sprint 2). Under
+Advanced Lens: provenance triples visible inline.
+
+**Section 7 · Knowledge links.** Chip strip of Knowledge Base items
+this strategy references, each chip showing trust-tier ring (D5 §5.2
+c4 red rings). Click opens KB item Evidence Drawer.
+
+**Section 8 · Timeline (filtered).** The Timeline (D2) rendered
+in-line, pre-filtered by `?strategy=<id>`. Shows this strategy's
+chronological story as ActivityRow entries. `→ open in full Timeline
+right rail` link cascades the filter to the right-rail Timeline
+(Bible §1.4.4 CNL).
+
+**Section 9 · Deployment history.** Table tile listing every
+activation, pause, resume, rollback, and broker-connection event.
+Renders empty in dormant styling if strategy has never reached
+Production.
+
+**Section 10 · Retirement information.** Renders **only** when the
+strategy is in Retired state. Shows: retirement reason (Division
+voice) · operator who approved · timestamp · retirement evidence
+(final metrics, drift analysis, contradiction if applicable).
+Otherwise shows D7 `strat-passport-retirement-empty` — a *dormant*
+state, not error:
+```
+Icon        clock · muted
+Headline    This strategy is still active. No retirement information yet.
+Purpose     Learning Division continues monitoring.
+Actions     view Learning proposals · view metrics
+```
+
+**Section 11 · Export & deploy targets.** The action rail of the
+Passport. Actions available depend on lifecycle stage:
+
+| Lifecycle stage | Available actions |
+|---|---|
+| Generated / Validated / Optimized / Certified | Export CSV · Copy permalink · Pin · Compare with peer |
+| Portfolio candidate | above + Route to reviewer (Sprint 3+) |
+| Approved / Production | above + View broker positions · Manual pause (governance-gated Sprint N+) |
+| Retired / Failed | above (read-only) + Reference in new generation (Sprint 3+) |
+
+**Deploy to broker ▾** dropdown lists eligible prop firms from
+Certification (§5.4); action is a *view-only* deep-link in Sprint 1
+(actual deploy is autonomous — Master Bot decides, operator observes).
+
+#### 6.7.3 Passport interactions
+
+- **Route:** `/c/strategies/:id` — deep-linkable, permalinkable
+  (§14.7).
+- **Deep-link payload:** `?tab=<section>` optionally jumps to a
+  specific section (e.g., `?tab=lineage`).
+- **Cross-module highlight:** setting `?strategy=<id>` anywhere in the
+  workspace highlights the strategy in every list it appears in
+  (Bible §1.4.4 CNL).
+- **State Memory:** scroll position within the Passport + which chart
+  tile's Advanced view was open + Timeline filter state all persist
+  per surface, per session (Bible §1.4.5).
+- **Pin from Passport:** the entire strategy Passport is pinnable —
+  pinning adds a chip to the workspace pins tray (Bible §7.12).
+- **Compare with peer:** opens a 2-up split with the currently pinned
+  strategy or opens the pins tray to choose (Sprint 2).
+- **Export CSV:** downloads the strategy's full data payload as CSV
+  (Bible §14.7).
+- **Copy permalink:** copies the deep URL with `?strategy=<id>` and
+  the current tab section.
+
+#### 6.7.4 Passport across modes (Decision Identity holds)
+
+- **Executive** — Sections 1, 2, 3, 4 visible; sections 5, 6, 7, 8, 9
+  collapsed to summary chips with `→ expand` links; serif on section
+  titles.
+- **Operations** *(default)* — All 11 sections visible; compact
+  density.
+- **Research** — All 11 sections visible; Sections 6, 7, 8 emphasised
+  (larger); Copilot companion panel discusses this strategy by default.
+- **Developer** — All 11 sections visible; Advanced Lens on; every
+  metric shows its computation method + source endpoint below;
+  Section 4 adds a fourth metric-block for `worker` (which worker ran
+  each stage · latency · restart count).
+
+**Decision Identity check** (D6 §8.1a): switch modes on the same
+Passport. Confidence values, risk classification, evidence count,
+lineage set, approval state — all byte-identical. Only rendering
+differs.
+
+#### 6.7.5 Passport empty states (extends §7)
+
+- **Passport for a Failed strategy** — Section 10 (Retirement) hidden;
+  Section 11 export/deploy actions greyed out except `Export CSV`,
+  `View failure evidence`, `Pin`, `Copy permalink`.
+- **Passport during initial load** — shimmer skeleton per section (each
+  section is a first-class loading unit — the header renders first,
+  then sections 1-3 populate, then 4-8 stream in).
+
+#### 6.7.6 Data contract (extends §11)
+
+The Passport composes exclusively over the canonical `Strategy` type
+(§11). No new fields required; no new backend endpoints. Passport is
+a **presentation layer**; every value it shows already lives in the
+canonical object.
+
+**Adapter:** `services/strategy.js` already returns the full
+`Strategy` payload (§11). Passport component consumes it and renders
+the 11 sections.
+
+#### 6.7.7 Why the Passport matters
+
+The Passport is the answer to *"where do I inspect this strategy?"* —
+a question every operator asks constantly. Without a Passport, the
+answer becomes *"across five different modules"*. With a Passport, the
+answer is a single URL.
+
+More profoundly: the Passport is the strategy's **civic identity
+document**. It carries the strategy's full history immutably — even
+after retirement, the Passport remains as evidence. This aligns with
+E1's core stance: **failed and retired strategies become permanent
+learning evidence**; the Passport is where that evidence lives.
+
+#### 6.7.8 Sprint 1 impact
+
+Sprint 1 upgrades from D8 §4.S5 *"Strategy Explorer minimal (list only)"*
+to **`S5a` Strategy Explorer list + `S5b` Strategy Passport detail**.
+D8 §4.S5 expanded accordingly.
+
+Passport implementation reuses primitives already scheduled for Sprint
+1: MetricBlock (P2), ChartTile (P3), TableTile (P4), PipelineStageBar
+(P5), LineageBar (P11), SignatureFrame (P13). **No new primitives
+required.**
+
+**Sprint 1 Passport effort:** 4 engineer-days (composition of existing
+primitives + 11-section layout + State Memory integration + empty
+states from §6.7.5).
+
 ---
 
 ## 7. Journey-specific empty states
@@ -1122,6 +1368,7 @@ For Sprint 1 acceptance of the Strategy Experience:
 - ✅ Purpose Before Status — every strategy card leads with `purpose_headline` before `current_stage`
 - ✅ Copy library (§10) applied across all shipped Timeline rows
 - ✅ Sprint 1 non-goals honoured — Lineage Graph mode, Pinned Preview, G3/G5/G6/G7 all deferred to Sprint 2+
+- ✅ **Strategy Passport** (§6.7) renders 11 sections end-to-end at `/c/strategies/:id` on Sprint 1
 
 ---
 

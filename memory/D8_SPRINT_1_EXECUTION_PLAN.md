@@ -399,7 +399,7 @@ sprint planning). Dependencies cite item codes.
 | S6 | Empty / loading / error / dormant states across S1–S5 | D7 (§8–§18 Sprint 1 specimens) | 3 d | P8 |
 | S7 | Attention panel severity-ordered (Q6 of Mission Control) | Bible §8.8 | 2 d | S1 |
 
-**Surfaces total: 34 engineer-days.**
+**Surfaces total: 38 engineer-days.**
 
 ### 4.T · Tests, tooling, ancillary
 
@@ -416,7 +416,7 @@ sprint planning). Dependencies cite item codes.
 
 ### 4.X · Total Sprint 1 effort
 
-Sum: **28 + 43 + 26 + 34 + 11 = 142 engineer-days**.
+Sum: **28 + 43 + 26 + 38 + 11 = 146 engineer-days**.
 
 At a 4-engineer team over 2 sprints (10 working days each), this is
 5 engineer-weeks capacity per person — matches 4 × 5 = 20 person-weeks
