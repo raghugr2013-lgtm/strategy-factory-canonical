@@ -527,6 +527,135 @@ Each session produces a **refinement log** — a table:
 Refinements resolve as **formal D/E-series addenda** — never as
 in-code overrides.
 
+### 9.6 Operator Scenario Library — canonical walk-through scripts
+
+Four scenarios execute during prototype review. Each drives the six
+evaluation dimensions (§2) through a realistic operator flow. These
+scenarios are the *canonical* walk-through scripts — repeatable across
+prototype iterations and Sprint 1 acceptance.
+
+#### 9.6.1 Scenario S1 — Executive Morning Review (~5 min)
+
+- **Starting context.** Executive mode. Fresh browser tab. Factory in
+  freeze mode with 2 medium-risk approvals pending. Yesterday: 3
+  strategies promoted.
+- **Tasks.**
+  1. Sign in.
+  2. Glance at daily posture on landing.
+  3. Open Approval Center; read the 2 medium-risk approvals.
+  4. Approve 1 · defer 1.
+  5. Sign out.
+- **Expected navigation.** `/login → /c/mission → /c/approvals →
+  /c/approvals/:id → /c/approvals → logout.` Back-stack unwinds cleanly.
+- **Expected Decision Identity.** Approval count in header · Attention
+  panel · Approval Center all read `2` before action, `0` after.
+- **Expected CNL.** Executive mode filter default `risk ≥ medium`
+  applies from landing; the deferred approval preserves its filter
+  visibility on return.
+- **Expected State Memory.** Returning to Approvals after opening the
+  detail preserves scroll + selected card highlight.
+- **Expected outcome.** Timeline records *"Operator approved …"* and
+  *"Operator deferred …"* in Division voice. Session ends clean.
+- **Dimensions exercised.** Discoverability · Trust · Identity · Rhythm.
+
+#### 9.6.2 Scenario S2 — Operations Shift Burst (~15 min)
+
+- **Starting context.** Operations mode. Returning operator (has visited
+  before). 4 pending approvals · 1 critical Attention item · Master Bot
+  running plan #47.
+- **Tasks.**
+  1. Sign in.
+  2. Read "since you were away" divider on Timeline (E4 §3.2).
+  3. Investigate the critical Attention item (Passport deep-dive).
+  4. Return to Mission Control via three-Esc.
+  5. Bulk-approve 3 low-risk approvals.
+  6. Handle the medium-risk approval individually.
+  7. Deny 1 with reason.
+- **Expected navigation.** Mission → Passport → 3× Esc → Mission →
+  Approvals → detail → Approvals. Every Back unwinds correctly.
+- **Expected Decision Identity.** The critical Attention item and its
+  Passport show identical evidence + confidence + risk.
+- **Expected CNL.** Advanced-Lens preference persists across shift; time
+  window `live ▸` cascades to all surfaces.
+- **Expected State Memory.** After the Passport deep-dive, returning
+  to Mission Control restores the exact scroll + expanded panels.
+- **Expected outcome.** 5 approval events on Timeline. Attention count
+  = 0. Optimistic-UI rollback path *not* triggered.
+- **Dimensions exercised.** Navigation Predictability · Rhythm ·
+  Cognitive Load · Trust.
+
+#### 9.6.3 Scenario S3 — Research Investigation (~30 min)
+
+- **Starting context.** Research mode. Investigating a strategy family
+  with drift signals. 1 pending Learning-Division retirement approval
+  in queue.
+- **Tasks.**
+  1. Sign in — lands with Copilot companion docked (D6 §6.5).
+  2. Open Strategy Explorer; filter by `Research Division` origin.
+  3. Open Passport for strategy #47.
+  4. Read Confidence Evolution + Validation Evidence sections.
+  5. Ask Copilot *"Why is this strategy's Sharpe declining?"* → follow
+     Copilot's citation to a knowledge item (fixture).
+  6. Return via ⌘[ — 2 Back presses restore Passport, then Explorer
+     with filter intact.
+  7. Switch to Operations mode via ⌘M — Passport re-renders with
+     Concept-A treatment; Decision Identity holds.
+  8. Review the retirement approval in Approvals inline (Everywhere-
+     Actionable · E1 §5.7 five-path proof).
+  9. Approve retirement.
+- **Expected navigation.** Deep-dive-heavy path; Back-stack unwinds
+  precisely; mode switch does *not* push stack entry (E5 §7.5).
+- **Expected Decision Identity.** Strategy #47's confidence value +
+  lineage + evidence identical across Research-mode Passport and
+  Operations-mode Passport.
+- **Expected CNL.** Explorer filter (`Research Division`) survives the
+  Passport deep-dive and returns intact.
+- **Expected State Memory.** Copilot session memory preserves the
+  question thread across the Passport navigation.
+- **Expected outcome.** Retirement approval commits · Timeline records
+  in Division voice · Passport section 10 (Retirement information)
+  now populated.
+- **Dimensions exercised.** Discoverability · Navigation · Trust
+  (Copilot Never Invents) · Identity · Rhythm.
+
+#### 9.6.4 Scenario S4 — Incident Response (~10 min)
+
+- **Starting context.** Developer mode. Governance armed kill posture
+  4 minutes ago. Errors in ingestion subsystem (fixture).
+- **Tasks.**
+  1. Sign in — danger ribbon fires in landing crossfade (E2 §9.5).
+  2. ⌘K palette pre-opens to developer group (D6 §7.2).
+  3. Jump to `errors · last 100`.
+  4. Correlate errors with Governance advisory via Timeline filter
+     `[actor: error + telemetry]`.
+  5. Ask Copilot for a grounded summary.
+  6. Copilot cites the 2 relevant Timeline events; provides trace-as-UI
+     under Advanced Lens (auto-on in Developer mode).
+  7. Return to Mission Control via three-Esc.
+  8. Verify kill-posture chip on status rail matches Attention panel.
+- **Expected navigation.** ⌘K → destination → filter change → Copilot
+  → Back to Mission Control. Every Back unwinds.
+- **Expected Decision Identity.** Kill-posture state chip identical
+  across danger ribbon, status rail, and Attention panel.
+- **Expected CNL.** Developer-mode `error + telemetry` Timeline filter
+  survives navigation to Copilot and back.
+- **Expected State Memory.** Errors-last-100 scroll position preserved
+  when returning from Copilot.
+- **Expected outcome.** No approvals committed. Session ends with
+  operator handing back to Operations (mode switch); kill posture
+  visibly logged in Timeline.
+- **Dimensions exercised.** Trust · Cognitive Load (crisis without
+  panic) · Rhythm · Navigation.
+
+#### 9.6.5 Scenario execution as walk-through scripts
+
+- Scenarios S1–S4 execute in Sessions 1–4 respectively (§9.1–§9.4).
+- Each scenario is repeated once per prototype iteration.
+- Deviation from expected navigation / Decision Identity / CNL / State
+  Memory triggers a Refinement Log entry.
+- Scenarios become **canonical Sprint 1 Playwright test scripts** in
+  D8 §7 test coverage.
+
 ---
 
 ## 10. Refinement addendum protocol

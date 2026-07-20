@@ -1,0 +1,109 @@
+/*
+ * Bible v2.1 §5 — Design tokens.
+ * Concept D · cool-shifted near-black · six-signal palette · 4-pt grid.
+ * Never reference raw hex/px outside this file.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* --- surfaces (cool-shifted near-black) --- */
+  --surface-0: #05070a;
+  --surface-1: #0a0e14;
+  --surface-2: #10151d;
+  --surface-3: #171f2a;
+
+  /* --- content --- */
+  --content-hi: #eef2f6;
+  --content-md: #b8c2ce;
+  --content-lo: #6b7684;
+
+  /* --- strokes --- */
+  --stroke-1: #1a2331;
+  --stroke-2: #2a3a52;
+  --stroke-3: #3b5170;
+
+  /* --- signal (six ceiling · Bible §5.1) --- */
+  --sig-ok:       #3ddc84;
+  --sig-info:     #4ea1f3;
+  --sig-warn:     #f0b429;
+  --sig-crit:     #ff5b5b;
+  --sig-advisory: #b8935f;
+  --sig-dormant:  #6b7684;
+
+  /* --- 8-hue chart palette (Bible §5.1) --- */
+  --c0: #4ea1f3; --c1: #8b8ffb; --c2: #3ddc84; --c3: #f0b429;
+  --c4: #ff5b5b; --c5: #5ecab5; --c6: #d17bff; --c7: #b8935f;
+
+  /* --- typography (Minor-Third scale ~1.15–1.22 · Bible §5.2.2) --- */
+  --font-caption:      11px;
+  --font-body-sm:      13px;
+  --font-body:         15px;
+  --font-body-md:      17px;
+  --font-h3:           22px;
+  --font-h2:           28px;
+  --font-h1:           40px;
+  --font-metric-hero:  clamp(2.5rem, 4vw, 3rem);
+
+  /* --- spacing 4-pt grid (Bible §5.3) --- */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 40px; --space-7: 64px;
+
+  /* --- radii --- */
+  --radius-1: 4px; --radius-2: 8px; --radius-3: 12px; --radius-4: 20px;
+
+  /* --- motion (Bible §6.1) --- */
+  --dur-fast:      120ms;
+  --dur-medium:    200ms;
+  --dur-slow:      320ms;
+  --dur-editorial: 400ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0.16, 0.84, 0.44, 1);
+
+  /* --- glows (Concept-B luminance · sparingly) --- */
+  --glow-neural:   0 0 24px rgba(78, 161, 243, 0.14);
+  --glow-active:   0 0 16px rgba(61, 220, 132, 0.16);
+
+  /* --- elevation --- */
+  --elev-1: 0 1px 2px rgba(0,0,0,0.4);
+  --elev-2: 0 8px 24px rgba(0,0,0,0.5);
+
+  /* --- accent gold (Concept-C · Bible §5.1) --- */
+  --accent-gold: #b8935f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--content-hi);
+  font-family: ui-sans-serif, system-ui;
+  font-size: var(--font-body);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--sig-info); color: var(--surface-0); }
+
+/* Focus ring (Bible §17) */
+*:focus-visible {
+  outline: 2px solid var(--sig-info);
+  outline-offset: 2px;
+  border-radius: var(--radius-1);
+}
+
+/* Mono numeric class — Bible §5.2 · tabular-nums */
+.mono-num {
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+}
