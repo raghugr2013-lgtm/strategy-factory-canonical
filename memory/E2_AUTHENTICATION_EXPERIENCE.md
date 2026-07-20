@@ -37,6 +37,7 @@ E2 confirms:
 - [x] **Context Never Lost (Bible §1.4.4)** — a URL requiring auth preserves its full query payload through the login flow; post-auth returns to the intended URL exactly as attempted.
 - [x] **State Memory (Bible §1.4.5)** — session-expiry recovery restores the operator's exact vantage point (scroll, expanded panels) on the surface they were on when the session expired.
 - [x] **Decision Identity (D6 §8.1a)** — the same account, when authed into any of its assigned modes, sees the same underlying entitlements; only the mode's presentation differs.
+- [x] **Trust Before Credentials (§9)** — the disabled pre-auth shell displays non-sensitive operational signals (health · kill posture · env · UTC time · platform status) so the operator feels they are approaching a live operational system before they type a character.
 
 ---
 
@@ -403,25 +404,131 @@ mode-assignment editing (D6 §13).
 
 ---
 
-## 9. Kill posture visibility during authentication
+## 9. Trust Before Credentials — pre-auth operational signals
 
-Kill posture is public. It is visible even before auth.
+Before authentication, the operator should already feel they are
+approaching a **live operational system** — not a hosted marketing
+site with a login form. This is codified as the *Trust Before
+Credentials* principle.
 
-**Rules:**
+The disabled shell may display **non-sensitive operational
+information** that reinforces confidence without exposing protected
+information or creating interaction opportunities.
 
-- StatusRail shows kill-posture chip pre-auth and post-auth identically
-  (§3.1).
-- Danger ribbon does **not** fire pre-auth (no operator to alert yet).
+### 9.1 What the pre-auth shell MAY display
+
+| Signal | Where | Why it matters | Sensitivity |
+|---|---|---|---|
+| **System health posture** | StatusRail bottom chip · single dot | The operator knows the platform is alive | Public (nominal / degraded / down) |
+| **Kill posture chip** | StatusRail bottom | The Factory's operational stance is public by design | Public |
+| **Environment label** | StatusRail bottom (e.g. `prod` · `staging`) | Confirms which instance the operator is signing into | Public |
+| **Current UTC time** | Header right side, mono | Anchors the operator in the Factory's time frame | Public |
+| **Platform version** | Footer or user-menu-adjacent chip (`@v55`) | Signals actively-maintained system | Public |
+| **6-chip StatusRail overview** | Footer | Same 6 chips shown post-auth · aggregate posture only | Public (posture, not detail) |
+| **Ambient shimmer / heartbeat** | Header brand chip | Subtle sign of aliveness | Cosmetic |
+| **Brand chip** (`Strategy Factory`) | Header left | Identity | Public |
+
+### 9.2 What the pre-auth shell MUST NOT display
+
+| Signal | Why forbidden |
+|---|---|
+| Approval counts (`● 4 approvals`) | Reveals workload / activity level |
+| Master Bot activity chip | Reveals plan state |
+| Worker states / division activity | Reveals internal operations |
+| Timeline events | Reveals actor activity |
+| User-specific data of any kind | Trivially reveals prior logins |
+| Governance advisories | Sensitive; belongs post-auth |
+| Feature flag states | Reveals internal configuration |
+| Any numeric metric > posture aggregate | Bloomberg-adjacent leakage |
+| Any strategy identifier | Absolutely not |
+| Any prop firm name | Reveals commercial relationships |
+| Any broker identifier | Reveals infrastructure |
+| Any error trace / stack / correlation id | Security / operational risk |
+
+**The bar:** if a signal *could theoretically be inferred by an
+unauthenticated visitor to compromise security or reveal operational
+intelligence*, it does not appear pre-auth.
+
+### 9.3 Rendering rules for pre-auth signals
+
+- **Every pre-auth chip renders at full opacity**, not at reduced
+  opacity. The pre-auth shell is *disabled for interaction*, not
+  *dimmed for aesthetics*. This is the mechanism of Trust Before
+  Credentials — the signals must feel *authoritative*, not *ghosted*.
+- **LeftRail modules render at 40% opacity with lock icons** — they
+  are visible-but-clearly-not-yet-accessible. This shows the operator
+  the shape of what's behind the door.
+- **Chips are non-interactive** pre-auth. Hover reveals a subtle
+  `--stroke-2` outline but no tooltip; click does nothing. Every chip
+  has `aria-disabled="true"` + `pointer-events: none`.
+- **Kill-posture chip** is the one exception: it retains a tooltip
+  showing *"Kill posture is public information."* — reinforcing why
+  it's visible.
+
+### 9.4 Kill posture visibility (subsumed into §9.1)
+
+Kill posture is public. It is visible even before auth per §9.1.
+
+**Rules** (moved from prior §9):
+
+- StatusRail shows kill-posture chip pre-auth and post-auth
+  identically (§3.1).
+- Danger ribbon does **not** fire pre-auth (no operator to alert yet;
+  banner instead — §9.5).
 - **Immediately post-auth**, if kill posture is armed, the danger
   ribbon appears in the landing-crossfade — the operator's first
   frame post-auth carries the ribbon.
-- Copy specimen (D7 style):
-  ```
-  DANGER  ⚠  Kill posture armed <at>  ·  deliberate freeze  ·  [ VIEW ]
-  ```
 
-**Rule:** never surprise the operator. If the Factory is frozen when
-they arrive, they see that in the very first frame.
+### 9.5 Kill posture pre-auth banner (never a ribbon)
+
+When kill posture is armed and no session exists, the login card
+carries a *muted banner above the sign-in header* — informational,
+never alarming:
+
+```
+┌────────────────────────────────┐
+│  ● Kill posture is armed.       │  ← --sig-dormant tint · muted
+│    Deliberate operational       │
+│    freeze in effect.            │
+│  ─────────────────────────────  │
+│                                 │
+│  Sign in                        │
+│  ...                            │
+└────────────────────────────────┘
+```
+
+Colour `--sig-dormant`, never `--sig-crit` — kill posture is a *state*,
+not a *threat*. Post-auth, the same posture surfaces as a `--sig-crit`
+danger ribbon because it demands active operator attention.
+
+### 9.6 Why Trust Before Credentials matters
+
+Every element of the pre-auth shell is a *silent promise* that this
+is not a demo, not a marketing page, not a wrapper — this is the
+same product the operator sees post-auth, showing them exactly what
+it can show without leaking anything it shouldn't.
+
+The operator who arrives at the door of an autonomous trading factory
+should not first see a login form on a white background. They should
+see the factory's *heartbeat* — the six-chip status rail, the UTC
+clock, the environment label, the kill-posture state — all present,
+all authoritative, all silent.
+
+**Rule of Silent Confidence.** A pre-auth shell should be able to be
+screenshotted and shared publicly with zero information leak, while
+still communicating to the operator that they are approaching a live
+system.
+
+### 9.7 Anti-patterns
+
+- ❌ Displaying approval counts, worker states, or Timeline events pre-auth.
+- ❌ Rendering pre-auth chips at reduced opacity — they must feel
+  authoritative.
+- ❌ A "Welcome" heading anywhere on the login screen.
+- ❌ Product marketing (feature callouts, hero imagery, testimonials).
+- ❌ Any interactive element other than the login form itself.
+- ❌ Cookie banner (internal tool exemption).
+- ❌ "Latest news" or blog links.
 
 ---
 
@@ -636,7 +743,8 @@ Auth experience ships only if:
 - ✅ Login flow completes end-to-end against existing `/api/auth/login`
 - ✅ Latency budget met (§3.2) — button responds within 300 ms; optimistic UI at 200 ms
 - ✅ All error states (§11) authored and rendered
-- ✅ Kill posture visible pre-auth (§9)
+- ✅ Kill posture visible pre-auth (§9.4)
+- ✅ Trust Before Credentials — pre-auth shell renders §9.1 signals; §9.2 signals confirmed absent
 - ✅ Mandatory password change (§6.1) implemented when backend flag is set
 - ✅ Session expiry recovery preserves CNL + State Memory (§10)
 - ✅ Logout clears sessionStorage but preserves localStorage (§7.2)
