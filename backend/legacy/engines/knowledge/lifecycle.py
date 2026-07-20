@@ -177,7 +177,7 @@ class LifecycleSweeper:
                         # decay annotation for market / execution
                         if domain in (KnowledgeDomain.MARKET, KnowledgeDomain.EXECUTION):
                             decay = min(1.0, age_s / max(1, ttl))
-                            if not dry_run and not annotate_decay_only is False:  # noqa: SIM108
+                            if not dry_run and annotate_decay_only is not False:  # noqa: SIM108
                                 pass
                             if not dry_run:
                                 try:

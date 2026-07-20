@@ -730,6 +730,43 @@ Post-freeze roadmap (in strict order, each pending operator approval):
 Bug fixes and operational wiring are permitted between freeze and
 activation without lifting the freeze.
 
+### Session — Activation Plan v2 remediation (2026-07-20, COMPLETE)
+
+Independent operator-review pass on `COHERENT_UKIE_ACTIVATION_PLAN.md`
+identified 12 conditions. All resolved via Batches 1 + 2 + 3(a),
+with Batch 4 (low-priority polish) deferred by operator direction.
+
+Deliverables:
+- **Plan v2** (`memory/COHERENT_UKIE_ACTIVATION_PLAN.md`, 681 lines) —
+  preview-vs-prod scope, Phase 0 baseline, timeline table,
+  Assumptions, Risk register, Appendix A seed policy, Phase E
+  rewritten around native Alertmanager silences (no delivery-layer
+  proxy).
+- **Review Memo v2** (`memory/COHERENT_UKIE_ACTIVATION_PLAN_REVIEW.md`,
+  222 lines) — finding-by-finding resolution table; verdict now
+  APPROVED (no conditions).
+- **Change Summary** (`memory/ACTIVATION_PLAN_V2_CHANGE_SUMMARY.md`).
+- **W1 wiring** — `engines/db_indexes.py`: 5 TTL specs added for
+  Stage-4 audit collections (main-DB `workload_dead_letter` +
+  cross-DB loop for `strategy_knowledge_base.{lifecycle_events,
+  knowledge_endorsement_events, knowledge_contradiction_events,
+  connector_events}`). All target `*_dt` companion fields per the
+  existing `audit_log` precedent. 5 new env overrides.
+- **W2 wiring** — `engines/subsystem_health_router.py`
+  auto-registers 5 retrofit providers with the central aggregator
+  at module import. `engines/health/router.py::system_health()`
+  now composes the async `ukie` block (omitted entirely when flag
+  off — no shape change to pre-Stage-4 consumers).
+- **Regression tests** — `backend/tests/test_activation_wiring_w1_w2.py`
+  (8 tests, all passing). Stage-4 subset now 181/181 passing (was
+  134 pre-remediation).
+
+Freeze fully respected: no new features, no new endpoints, no new
+flags, no runtime behaviour change (all Stage-4 flags remain OFF by
+default).
+
+Awaiting operator sign-off on Plan v2 §14 before Phase A start.
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

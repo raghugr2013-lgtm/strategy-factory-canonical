@@ -45,12 +45,33 @@ async def system_health() -> dict:
     if not coe_health_contract_enabled():
         raise HTTPException(status_code=503, detail="COE_HEALTH_CONTRACT_ENABLED is off")
     snaps = collect_all()
-    return {
+    payload = {
         "ts": datetime.now(timezone.utc).isoformat(),
         "platform_health_score": platform_health_score(snaps),
         "subsystem_count": len(snaps),
         "subsystems": snaps,
     }
+
+    # ── Phase 4 / Coherent UKIE Activation W2 — UKIE async block ──
+    # The UKIE snapshot is async + Mongo-touching, so it cannot ride
+    # the sync `collect_all()` path. We compose it separately here.
+    # When `UKIE_HEALTH_PROVIDER_ENABLED=false` the provider returns
+    # None and we OMIT the `ukie` key entirely — preserving response
+    # shape for pre-Stage-4 consumers (see
+    # engines/knowledge/health_provider.py docstring lines 11-13).
+    try:
+        from engines.knowledge.health_provider import (
+            get_ukie_health_provider,
+            is_ukie_health_provider_enabled,
+        )
+        if is_ukie_health_provider_enabled():
+            ukie_block = await get_ukie_health_provider().snapshot()
+            if ukie_block is not None:
+                payload["ukie"] = ukie_block
+    except Exception as e:                                     # noqa: BLE001
+        logger.warning("[api/health/system] UKIE composition skipped: %s", e)
+
+    return payload
 
 
 @router.get("/subsystems")

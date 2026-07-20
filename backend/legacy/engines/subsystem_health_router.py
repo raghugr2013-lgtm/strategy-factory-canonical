@@ -77,3 +77,62 @@ for _spec in SUBSYSTEMS:
         methods=["GET"],
         name=f"get_{_name.replace('-', '_')}_health",
     )
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Phase 4 / Coherent UKIE Activation — aggregator wiring (W2).
+#
+# Each retrofit registers a HealthSnapshot provider with the central
+# `/api/health/system` aggregator so an operator flipping
+# `<SUB>_HEALTH_PROVIDER_ENABLED=true` sees the subsystem appear
+# without any code change. When the flag is off the provider returns
+# an `empty_snapshot()` marked `dormant` — health_score=100, state=OK.
+# This preserves the "no data yet ≠ unhealthy" doctrine documented in
+# engines/health/contract.py::empty_snapshot.
+#
+# Registration is best-effort. If the health-contract module is
+# missing (e.g. Phase 2 Stage 1 not deployed) we simply skip
+# registration; nothing else in this module changes.
+# ─────────────────────────────────────────────────────────────────────
+def _register_aggregator_providers() -> None:
+    try:
+        from engines.health.providers import register_provider
+        from engines.health.contract import (
+            ActionRequired,
+            HealthSnapshot,
+            RecoveryState,
+            RecoveryStatus,
+            empty_snapshot,
+        )
+    except Exception:                                          # pragma: no cover
+        return
+
+    def _make_provider(name: str, flag_name: str):
+        def _provider() -> HealthSnapshot:
+            enabled = _flag(flag_name, False)
+            if not enabled:
+                snap = empty_snapshot(name)
+                snap.recovery_status = RecoveryStatus(
+                    state=RecoveryState.OK,
+                    reason="dormant",
+                    action_required=ActionRequired.NONE,
+                )
+                return snap
+            # Opted-in but no deeper telemetry yet — return a
+            # baseline healthy snapshot. Real subsystem probes are
+            # wired at Coherent UKIE Activation time.
+            snap = empty_snapshot(name)
+            snap.recovery_status = RecoveryStatus(
+                state=RecoveryState.OK,
+                reason="opted_in",
+                action_required=ActionRequired.NONE,
+            )
+            return snap
+        _provider.__name__ = f"{name.replace('-', '_')}_snapshot"
+        return _provider
+
+    for _spec in SUBSYSTEMS:
+        register_provider(_spec["name"], _make_provider(_spec["name"], _spec["flag"]))
+
+
+_register_aggregator_providers()

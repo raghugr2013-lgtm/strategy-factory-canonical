@@ -45,6 +45,32 @@ MARKET_UNIVERSE_AUDIT_TTL_DAYS = int(
     os.environ.get("MARKET_UNIVERSE_AUDIT_TTL_DAYS", "90")
 )
 
+# ─── Phase 4 / Coherent UKIE Activation — Stage-4 audit collection TTLs ─
+# Retention windows for Stage-4 audit trails. Values chosen per
+# BACKEND_FEATURE_FREEZE.md §3.2. Operator-tunable.
+#
+# IMPORTANT: All Stage-4 audit writers currently emit `at` (or
+# `first_failed_at`) as an ISO-8601 STRING, not a BSON Date. Mongo's
+# TTL monitor only reaps documents whose indexed field is a BSON Date,
+# so the TTL specs below target COMPANION `*_dt` fields following the
+# same convention as `audit_log` (see §258-269 of this file). Until a
+# writer populates the `*_dt` companion, the TTL index is a no-op —
+# safe, forward-looking, no data loss risk. This matches the "deferred
+# to activation" wiring item in Freeze doc §10.
+COE_DEAD_LETTER_TTL_DAYS = int(os.environ.get("COE_DEAD_LETTER_TTL_DAYS", "90"))
+UKIE_LIFECYCLE_EVENTS_TTL_DAYS = int(
+    os.environ.get("UKIE_LIFECYCLE_EVENTS_TTL_DAYS", "180")
+)
+UKIE_ENDORSEMENT_EVENTS_TTL_DAYS = int(
+    os.environ.get("UKIE_ENDORSEMENT_EVENTS_TTL_DAYS", "90")
+)
+UKIE_CONTRADICTION_EVENTS_TTL_DAYS = int(
+    os.environ.get("UKIE_CONTRADICTION_EVENTS_TTL_DAYS", "365")
+)
+UKIE_CONNECTOR_EVENTS_TTL_DAYS = int(
+    os.environ.get("UKIE_CONNECTOR_EVENTS_TTL_DAYS", "180")
+)
+
 
 # ─────────────────────────────────────────────────────────────────────
 # Index specifications
@@ -284,6 +310,36 @@ TTL_SPECS: List[Tuple[str, str, int, str]] = [
     # R0 — market_universe_audit retention (90 days approved default).
     ("market_universe_audit", "ts_dt",
      MARKET_UNIVERSE_AUDIT_TTL_DAYS * 86400, "ttl_market_universe_audit"),
+
+    # ─── Phase 4 / Coherent UKIE Activation — Stage-4 TTLs (main DB) ─
+    # `workload_dead_letter` lives in the default DB. Field convention:
+    # writer emits `first_failed_at` as ISO string; a companion
+    # `first_failed_at_dt` BSON-Date field is expected once writers are
+    # upgraded during Coherent UKIE Activation Phase B.2 wiring. The
+    # TTL below is idempotent and safe today (no-op until *_dt lands).
+    ("workload_dead_letter", "first_failed_at_dt",
+     COE_DEAD_LETTER_TTL_DAYS * 86400, "ttl_workload_dead_letter"),
+]
+
+
+# Per-DB TTL specifications for the `strategy_knowledge_base` UKIE-KB.
+# These collections live in a SEPARATE Mongo database (see
+# engines.knowledge.constants.KNOWLEDGE_DB_NAME). Same *_dt convention
+# as above — index is a no-op until writers emit BSON Date companions.
+KB_TTL_SPECS: List[Tuple[str, str, int, str]] = [
+    # UKIE γ lifecycle sweeper audit trail (Phase C.3).
+    ("lifecycle_events", "at_dt",
+     UKIE_LIFECYCLE_EVENTS_TTL_DAYS * 86400, "ttl_lifecycle_events"),
+
+    # UKIE γ confidence-evolution endorsement/contradiction stream (Phase C.5).
+    ("knowledge_endorsement_events", "at_dt",
+     UKIE_ENDORSEMENT_EVENTS_TTL_DAYS * 86400, "ttl_knowledge_endorsement_events"),
+    ("knowledge_contradiction_events", "at_dt",
+     UKIE_CONTRADICTION_EVENTS_TTL_DAYS * 86400, "ttl_knowledge_contradiction_events"),
+
+    # P4A/P4D connector state-transition observer (Phase D.14).
+    ("connector_events", "at_dt",
+     UKIE_CONNECTOR_EVENTS_TTL_DAYS * 86400, "ttl_connector_events"),
 ]
 
 
@@ -342,6 +398,47 @@ async def ensure_indexes() -> Dict[str, Any]:
             errors.append(err)
             logger.warning("[db_indexes] TTL failed %s/%s: %s", coll_name, name, e)
 
+    # ─── Cross-DB TTLs: strategy_knowledge_base UKIE-KB audit trails ─
+    # Best-effort. If the KB DB is unreachable, we log and move on;
+    # startup must never block on TTL wiring.
+    kb_db = None
+    try:
+        from engines.knowledge.constants import KNOWLEDGE_DB_NAME
+        kb_db = get_db().client[KNOWLEDGE_DB_NAME]
+    except Exception as e:                                     # pragma: no cover
+        logger.warning("[db_indexes] KB DB handle unavailable — skipping KB TTLs: %s", e)
+
+    if kb_db is not None:
+        for coll_name, field, ttl_sec, name in KB_TTL_SPECS:
+            try:
+                existing = await kb_db[coll_name].index_information()
+                if name in existing:
+                    cur_ttl = existing[name].get("expireAfterSeconds")
+                    if cur_ttl != ttl_sec:
+                        await kb_db[coll_name].drop_index(name)
+                        await kb_db[coll_name].create_index(
+                            [(field, ASCENDING)],
+                            name=name, expireAfterSeconds=ttl_sec, background=True,
+                        )
+                        created.append(f"kb.{coll_name}.{name}(retuned)")
+                        logger.info("[db_indexes] retuned KB TTL %s.%s → %ds",
+                                    coll_name, name, ttl_sec)
+                    else:
+                        existed.append(f"kb.{coll_name}.{name}")
+                    continue
+                await kb_db[coll_name].create_index(
+                    [(field, ASCENDING)],
+                    name=name, expireAfterSeconds=ttl_sec, background=True,
+                )
+                created.append(f"kb.{coll_name}.{name}")
+                logger.info("[db_indexes] created KB TTL %s.%s ttl=%ds",
+                            coll_name, name, ttl_sec)
+            except Exception as e:                             # pragma: no cover
+                err = {"collection": f"kb.{coll_name}", "ttl_index": name,
+                       "error": str(e)[:200]}
+                errors.append(err)
+                logger.warning("[db_indexes] KB TTL failed %s/%s: %s", coll_name, name, e)
+
     return {
         "created": created,
         "existed": existed,
@@ -351,6 +448,11 @@ async def ensure_indexes() -> Dict[str, Any]:
             "llm_call_log": LLM_CALL_LOG_TTL_DAYS,
             "market_spread": MARKET_SPREAD_TTL_DAYS,
             "market_universe_audit": MARKET_UNIVERSE_AUDIT_TTL_DAYS,
+            "workload_dead_letter": COE_DEAD_LETTER_TTL_DAYS,
+            "lifecycle_events": UKIE_LIFECYCLE_EVENTS_TTL_DAYS,
+            "knowledge_endorsement_events": UKIE_ENDORSEMENT_EVENTS_TTL_DAYS,
+            "knowledge_contradiction_events": UKIE_CONTRADICTION_EVENTS_TTL_DAYS,
+            "connector_events": UKIE_CONNECTOR_EVENTS_TTL_DAYS,
         },
     }
 
