@@ -1057,3 +1057,188 @@ Files:
 - These credentials are inline in `authStore.ts` and never touch the
   backend. They will be removed at Design Freeze.
 
+
+---
+
+## Prototype Phase 4 — Core Surfaces COMPLETE (2026-07-20) ✅
+
+Backend Feature Freeze remains in effect. All Phase 4 work landed inside
+`/app/prototype/` per D8 §13.7 throw-away discipline.
+
+### 6 core surfaces + shell routing
+Under `/app/prototype/src/surfaces/`:
+- `MissionControl.tsx` (Bible §7.11, D1 §5) — 3 KPI blocks, pipeline
+  stage bar, throughput chart, activity strip, approvals summary
+  chip-strip with one-click drill to Approval Center.
+- `Timeline.tsx` (Bible §7.4, D2) — chronological activity stream +
+  actor-kind facet chips + EvidenceDrawer per row.
+- `ApprovalCenter.tsx` (Bible §7.5, D3) — risk-sorted approval grid;
+  optimistic decide (approve · defer · block); resolved-strip.
+- `MasterBot.tsx` (Bible §7.6, D4) — workforce org chart via
+  `WorkerCard` grid + purpose-first `DivisionCaption`; kill-posture
+  notice when armed.
+- `StrategyExplorer.tsx` (E1) — sortable strategies table with
+  status/flag chips + row-activation to passport.
+- `StrategyPassport.tsx` (E1 §4, D1 §11) — full passport anatomy:
+  metrics · ProvenanceTriple · LineageBar · sparkline · narrative ·
+  EvidenceDrawer.
+
+Shell + routing:
+- `LeftRail.tsx` — 6 modules (mission · timeline · approvals ·
+  workforce · strategies · settings) now render as `NavLink` when
+  authenticated, `Lock`-glyphed stub when anonymous.
+- `InspectorSheet.tsx` — floating right-side sheet hosting the
+  Inspector; reachable from every authenticated surface via the header
+  "◆ proto" button. Overlay dismiss + Esc-close.
+- `SurfaceHeader.tsx`, `ScenarioBanner.tsx` — Purpose Before Status
+  header anatomy + fixture-only scenario indicator.
+
+### Acceptance criteria — all satisfied
+- ✅ 6 surfaces wired + reachable via LeftRail
+- ✅ Scenario fixtures drive presentation (no simulator)
+- ✅ Global Inspector available from every surface
+- ✅ Token-only styling, no hardcoded colours outside `tokens.css`
+- ✅ `data-testid` on every interactive element
+- ✅ Successful `yarn build` (2.47s · 122KB gzipped)
+- ✅ Smoke screenshot verifies full navigation loop
+- ✅ Vite build clean; zero React console errors
+
+---
+
+## Prototype Phase 5 — Cross-module Wiring COMPLETE (2026-07-20) ✅
+
+Delivered the full Phase-5 navigation contract in one pass: Rule of
+Predictable Return + Decision Identity + Facet Bar cascade + Master Bot
+three-view toggle.
+
+### `navigationStore` (new)
+`/app/prototype/src/workspace-state/navigationStore.ts` — a single
+Zustand store encoding three of the four invariants:
+- **Facet plane**: `{ actor, status, risk }` shared across Timeline,
+  Approval Center, and Strategy Explorer. Each surface projects the
+  cascade onto its own facet axis.
+- **Surface memory**: `{ [pathname]: state-slice }` keyed dictionary
+  so each surface can persist arbitrary interaction state (selected
+  row, resolved chips, active id, active view) across navigation.
+- **Return crumb**: `{ path, label, origin, originId? }` breadcrumb
+  dropped by any surface before navigating to a detail view; the
+  passport reads + consumes it to render an origin-aware back button.
+
+### Rule of Predictable Return (E5 §4.5)
+- Timeline restores the last-opened row + facet on return.
+- Approval Center restores resolved chips + risk facet on return.
+- Strategy Explorer restores the last-active id highlight (`▸ strat-…`)
+  on return.
+- Passport back button reads the crumb → navigates to the exact
+  origin path with copy that names it ("back to timeline" · "back to
+  approvals" · "back to explorer").
+
+### Decision Identity (D6 §8.1a)
+- `workspace-state/store.ts::selectedStrategy` is the single source of
+  truth for the current strategy id.
+- Every cross-surface navigation to a passport calls `selectStrategy`
+  first, guaranteeing the id is stable across modes/surfaces.
+- Passport surfaces render two mono chips (`identity · <id>` +
+  `via · <origin>`) confirming the invariant at a glance.
+
+### Facet Bar cascade (Bible §7.4a)
+- Timeline actor facet → `navigationStore.facets.actor`
+- Approvals risk facet → `navigationStore.facets.risk`
+- Strategy Explorer status facet → `navigationStore.facets.status`
+- Each surface renders a `cascade · <axis> <value>` hint so operators
+  can see the plane at a glance.
+
+### Master Bot three-view toggle
+- **Org**: original `WorkerCard` grid.
+- **Purpose**: purpose-first list, alphabetised by purpose, muted
+  state chip on the trailing edge. Reinforces D4 §5.1.1.
+- **Status**: status-first table, sorted with error/blocked first,
+  purpose intentionally muted. Reinforces Decision Identity by making
+  the same workforce presentable in three ways without changing truth.
+- Selected view persists in surface memory keyed by pathname.
+
+### Evidence drawer footer action
+- `EvidenceDrawer` gained an optional `footerAction` prop. Timeline
+  uses it to expose "open passport · strat-###" when the selected
+  event references a strategy id — closing the loop from evidence to
+  Decision Identity.
+
+### Verified flows (single end-to-end screenshot)
+- 🟢 Timeline actor facet → cascade hint updates.
+- 🟢 Approvals risk facet → chip narrows the grid, cascade hint
+  updates.
+- 🟢 Explorer status facet → status counts + row set update.
+- 🟢 Approvals row → "open passport" drop-crumb → back button reads
+  "BACK TO APPROVALS" + `identity · strat-014` + `via · approvals`.
+- 🟢 Master Bot 3-view toggle: Org → Purpose → Status all render.
+- 🟢 Vite build 2.59 s · 129KB gzipped · zero React console errors.
+
+---
+
+## Prototype Phase 6 — Evaluation Harness COMPLETE (2026-07-20) ✅
+
+Dedicated Evaluation Harness route at `/prototype/eval`. Inspector
+remains focused on fixtures + developer tooling per operator directive.
+
+### `evaluationStore` (new)
+`/app/prototype/src/workspace-state/evaluationStore.ts`:
+- 6 dimensions × 4 criteria = **24 authored criteria** total,
+  covering Discoverability · Navigation Predictability · Cognitive
+  Load · Interaction Rhythm · Operator Trust · Product Identity.
+- Each criterion carries `id`, `headline`, `detail`, and a
+  D/E-series `reference` citation.
+- Per-criterion verdict `pass · review · fail · unset`; persisted to
+  `localStorage` under `sf.eval.v1`.
+- `summariseDimension(d, v)` → per-dimension roll-up (verdict is
+  fail-wins → review-wins → unset-wins → pass).
+- `overallReadiness(v)` → 4-state readiness verdict:
+  `ready · nearly · blocked · unstarted`, with headline + detail copy.
+
+### `EvaluationHarness` surface (new)
+`/app/prototype/src/surfaces/EvaluationHarness.tsx`:
+- Surface header (Purpose Before Status) + session label input +
+  reset / mark-all-pass controls.
+- **Overall Readiness Card** (SignatureFrame · gold when READY, crit
+  when BLOCKED, info when NEARLY, advisory when UNSTARTED). Shows
+  headline, detail copy, and counts (pass · review · fail · unset)
+  plus a `<pass>% of <total>` mono trailer.
+- **Evaluation Session Summary** — six-tile grid, one tile per
+  dimension. Each tile carries a verdict chip, `<pass>/<total>
+  passing`, and a right-arrow anchor to the dimension section below.
+- **Six dimension sections** with authored criteria, each rendered
+  as a card with a 4-button verdict selector (pass · review · fail ·
+  unset). Left-accent bar changes colour per verdict.
+- **Walk-through notes** — persisted textarea for capturing
+  refinements to author as D/E-series addenda.
+
+### Feature-flags + discoverability
+- `/prototype/eval` is guarded by `RequireAuth` per the rest of the
+  authenticated shell.
+- LeftRail exposes a new "EVAL" module (`ClipboardList` icon) so the
+  harness is reachable during walkthrough sessions without needing to
+  type the URL.
+
+### Verified flows
+- 🟢 Every criterion verdict click writes to localStorage.
+- 🟢 Session summary tiles roll up dimension verdicts correctly
+  (fail-wins > review-wins > unset > pass).
+- 🟢 Overall readiness verdict transitions unstarted → nearly →
+  ready as verdicts land; a single "fail" flips to BLOCKED.
+- 🟢 `mark-all-pass` shortcut flips readiness to READY.
+- 🟢 Reset restores all verdicts to unset.
+- 🟢 Session label + notes persisted between reloads.
+
+### Next actionable steps
+1. Operator walk-through of the prototype using the 6-dimension
+   harness at `/prototype/eval`.
+2. Refinements captured in the notes textarea → authored as formal
+   D-series / E-series addenda (Refinement Addendum protocol per
+   P0 §10). No in-code overrides.
+3. Design Freeze declaration once the harness reports READY.
+4. Sprint 1 React production build in `/app/frontend/` per D8 §11.
+
+### Deferred / blocked (unchanged)
+- 🟡 F-B `/api/save-strategy` origin tag — deferred per operator directive.
+- 🟡 Operator: flip `COE_HEALTH_CONTRACT_ENABLED=true` on VPS (Phase A precondition).
+
+

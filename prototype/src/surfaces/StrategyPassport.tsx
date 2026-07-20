@@ -1,12 +1,16 @@
 /*
- * StrategyPassport — E1 §4, D1 §11.
- * Detailed view for one strategy. Anatomy:
- *   Header · Passport hero (name + status + version) ·
- *   MetricBlocks (sharpe, drawdown, hit, agreement) ·
- *   ProvenanceTriple · LineageBar · sparkline chart ·
- *   narrative (research/governance body) · action strip (fixture only).
+ * StrategyPassport — E1 §4, D1 §11. Phase 5-wired:
+ *   • Reads the return-crumb from `navigationStore` on mount to render
+ *     an origin-aware back button ("back to timeline" vs "back to
+ *     approvals" vs default explorer).
+ *   • Decision Identity: `useWorkspaceStore.selectStrategy(id)` keeps
+ *     the id sticky across surfaces so any surface that highlights the
+ *     current strategy stays in sync.
+ *   • Rule of Predictable Return: the back button navigates to the
+ *     stored path (not just history.back), guaranteeing the previous
+ *     surface's memory (facets, drawer, resolved chips) is restored.
  */
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { SurfaceHeader } from './SurfaceHeader';
@@ -20,6 +24,8 @@ import { Chip, type ChipTone } from '../primitives/Chip';
 import { StateTemplate } from '../primitives/StateTemplate';
 import { EvidenceDrawer } from '../primitives/EvidenceDrawer';
 import { useScenarioFixture, type StrategyPassport as PassportShape } from '../gallery/scenarioFixtures';
+import { useNavigationStore, type ReturnCrumb } from '../workspace-state/navigationStore';
+import { useWorkspaceStore } from '../workspace-state/store';
 
 const statusTone: Record<PassportShape['status'], ChipTone> = {
   live: 'ok', paper: 'info', paused: 'warn', reviewing: 'advisory',
@@ -36,7 +42,30 @@ export const StrategyPassport: React.FC = () => {
   const nav = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const readCrumb    = useNavigationStore((s) => s.crumb);
+  const consumeCrumb = useNavigationStore((s) => s.consumeCrumb);
+  const selectStrategy = useWorkspaceStore((s) => s.selectStrategy);
+
+  // Snapshot the crumb on first render so it persists through UI
+  // interactions on this surface, then clear it from the store.
+  const [snapshot, setSnapshot] = useState<ReturnCrumb | null>(null);
+  useEffect(() => {
+    if (readCrumb) {
+      setSnapshot(readCrumb);
+      consumeCrumb();
+    }
+  }, [readCrumb, consumeCrumb]);
+
+  // Establish Decision Identity as soon as the passport mounts.
+  useEffect(() => { if (id) selectStrategy(id); }, [id, selectStrategy]);
+
   const p = id ? fx.passportById[id] : undefined;
+
+  const backLabel = useMemo(() => snapshot?.label ?? 'back to explorer', [snapshot]);
+  const backPath  = useMemo(() => snapshot?.path  ?? '/c/strategies',   [snapshot]);
+  const backOrigin = snapshot?.origin ?? 'explorer';
+
+  const goBack = () => nav(backPath);
 
   if (!p) {
     return (
@@ -47,8 +76,8 @@ export const StrategyPassport: React.FC = () => {
           icon={Sparkles}
           tone="dormant"
           headline="This strategy passport is unavailable in the current scenario."
-          purpose="Return to the Explorer to browse strategies for this scenario."
-          primaryAction={{ label: 'open Strategy Explorer', onClick: () => nav('/c/strategies') }}
+          purpose="Return to the previous surface to browse strategies for this scenario."
+          primaryAction={{ label: backLabel, onClick: goBack }}
           advancedFootnote={`requested id · ${id}`}
         />
       </div>
@@ -59,22 +88,46 @@ export const StrategyPassport: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       <ScenarioBanner />
 
-      <button
-        data-testid="passport-back"
-        onClick={() => nav('/c/strategies')}
-        style={{
-          alignSelf: 'flex-start',
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'transparent', border: '1px solid var(--stroke-2)',
-          color: 'var(--content-md)', fontFamily: 'inherit',
-          borderRadius: 'var(--radius-1)',
-          padding: '4px 10px', fontSize: 'var(--font-caption)',
-          textTransform: 'uppercase', letterSpacing: '0.06em',
-          cursor: 'pointer',
-        }}
+      <div
+        data-testid="passport-return-strip"
+        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
       >
-        <ArrowLeft size={12} /> back to explorer
-      </button>
+        <button
+          data-testid="passport-back"
+          onClick={goBack}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'transparent', border: '1px solid var(--stroke-2)',
+            color: 'var(--content-md)', fontFamily: 'inherit',
+            borderRadius: 'var(--radius-1)',
+            padding: '4px 10px', fontSize: 'var(--font-caption)',
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+            cursor: 'pointer',
+          }}
+        >
+          <ArrowLeft size={12} /> {backLabel}
+        </button>
+        <span
+          data-testid="passport-identity-chip"
+          style={{
+            fontSize: 'var(--font-caption)', color: 'var(--content-lo)',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            fontFamily: 'ui-monospace, monospace',
+          }}
+        >
+          identity · {p.id}
+        </span>
+        <span
+          data-testid="passport-origin-chip"
+          style={{
+            fontSize: 'var(--font-caption)', color: 'var(--content-lo)',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            fontFamily: 'ui-monospace, monospace',
+          }}
+        >
+          via · {backOrigin}
+        </span>
+      </div>
 
       <SurfaceHeader
         eyebrow={`Strategy passport · ${p.owner}`}

@@ -8,7 +8,7 @@
  */
 import { NavLink } from 'react-router-dom';
 import {
-  Activity, Bot, Briefcase, ClipboardCheck, Compass, Lock, Settings,
+  Activity, Bot, Briefcase, ClipboardCheck, Compass, Lock, Settings, ClipboardList,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../workspace-state/authStore';
@@ -22,6 +22,7 @@ const MODULES: RailModule[] = [
   { key: 'workforce',  label: 'workforce',  icon: Bot,            to: '/c/workforce',  testId: 'nav-workforce'  },
   { key: 'strategies', label: 'strategies', icon: Briefcase,      to: '/c/strategies', testId: 'nav-strategies' },
   { key: 'settings',   label: 'settings',   icon: Settings,       to: '/c/settings',   testId: 'nav-settings'   },
+  { key: 'eval',       label: 'eval',       icon: ClipboardList,  to: '/prototype/eval', testId: 'nav-eval'      },
 ];
 
 export const LeftRail: React.FC = () => {

@@ -27,6 +27,7 @@ import { MasterBot } from './surfaces/MasterBot';
 import { StrategyExplorer } from './surfaces/StrategyExplorer';
 import { StrategyPassport } from './surfaces/StrategyPassport';
 import { SettingsStub } from './surfaces/SettingsStub';
+import { EvaluationHarness } from './surfaces/EvaluationHarness';
 import './tokens.css';
 
 const RootRedirect: React.FC = () => {
@@ -53,6 +54,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/c/strategies/:id" element={<Guarded><StrategyPassport /></Guarded>} />
           <Route path="/c/settings"   element={<Guarded><SettingsStub /></Guarded>} />
           <Route path="/prototype/gallery" element={<Guarded><PrimitiveGallery /></Guarded>} />
+          <Route path="/prototype/eval"    element={<Guarded><EvaluationHarness /></Guarded>} />
         </Route>
       </Routes>
     </BrowserRouter>

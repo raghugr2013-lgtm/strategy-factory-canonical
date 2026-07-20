@@ -19,6 +19,12 @@ export interface EvidenceSection {
   body: React.ReactNode;
 }
 
+export interface EvidenceDrawerAction {
+  label: string;
+  onClick: () => void;
+  testId?: string;
+}
+
 export interface EvidenceDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -28,11 +34,12 @@ export interface EvidenceDrawerProps {
   lineage: { self: LineageNode; ancestors?: LineageNode[]; descendants?: LineageNode[] };
   sections?: EvidenceSection[];
   state?: EvidenceState;
+  footerAction?: EvidenceDrawerAction;
   testId?: string;
 }
 
 export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
-  open, onClose, title, subtitle, provenance, lineage, sections = [], state = 'happy', testId,
+  open, onClose, title, subtitle, provenance, lineage, sections = [], state = 'happy', footerAction, testId,
 }) => {
   const motionEnabled = useMotionEnabled();
 
@@ -172,6 +179,33 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
                 ))
               )}
             </div>
+
+            {footerAction && (
+              <footer
+                style={{
+                  padding: 'var(--space-3) var(--space-5)',
+                  borderTop: '1px solid var(--stroke-1)',
+                  display: 'flex', justifyContent: 'flex-end',
+                }}
+              >
+                <button
+                  data-testid={footerAction.testId ?? 'evidence-drawer-footer-action'}
+                  onClick={footerAction.onClick}
+                  style={{
+                    background: 'var(--sig-info)',
+                    color: 'var(--surface-0)',
+                    border: 'none',
+                    borderRadius: 'var(--radius-1)',
+                    padding: '8px 14px',
+                    fontSize: 'var(--font-body-sm)',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {footerAction.label} →
+                </button>
+              </footer>
+            )}
           </motion.aside>
         </>
       )}
