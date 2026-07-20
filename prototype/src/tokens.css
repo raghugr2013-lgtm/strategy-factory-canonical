@@ -107,3 +107,12 @@ body {
   font-family: ui-monospace, "SFMono-Regular", monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* Skeleton shimmer used by MetricBlock, ChartTile, TableTile loading state */
+@keyframes sf-skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Focus-visible ring for interactive rows */
+button, [role="button"], a { cursor: pointer; }

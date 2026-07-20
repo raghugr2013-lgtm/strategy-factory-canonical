@@ -1,6 +1,7 @@
 /*
- * Prototype entry — Phase 1 foundation.
- * Route table follows D8 §3.3.
+ * Prototype entry — Phase 2 primitives.
+ * Route table follows D8 §3.3; the Primitive Gallery is a prototype-only
+ * validation route and will be removed at Design Freeze.
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -8,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { AppShell } from './shell/AppShell';
 import { StateTemplate } from './primitives/StateTemplate';
+import { PrimitiveGallery } from './gallery/PrimitiveGallery';
 import './tokens.css';
 
 // Phase 1 placeholder — real surfaces land in Phase 4.
@@ -40,8 +42,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route path="/" element={<Navigate to="/c/mission" replace />} />
+          <Route path="/" element={<Navigate to="/prototype/gallery" replace />} />
           <Route path="/c/mission" element={<MissionPlaceholder />} />
+          <Route path="/prototype/gallery" element={<PrimitiveGallery />} />
         </Route>
       </Routes>
     </BrowserRouter>

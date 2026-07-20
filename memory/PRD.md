@@ -933,3 +933,54 @@ Recommended authorship order: **E2 → E3 → E4 → E1 → E5**. Estimated time
 4. Refinement addenda authored (per P0 §10).
 5. Design Freeze declared (per P0 §11).
 6. Sprint 1 kick-off per D8 §11 rollout order.
+
+---
+
+## Prototype Phase 2 — Primitives COMPLETE (2026-02-04) ✅
+
+Backend Feature Freeze remains in effect. All work landed strictly inside
+`/app/prototype/` per D8 §13.7 throw-away discipline.
+
+### 13 new primitives shipped
+Under `/app/prototype/src/primitives/`:
+
+- Foundations: `SignatureFrame.tsx`, `DivisionCaption.tsx`, `KeyboardShortcutHUD.tsx`
+- Data: `MetricBlock.tsx` (A/B/C variants), `ChartTile.tsx` (line + sparkline), `TableTile.tsx` (sortable, hover-actions, drill-through)
+- Workflow: `PipelineStageBar.tsx` (8 stages × 5 states), `ActivityRow.tsx` (10 actor kinds), `WorkerCard.tsx` (5 states)
+- Decision: `ApprovalCard.tsx` (3 risk levels × 6 origins)
+- Evidence: `EvidenceDrawer.tsx`, `LineageBar.tsx`, `ProvenanceTriple.tsx`
+
+Shared: `motion.ts` (Bible §6.1 presets — fadeInUp, fadeIn, drawerSlide, stagger).
+
+### PrimitiveGallery route
+- `/prototype/gallery` — single validation surface at
+  `/app/prototype/src/gallery/PrimitiveGallery.tsx`.
+- Five sections: **F** Foundations · **D** Data · **W** Workflow · **X** Decision · **E** Evidence, plus **S** Canonical States showcase.
+- Prototype-only Inspector (`/app/prototype/src/gallery/Inspector.tsx`) with toggles for canonical state, mode, density, advanced-lens, reduced-motion, long-content.
+- Inspector-only store: `/app/prototype/src/workspace-state/inspectorStore.ts`.
+- Deterministic fixtures: `/app/prototype/src/gallery/fixtures.ts`.
+
+### Acceptance criteria — all satisfied
+- ✅ 13 primitives complete
+- ✅ Token-only styling (nothing hardcoded outside `tokens.css`)
+- ✅ Four canonical states supported via `StateTemplate`
+- ✅ `data-testid` on every interactive element
+- ✅ Responsive layout via CSS grid `auto-fit`
+- ✅ Focus-visible ring inherited globally
+- ✅ Reduced-motion honoured (media query + inspector override + `useMotionEnabled` hook)
+- ✅ Successful `yarn build` (2.87s · 107KB gzipped)
+- ✅ Screenshots captured across happy / loading / empty / advanced-lens / executive-cinema
+- ✅ Zero React console errors (Router future-flag notices only)
+
+### Next actionable steps
+1. Prototype Phase 3 — Authentication surface (Trust Before Credentials).
+2. Phase 4 — Core Surfaces (Mission Control, Timeline, Approval Center, Master Bot, Strategy Explorer).
+3. Phase 5 — Cross-module wiring (Predictable Return, Facet cascade, Decision Identity).
+4. Phase 6 — Fixture Debug Panel & Evaluation Harness (upgrades the current Inspector).
+5. Prototype walkthrough against 6 Evaluation Dimensions → Design Freeze.
+6. Sprint 1 React production implementation in `/app/frontend/` per D8 §11.
+
+### Deferred / blocked (unchanged)
+- 🟡 F-B `/api/save-strategy` origin tag — awaiting operator decision (a/b/c).
+- 🟡 Operator: flip `COE_HEALTH_CONTRACT_ENABLED=true` on VPS (Phase A precondition).
+
