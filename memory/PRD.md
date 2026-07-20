@@ -984,3 +984,76 @@ Shared: `motion.ts` (Bible §6.1 presets — fadeInUp, fadeIn, drawerSlide, stag
 - 🟡 F-B `/api/save-strategy` origin tag — awaiting operator decision (a/b/c).
 - 🟡 Operator: flip `COE_HEALTH_CONTRACT_ENABLED=true` on VPS (Phase A precondition).
 
+
+---
+
+## Scenario Presets + Prototype Phase 3 — Authentication COMPLETE (2026-02-04) ✅
+
+Backend Feature Freeze remains in effect. All work landed strictly inside
+`/app/prototype/`. `/api/save-strategy` origin tag continues deferred by
+operator instruction.
+
+### Scenario Presets (fixture-only)
+- `/app/prototype/src/gallery/scenarios.ts` — 6 fixture bundles:
+  Executive Morning Review · Operations Shift Burst · Research Investigation
+  · Incident Response · Governance Review · Compute Pressure.
+- `inspectorStore.applyScenario(key)` fans preset values into the workspace
+  store (mode, density, advanced lens, kill posture) and the inspector
+  (canonical state, long content). Selecting any individual toggle clears
+  `scenarioKey` so operators can freely drift from a preset.
+- Inspector now surfaces a **Scenario presets** section above the manual
+  state controls — first-class walkthrough entry points.
+- **No simulator logic** — presets are pure fixtures per user directive.
+
+### Phase 3 — Authentication (Trust Before Credentials)
+Files:
+- `/app/prototype/src/workspace-state/authStore.ts` — 4 stances
+  (anonymous · authenticating · authenticated · expired), fixture
+  credentials `operator@coinnike.com / prototype123`, error taxonomy
+  covering E2 §3.3 (empty, invalid email, wrong creds, locked, expired,
+  backend down).
+- `/app/prototype/src/auth/LoginScreen.tsx` — centered card inside
+  persistent chrome, kill-posture pre-auth banner, 260 ms latency, focused
+  password field after wrong creds.
+- `/app/prototype/src/auth/UserMenu.tsx` — header disclosure with session
+  meta, mode switcher, sign-out, prototype "expire session" button.
+- `/app/prototype/src/auth/RequireAuth.tsx` — guard preserving `?next=`.
+- `/app/prototype/src/shell/LeftRailStub.tsx` — 7 modules rendered at 40%
+  opacity with lock glyphs when unauthenticated (E2 §3.1). Real routing
+  arrives with Phase 4.
+- `AppShell` updated: LeftRail always visible; pre-auth suppresses ⌘K
+  hint & UserMenu; post-auth kill-posture triggers red danger ribbon.
+
+### Verified flows (screenshots captured)
+- 🟢 Anonymous root → redirect to `/auth/sign-in`.
+- 🟢 Pre-auth chrome: locked rail, `⌘K DISABLED`, kill-posture chip visible.
+- 🟢 Wrong credentials → warn-toned inline error, password refocused.
+- 🟢 Invalid email → dedicated error message.
+- 🟢 Locked email (`locked@coinnike.com`) → 15-minute cool-down copy.
+- 🟢 Correct login → redirect to captured `next` (defaults to gallery).
+- 🟢 UserMenu opens with session meta, mode switcher, sign-out.
+- 🟢 "Expire session" → redirect + info-toned "Your session expired." notice.
+- 🟢 Scenario presets: Executive, Incident (kill posture + danger ribbon),
+     others switching mode/density/state cleanly.
+- 🟢 Vite build 2.43 s · 112 KB gzipped · zero React console errors.
+
+### Next actionable steps
+1. **Phase 4 — Core Surfaces**: Mission Control · Timeline · Approval Center
+   · Master Bot · Strategy Explorer (real routing in LeftRail).
+2. Phase 5 — Cross-module wiring (Predictable Return, Facet cascade,
+   Decision Identity, three-view Master Bot toggle).
+3. Phase 6 — Fixture Debug Panel & Evaluation Harness (upgrades Inspector).
+4. Prototype walkthrough against 6 Evaluation Dimensions → Design Freeze.
+5. Sprint 1 React production build in `/app/frontend/` per D8 §11.
+
+### Deferred / blocked
+- 🟡 F-B `/api/save-strategy` origin tag — deferred per operator directive.
+- 🟡 Operator: flip `COE_HEALTH_CONTRACT_ENABLED=true` on VPS (Phase A precondition).
+
+### Prototype-only credentials
+- Fixture email: `operator@coinnike.com`
+- Fixture password: `prototype123`
+- Locked-account fixture: `locked@coinnike.com`
+- These credentials are inline in `authStore.ts` and never touch the
+  backend. They will be removed at Design Freeze.
+

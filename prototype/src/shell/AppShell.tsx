@@ -1,20 +1,32 @@
 /*
  * AppShell — Bible §4 · persistent chrome; never re-mounts on route change.
- * Prototype Phase 1 scaffold: header · status-rail placeholder · main outlet.
- * LeftRail · TopTabBar · RightRail · PinsTray arrive in Phase 2.
+ * Phase 3 update: adds LeftRailStub + auth-aware chrome per E2 §3.1 & §9.
+ * Pre-auth chrome renders header brand, LeftRail-locked, StatusRail (6 chips
+ * + kill posture), and hides the ⌘K hint & user menu.
  */
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useWorkspaceStore } from '../workspace-state/store';
+import { useAuthStore } from '../workspace-state/authStore';
+import { LeftRailStub } from './LeftRailStub';
+import { UserMenu } from '../auth/UserMenu';
 
 export const AppShell: React.FC = () => {
   const mode = useWorkspaceStore((s) => s.mode);
   const advLens = useWorkspaceStore((s) => s.advancedLens);
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);
   const cmdkHintDismissed = useWorkspaceStore((s) => s.cmdkHintDismissed);
+  const authStance = useAuthStore((s) => s.stance);
+  const loc = useLocation();
+
+  const isAuthed = authStance === 'authenticated';
+  // Danger ribbon fires only post-auth per E2 §9.4.
+  const showDangerRibbon = isAuthed && killArmed;
+  // Suppress ⌘K hint on the login screen per E2 §3.1.
+  const onLoginRoute = loc.pathname.startsWith('/auth');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {killArmed && (
+      {showDangerRibbon && (
         <div
           role="alert"
           data-testid="danger-ribbon"
@@ -47,6 +59,7 @@ export const AppShell: React.FC = () => {
           <span style={{ fontSize: 'var(--font-body-md)', fontWeight: 500 }}>Strategy Factory</span>
           <span
             className="mono-num"
+            data-testid="app-version"
             style={{
               fontSize: 'var(--font-caption)',
               color: 'var(--content-lo)',
@@ -58,7 +71,19 @@ export const AppShell: React.FC = () => {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-          {!cmdkHintDismissed && (
+          <span
+            className="mono-num"
+            data-testid="header-utc"
+            style={{
+              fontSize: 'var(--font-caption)',
+              color: 'var(--content-lo)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            {new Date().toISOString().slice(11, 16)} UTC
+          </span>
+          {isAuthed && !cmdkHintDismissed && !onLoginRoute && (
             <span
               data-testid="cmdk-hint"
               style={{
@@ -72,30 +97,55 @@ export const AppShell: React.FC = () => {
               ⌘K → find anything
             </span>
           )}
-          <span
-            data-testid="mode-chip"
-            className="mono-num"
-            style={{
-              fontSize: 'var(--font-caption)',
-              color: 'var(--content-md)',
-              padding: '4px 8px',
-              border: '1px solid var(--stroke-2)',
-              borderRadius: 'var(--radius-1)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}
-          >
-            mode · {mode} {advLens && '· advanced'}
-          </span>
+          {!isAuthed && onLoginRoute && (
+            <span
+              data-testid="cmdk-disabled"
+              aria-disabled="true"
+              style={{
+                fontSize: 'var(--font-caption)',
+                color: 'var(--content-lo)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontFamily: 'ui-monospace, monospace',
+                opacity: 0.5,
+              }}
+            >
+              ⌘K disabled
+            </span>
+          )}
+          {isAuthed ? (
+            <UserMenu />
+          ) : (
+            <span
+              data-testid="mode-chip"
+              className="mono-num"
+              style={{
+                fontSize: 'var(--font-caption)',
+                color: 'var(--content-md)',
+                padding: '4px 8px',
+                border: '1px solid var(--stroke-2)',
+                borderRadius: 'var(--radius-1)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              mode · {mode} {advLens && '· advanced'}
+            </span>
+          )}
         </div>
       </header>
-      <main
-        role="main"
-        tabIndex={-1}
-        style={{ flex: 1, padding: 'var(--space-6) var(--space-5)', background: 'var(--surface-0)' }}
-      >
-        <Outlet />
-      </main>
+
+      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+        <LeftRailStub />
+        <main
+          role="main"
+          tabIndex={-1}
+          style={{ flex: 1, padding: 'var(--space-6) var(--space-5)', background: 'var(--surface-0)', overflowY: 'auto' }}
+        >
+          <Outlet />
+        </main>
+      </div>
+
       <footer
         data-testid="status-rail"
         style={{
@@ -117,11 +167,15 @@ export const AppShell: React.FC = () => {
         <span>● scheduler</span>
         <span>● llm</span>
         <span>● governance</span>
-        <span style={{ color: killArmed ? 'var(--sig-crit)' : 'var(--sig-dormant)' }}>
+        <span
+          data-testid="kill-posture-chip"
+          title={!isAuthed ? 'Kill posture is public information.' : undefined}
+          style={{ color: killArmed ? 'var(--sig-crit)' : 'var(--sig-dormant)' }}
+        >
           {killArmed ? '⚠ kill posture armed' : '○ kill posture'}
         </span>
         <span style={{ marginLeft: 'auto' }} className="mono-num">
-          {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC · env prod
+          env prod · @v55
         </span>
       </footer>
     </div>

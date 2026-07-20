@@ -6,6 +6,7 @@
  */
 import { useInspectorStore } from '../workspace-state/inspectorStore';
 import { useWorkspaceStore } from '../workspace-state/store';
+import { SCENARIOS } from './scenarios';
 
 const label: React.CSSProperties = {
   fontSize: 'var(--font-caption)',
@@ -41,6 +42,7 @@ export const Inspector: React.FC = () => {
     canonicalState, setCanonicalState,
     reducedMotion, setReducedMotion,
     longContent, setLongContent,
+    scenarioKey, applyScenario,
   } = useInspectorStore();
   const { mode, setMode, density, setDensity, advancedLens, toggleAdvancedLens } = useWorkspaceStore();
 
@@ -71,6 +73,51 @@ export const Inspector: React.FC = () => {
           Fixture-only. Removed at Design Freeze.
         </span>
       </div>
+
+      <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <legend style={label}>Scenario presets</legend>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {SCENARIOS.map((s) => (
+            <button
+              key={s.key}
+              data-testid={`inspector-scenario-${s.key}`}
+              onClick={() => applyScenario(s.key)}
+              style={{
+                ...(scenarioKey === s.key ? activeControl : control),
+                textAlign: 'left',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 2,
+                padding: '6px 8px',
+                textTransform: 'none',
+                letterSpacing: 0,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'var(--font-caption)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  fontFamily: 'ui-monospace, monospace',
+                }}
+              >
+                {s.title}
+              </span>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: scenarioKey === s.key ? 'var(--surface-0)' : 'var(--content-lo)',
+                  lineHeight: 1.35,
+                  fontFamily: 'inherit',
+                }}
+              >
+                {s.blurb}
+              </span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <legend style={label}>Canonical state</legend>
