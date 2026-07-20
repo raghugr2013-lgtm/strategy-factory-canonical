@@ -1,0 +1,5 @@
+==== Phase 0 baseline capture — REHEARSAL against preview pod ====
+captured_at_utc=2026-07-20T09:00:11Z
+base_url=https://312f2cec-9639-4931-94d7-5e4666a15e07.preview.emergentagent.com
+target_environment=preview-pod (REHEARSAL — VPS production baseline must be captured separately)
+backend_pid=10

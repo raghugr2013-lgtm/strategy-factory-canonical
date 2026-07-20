@@ -1,0 +1,13 @@
+total 44
+drwxr-xr-x 2 root root 4096 Jul 20 09:00 .
+drwxr-xr-x 3 root root 4096 Jul 20 09:00 ..
+-rw-r--r-- 1 root root  300 Jul 20 09:00 00_capture_meta.txt
+-rw-r--r-- 1 root root  152 Jul 20 09:00 01_health.json
+-rw-r--r-- 1 root root   47 Jul 20 09:00 02_health_system.json
+-rw-r--r-- 1 root root   47 Jul 20 09:00 03_health_subsystems.json
+-rw-r--r-- 1 root root  609 Jul 20 09:00 03a_health_config.json
+-rw-r--r-- 1 root root   39 Jul 20 09:00 04_coe_state.json
+-rw-r--r-- 1 root root   39 Jul 20 09:00 05_coe_metrics.json
+-rw-r--r-- 1 root root   98 Jul 20 09:00 06_version.json
+-rw-r--r-- 1 root root  609 Jul 20 09:00 07_stage4_dormancy.txt
+-rw-r--r-- 1 root root    0 Jul 20 09:00 99_file_manifest.txt

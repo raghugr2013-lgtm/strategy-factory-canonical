@@ -1,0 +1,14 @@
+knowledge/health                       200
+knowledge/query                        405
+knowledge/metrics                      503
+knowledge/promote-events               503
+knowledge/retro-score-runs             503
+knowledge/connector-events             503
+meta-learning/health                   503
+mi/health                              503
+execution/health                       503
+portfolio/health                       503
+factory-eval/health                    503
+knowledge/query-POST                   503 (POST)
+coe/dead-letter                        503
+coe/dead-letter/depth                  503
