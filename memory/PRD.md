@@ -486,6 +486,71 @@ Backend Feature Freeze):
 - Validation Gate 5
 - Backend Feature Freeze
 
+## Phase 4 P4B — COE γ: IMPLEMENTED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_4_P4B_COE_GAMMA_NOTES.md`
+
+Landed as an additive `engines/coe_gamma/` package (pre-existing
+orchestrator unmodified — composition via injected hooks):
+- **P4B.1 Retry executor** — per-class exponential-backoff with
+  policies matching plan §4.1 (market_data 5×, agent 3×, backtest 2×,
+  execution 0×, monitoring/knowledge 3×, meta_learning 3×). Pass-through
+  when flag off.
+- **P4B.2 Dead-letter repository** — `workload_dead_letter` collection
+  with record/list/get/requeue/discard/depth. Every method short-
+  circuits with `flag_off` when disabled.
+- **P4B.3 Work recovery** — boot-time stale in-flight sweep with
+  injected requeue/dead-letter hooks; idempotent.
+- **P4B.4 Provider-aware admission** — decision surface consulting an
+  injected `breaker_state_lookup`; gates `agent`/`backtest` classes;
+  HALF_OPEN admits with `probe=True`.
+- **P4B.5 Age boost** — pure priority-delta math; env-tunable
+  thresholds; returns 0.0 when flag off.
+- **P4B.6 Elastic bands** — BACKTEST↔MUTATION capacity loans capped
+  at 50% of donor reservation, only when donor idle + receiver above
+  high-water.
+- **P4B.7 Budget hard-cap** — daily USD ceiling above the pre-existing
+  soft-cap; refuses `agent`/`backtest` on breach; returns headroom
+  in decision object.
+- **P4B.8 Operator controls** — circuit-reset + queue pause/resume with
+  audit sink; each action returns a stamped `OperatorAction` row.
+
+New endpoints (all self-guard 503 when flag off):
+- `GET /api/coe/dead-letter[?class=&limit=&offset=&include_discarded=]`
+- `GET /api/coe/dead-letter/depth[?class=]`
+- `GET /api/coe/dead-letter/{row_id}`
+- `POST /api/coe/dead-letter/{row_id}/requeue`
+- `POST /api/coe/dead-letter/{row_id}/discard`
+- `POST /api/coe/circuit-breaker/{provider}/reset`
+- `POST /api/coe/queue/pause`
+- `POST /api/coe/queue/resume`
+
+New feature flags introduced (all default OFF):
+- `COE_RETRY_ENABLED`
+- `COE_DEAD_LETTER_ENABLED`
+- `COE_WORK_RECOVERY_ENABLED`
+- `COE_PROVIDER_AWARE_ADMISSION`
+- `COE_AGE_BOOST_ENABLED`
+- `COE_ELASTIC_BAND_ENABLED`
+- `COE_BUDGET_HARD_CAP_ENABLED`
+- `COE_OPERATOR_CONTROLS_ENABLED`
+
+New Mongo collections (created lazily on first write):
+- `workload_dead_letter` — dead-letter rows (TTL 90d to be applied
+  at activation time via `engines/db_indexes.py`)
+- `coe_operator_events` — operator-action audit rows
+
+Cumulative unit tests: **275 / 275 passing**
+(239 prior + 36 new P4B).
+
+**Every P4B flag defaults OFF. Zero production behaviour change.**
+
+Remaining Stage-4 work:
+- P4C — UKIE γ
+- P4D — Observability Finalisation
+- Validation Gate 5
+- Backend Feature Freeze
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

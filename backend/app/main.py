@@ -576,6 +576,16 @@ def create_app() -> FastAPI:
     except Exception as _dx:  # noqa: BLE001
         logger.warning("BI5/BID diff router mount skipped: %s", _dx)
 
+    # ── COE γ router (Phase 2 Stage 4 P4B) ────────────────────────
+    # Dead-letter + operator controls. Every endpoint self-guards with
+    # HTTP 503 when its component flag is off (defaults OFF).
+    try:
+        from engines.coe_gamma.router import router as _coe_gamma_router  # type: ignore
+        app.include_router(_coe_gamma_router)
+        logger.info("mounted COE γ router: /api/coe/{dead-letter,circuit-breaker,queue} (flag-gated)")
+    except Exception as _cgx:  # noqa: BLE001
+        logger.warning("COE γ router mount skipped: %s", _cgx)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,
