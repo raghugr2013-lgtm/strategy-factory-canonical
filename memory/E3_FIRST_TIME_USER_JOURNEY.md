@@ -39,6 +39,7 @@ E3 confirms:
 - [x] **Purpose Before Status (D4 §5.1.1)** — every first-time surface leads with *why the surface exists*, not *what is missing*.
 - [x] **Decision Identity (D6 §8.1a)** — a first-time user seeing the same object across modes sees byte-identical underlying truth; only rendering differs.
 - [x] **Trust Before Credentials (E2 §9)** — the first-time user has already seen the pre-auth shell; post-auth builds on that trust rather than restarting from zero.
+- [x] **Progressive Confidence (§8.4)** — as the operator accumulates experience, the Factory quietly acknowledges meaningful operational milestones through Timeline-backed confirmations in professional tone — never badges, never gamification.
 
 ---
 
@@ -454,6 +455,136 @@ graduates independently and silently.
 sessions, that the product is quieter and more familiar. That's the
 metric.
 
+### 8.4 Progressive Confidence — operational milestones beyond moment-zero
+
+*Silent Graduation* codifies the product becoming *quieter* as the
+operator matures. **Progressive Confidence** is its mirror: the
+Factory occasionally *speaking* — a rare, professional acknowledgement
+of an operational milestone that reinforces confidence without ever
+becoming gamification.
+
+**Progressive Confidence is not** achievement, badge, streak,
+levelling-up, XP, or any consumer-app trope. It is a **Timeline-
+backed factual acknowledgement** written in Division voice that a
+meaningful operational moment has occurred.
+
+#### 8.4.1 The five milestones
+
+Sprint 1+ codifies **five acknowledged milestones**. No sixth is added
+without a v-major bump.
+
+| # | Milestone | Copy specimen |
+|---|---|---|
+| M1 | **First strategy promoted to Production** | *"Master Bot recorded your first strategy promotion. `strat_bb_ema_rsi_v3` is now in Production on 3 accounts."* |
+| M2 | **First strategy retired** | *"Learning Division recorded your first strategy retirement. `strat_bb_ema_rsi_v3` served for 28 days · +$247 realised."* |
+| M3 | **First production deployment across ≥ 3 concurrent strategies** | *"The Factory is running a portfolio of 3 strategies for the first time."* |
+| M4 | **First month of continuous Factory operation** | *"The Factory has been operating continuously for 30 days · 47 approvals resolved · 12 strategies in Production."* |
+| M5 | **First knowledge-base contradiction resolved by operator** | *"Governance recorded your first contradiction resolution. Knowledge Base v-major bumped to `verified` on this record."* |
+
+Each milestone fires **exactly once per operator per Factory instance
+lifetime**. Multiple operators on the same Factory each see their own
+first-promotion moment; the Factory does not re-fire M1 for a returning
+operator who has seen it already.
+
+#### 8.4.2 How milestones manifest
+
+- **A Timeline row** in Division voice (specimen per §8.4.1). Layer 1
+  visibility (operator can see this).
+- **A subtle status-rail note** for 4 hours after the milestone,
+  showing `● milestone recorded` chip (`--sig-ok` tint, muted). Click
+  → jumps to the Timeline row.
+- **No modal.** No overlay. No confetti. No sound.
+- **No dismissal action** — the chip auto-fades after 4 hours; the
+  Timeline row persists forever.
+
+#### 8.4.3 Detection
+
+Purely frontend-derived from existing Timeline events + workspace
+state. **No new backend endpoints. No new state fields.** Feature
+Freeze respected.
+
+Detection lives in the workspace state store as a set of derived
+selectors:
+
+```ts
+useMilestoneFired('M1'): boolean       // reads localStorage flag
+useMilestoneEligible('M1'): boolean    // reads Timeline: has any promotion event fired?
+```
+
+On first eligibility, milestone renders + flag sets. Never re-fires.
+
+localStorage keys:
+- `strategyFactory.milestone.M1: <ISO of when fired>`
+- (etc.)
+
+Per-operator, per-device. If the operator switches devices, milestones
+may re-fire on the new device. This is acceptable and intentional —
+the milestone is a *personal* moment for that operator on that device.
+
+#### 8.4.4 The professional tone contract
+
+Every milestone specimen (§8.4.1) obeys these rules:
+
+1. **Third-person Division voice.** Never *"You did it!"* — instead
+   *"Master Bot recorded your first strategy promotion."*
+2. **Factual, not celebratory.** Numbers > adjectives.
+3. **Includes evidence.** Every milestone Timeline row carries
+   `→ view outcome` linking to the underlying artefacts.
+4. **≤ 90 chars per line** (D7 §22 cadence).
+5. **Never accuses the operator.** No *"Great job!"*.
+6. **Never blocks a workflow.** The operator can approve the next
+   thing while the milestone chip is still visible.
+
+#### 8.4.5 What Progressive Confidence is NOT
+
+- ❌ Badges, achievements, XP, streaks, or scoring.
+- ❌ Sound effects or haptic feedback.
+- ❌ Confetti or celebratory animation.
+- ❌ Sharable "milestone cards" or social features.
+- ❌ Modal interruption of any workflow.
+- ❌ Notifications outside the workspace (email, push, SMS).
+- ❌ Milestones for micro-events (1st ⌘K use, 100th filter apply,
+  etc.) — hint dismissal handles those silently per Silent Graduation.
+- ❌ Milestones that measure *the operator* rather than the *Factory*
+  (no "you approved 100 recommendations" — that's about the operator's
+  volume, not an operational milestone).
+
+#### 8.4.6 Why Progressive Confidence works
+
+An experienced operator working alongside an autonomous system needs
+*occasional evidence that the compound of their judgement and the
+Factory's autonomy has produced real outcomes*. Without any
+acknowledgement, the product feels like a treadmill — approve, defer,
+approve, defer. With appropriate quiet acknowledgement at meaningful
+milestones, the product feels like a **firm that has been operating
+under the operator's stewardship**.
+
+The five milestones (§8.4.1) are the ones where a real operational
+threshold has been crossed. They are not the *only* meaningful moments
+of an operator's tenure — but they are the ones worth capturing as
+canonical Timeline entries.
+
+**Rule of Quiet Acknowledgement.** The Factory speaks about milestones
+in the same voice it speaks about every other event — factually, in
+Division voice, once. The milestone is memorable *because* it is
+rendered in the same register as everything else, not despite it.
+
+#### 8.4.7 Mode-specific rendering
+
+- **Executive** — milestone Timeline rows appear on the Daily Briefing
+  narrative summary (Sprint 3+); until then, they appear in the Timeline
+  right rail as any other event.
+- **Operations** — status-rail chip visible for 4 h.
+- **Research** — Copilot may reference milestones when narrating the
+  Factory's history: *"The Factory has been operating for 32 days.
+  Its first strategy promotion was recorded on day 4."*
+- **Developer** — milestone Timeline rows carry Advanced-Lens chips
+  showing `[detection: derived]` and localStorage flag identity.
+
+**Decision Identity check** (D6 §8.1a): the milestone event and its
+underlying evidence are byte-identical across modes; only presentation
+differs.
+
 ---
 
 ## 9. First-time-specific empty state additions (extend D7)
@@ -651,6 +782,7 @@ First-Time Journey ships only if:
 - ✅ Kill-posture behaviour on first-time visit tested (§11 FT2)
 - ✅ Decision Identity — first-time user seeing an object across modes sees byte-identical truth
 - ✅ Trust Before Credentials (E2 §9) coherence — first-time landing feels like continuation of pre-auth trust
+- ✅ Progressive Confidence — 5 milestones (§8.4.1) detectable client-side; each fires exactly once per operator per device; renders Timeline row + 4h status-rail chip
 - ✅ `data-testid` on every first-time-specific element (hints, tooltips)
 
 ---
