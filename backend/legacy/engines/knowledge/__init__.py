@@ -89,3 +89,26 @@ from .pipeline import (                                         # noqa: F401
     run_one as run_pipeline_one,
 )
 from .dry_run import run_dry, synthetic_fixture                 # noqa: F401
+
+# Phase 2 Stage 3.γ — Promote Bridge (P2C.9) + Retro-scoring (P2C.11)
+from .promote import (                                          # noqa: F401
+    PromoteOptions,
+    PromoteVerdict,
+    evaluate_promote,
+    is_promote_bridge_enabled,
+    is_promote_dry_run_default,
+)
+from .promote_bridge import (                                   # noqa: F401
+    DemoteResult,
+    PromoteBridge,
+    PromoteResult,
+    get_bridge as get_promote_bridge,
+)
+from .retro_score import (                                      # noqa: F401
+    CONFIRM_WRITE_TOKEN,
+    RetroScoreRunner,
+    RetroScoreSummary,
+    get_runner as get_retro_score_runner,
+    is_retro_score_enabled,
+    legacy_row_to_item,
+)

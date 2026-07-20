@@ -120,12 +120,22 @@ class KnowledgeRepository:
         *,
         license_verdict: Optional[LicenseVerdict] = None,
         trust_score:     Optional[TrustScore]     = None,
+        retro_score_run_id: Optional[str]         = None,
     ) -> InsertResult:
         """Write one item into its domain sub-collection.
 
         Returns quickly on any error — the pipeline logs and continues.
         Guarantees hard rails (`learning_only=True`,
         `eligible_for_deploy=False`) regardless of item state.
+
+        Args:
+            retro_score_run_id: Optional Stage-3.γ audit stamp. When
+                supplied, the written document carries a
+                `retro_score_run_id` field enabling per-run rollback via
+                `retro_score.rollback(run_id)`. Non-retro writes pass
+                None and produce documents without this field
+                (backward-compatible; no shape change to Stage 3.β
+                write path).
         """
         domain = item.domain
         target = storage_collection_for(domain)
@@ -165,7 +175,8 @@ class KnowledgeRepository:
         now = _now_iso()
         doc_body = self._build_doc(item, now=now,
                                    license_verdict=license_verdict,
-                                   trust_score=trust_score)
+                                   trust_score=trust_score,
+                                   retro_score_run_id=retro_score_run_id)
         try:
             res = await db[target].update_one(
                 {"content_hash": ch, "domain": domain.value},
@@ -212,6 +223,7 @@ class KnowledgeRepository:
         now: str,
         license_verdict: Optional[LicenseVerdict],
         trust_score:     Optional[TrustScore],
+        retro_score_run_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """The authoritative document shape written to the domain sub-collection."""
         doc: Dict[str, Any] = {
@@ -239,6 +251,8 @@ class KnowledgeRepository:
             doc["license_verdict"] = license_verdict.to_outcome()
         if trust_score is not None:
             doc["trust_score"] = trust_score.to_outcome()
+        if retro_score_run_id is not None:
+            doc["retro_score_run_id"] = str(retro_score_run_id)
         return doc
 
 

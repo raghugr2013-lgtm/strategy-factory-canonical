@@ -379,6 +379,61 @@ sign-off):
 
 **All Stage-2 code changes remain feature-flagged and dormant.** Zero behaviour change until flags are enabled.
 
+## Phase 2 Stage 3.γ — IMPLEMENTED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_2_STAGE_3_GAMMA_NOTES.md`
+Gate report: `/app/memory/PHASE_2_VALIDATION_GATE_4_REPORT.md`
+
+Landed sequence (per operator directive):
+1. **P2C.9 α** — Promote endpoint + preconditions + audit collection, dry-run only ✅
+2. **P2C.9 β** — Writer + rollback endpoint (flag-gated) ✅
+3. **P2C.11 α** — Retro-score runner + `retro_score_runs`, dry-run only ✅
+4. **P2C.11 β** — Commit path dual-gated + rollback endpoint ✅
+5. **Tests** — 38 new unit tests, all passing (24 promote + 14 retro-score) ✅
+6. **Documentation** — Stage 3.γ notes complete ✅
+7. **Validation Gate 4 Report** — draft submitted, PASS ✅
+
+New files (all in `backend/legacy/engines/knowledge/`):
+- `promote.py` (pure precondition checker)
+- `promote_bridge.py` (writer + audit + demote)
+- `promote_router.py` (endpoints)
+- `retro_score.py` (batch runner + mapping + rollback)
+- `retro_score_router.py` (endpoints)
+
+Modified files:
+- `repository.py` — added `retro_score_run_id` kwarg (backward-compat: None by default; no shape change to Stage-3.β write path)
+- `__init__.py` — new exports
+- `router.py` — mounts the two Stage-3.γ sub-routers on the same `/api/knowledge` prefix
+
+New feature flags introduced (all default OFF):
+- `UKIE_PROMOTE_BRIDGE_ENABLED` — master switch for the promote endpoints
+- `UKIE_PROMOTE_DRY_RUN` — default dry-run behaviour when the master is on (default TRUE)
+- `UKIE_RETRO_SCORE_ENABLED` — master switch for the retro-score endpoints
+
+Reused pre-existing flag:
+- `UKIE_GOVERNANCE_CUTOVER` — retro-score real writes require this too (dual gate)
+
+New endpoints (all self-guard with HTTP 503 when their master flag is off):
+- `POST /api/knowledge/promote/{item_id}` (+`?dry_run=0|1`)
+- `POST /api/knowledge/promote/{item_id}/rollback`
+- `POST /api/knowledge/retro-score`
+- `POST /api/knowledge/retro-score/rollback/{run_id}`
+
+New Mongo collections (created lazily on first write; audit-quality):
+- `strategy_knowledge_base.promote_events` — every promote/demote attempt
+- `strategy_knowledge_base.retro_score_runs` — every retro-score run summary + rollbacks
+
+Cumulative UKIE + BI5 unit tests: **181 / 181 passing**
+(143 prior + 38 new for Stage 3.γ).
+
+**Every Stage-3.γ flag defaults OFF. Zero behaviour change in
+production until the operator flips a flag.**
+
+Next steps (all pending operator review of this milestone):
+1. Coherent UKIE Activation (Gate 3 §13 sequence)
+2. BI5 shadow 24-hour observation window
+3. Stage 4 kickoff (connector fleet + COE γ + observability finalisation)
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

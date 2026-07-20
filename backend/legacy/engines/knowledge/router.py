@@ -193,3 +193,19 @@ async def post_dry_run(payload: Optional[Dict[str, Any]] = Body(default=None)) -
         synthetic_fixture_name=fixture_name,
     )
     return summary.to_dict()
+
+
+# ── Stage 3.γ — Promote Bridge (P2C.9) + Retro-scoring (P2C.11) ──────
+#
+# The sub-routers implement their own flag gates
+# (`UKIE_PROMOTE_BRIDGE_ENABLED`, `UKIE_RETRO_SCORE_ENABLED`) and
+# refuse with HTTP 503 when off. We mount them on the same prefix so
+# every `/api/knowledge/*` route lives on one FastAPI router.
+
+from .promote_router import router as _promote_router            # noqa: E402
+from .retro_score_router import router as _retro_score_router    # noqa: E402
+
+for _r in _promote_router.routes:
+    router.routes.append(_r)
+for _r in _retro_score_router.routes:
+    router.routes.append(_r)
