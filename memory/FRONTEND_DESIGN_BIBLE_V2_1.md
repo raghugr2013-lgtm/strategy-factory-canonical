@@ -154,6 +154,94 @@ Workforce, or any future module.
 reversible with a single keystroke (`Esc` / `⌘[`) with **zero loss of
 selected context**.
 
+#### 1.4.5 State Memory (complementary refinement · new v2.1)
+
+Where **Context Never Lost (§1.4.4)** preserves state that *follows the
+operator* (mode, filters, time-window, selections, pins), **State
+Memory** preserves state that *stays with the surface* (scroll,
+expand/collapse, tab, layout). Together they realise the metaphor:
+*returning to a screen should feel like returning to your desk, not
+opening a new document.*
+
+**What State Memory preserves per surface:**
+
+| State | Preserved | Scope | Persistence |
+|---|---|---|---|
+| Scroll position | ✅ | per surface, per session | Session |
+| Expanded / collapsed panels | ✅ | per panel, per session | Session |
+| Selected tab (TopTabBar sub-section) | ✅ | per module | Session |
+| Selected worker on Workforce Org Chart | ✅ | per module | Session |
+| Selected strategy on Explorer | ✅ | per surface | Session |
+| Pinned Preview tray contents | ✅ (also via CNL) | workspace-global | Session |
+| Open Lineage Graph drawer | ✅ | per surface (drawer restores on return) | Session |
+| Open Evidence Drawer | ✅ | per surface | Session |
+| Local workspace layout (per-module resizeable regions) | ✅ | per module | Session |
+| Column sort on Table tiles | ✅ | per tile | Session |
+| Advanced-Lens toggle | ✅ (also via CNL) | workspace-global | Persistent |
+| Density | ✅ (also via CNL) | workspace-global | Persistent |
+| Pin/unpin toolbar state | ✅ | per surface | Session |
+
+**Distinction from Context Never Lost:**
+
+- **CNL** = *what the operator brings with them*. Follows across
+  navigation. Enforced via workspace state store + URL query params.
+- **State Memory** = *what the surface remembers about its last
+  visitor*. Stays on the surface. Enforced via per-surface state slice.
+
+The two work together. Example: an operator on Timeline scrolls to
+row 47, filters by `research`, opens Row 47's Evidence Drawer.
+Navigates away. Returns.
+- CNL restores: the `research` filter, the time-window chip, the
+  workspace mode, the Pinned Preview tray.
+- State Memory restores: the scroll to Row 47, the Evidence Drawer
+  open, the row highlighted.
+
+**Implementation contract (for Sprint 1 architecture):**
+
+- Every surface component owns a `stateMemoryKey` — a stable string
+  identifier scoped to that surface.
+- On mount, the surface reads its slice from the session store and
+  applies scroll / expand / tab / layout state.
+- On unmount, the surface writes its current slice.
+- The store is `sessionStorage`-backed (survives navigation within a
+  session; cleared on tab close).
+- The store is deep-linkable *only for the CNL fields*; State Memory
+  fields do NOT enter the URL — visiting a shared link starts fresh on
+  scroll/expand while inheriting the sender's mode/filters/time-window.
+
+**Persistence rules:**
+
+| Kind | Storage | Survives page reload | Survives tab close | In URL |
+|---|---|---|---|---|
+| CNL (mode, density, Advanced-Lens) | localStorage | ✅ | ✅ | No (session-personal) |
+| CNL (filters, time-window, selected artefact) | sessionStorage + URL | ✅ | Partial | ✅ |
+| State Memory (scroll, expand, tab, layout) | sessionStorage | ✅ | No | No |
+| Pinned Preview tray | sessionStorage | ✅ | No | No |
+
+**Anti-patterns that violate State Memory:**
+
+- ❌ Scrolling every list to the top on return.
+- ❌ Re-collapsing every panel on route change.
+- ❌ Forgetting which sub-tab the operator was on.
+- ❌ Closing drawers on navigation and requiring re-open.
+
+**Anti-patterns that would violate the CNL/State-Memory distinction:**
+
+- ❌ Placing scroll position in the URL (pollutes shared links).
+- ❌ Persisting scroll to localStorage (survives too long; feels stale
+  on next-day return).
+- ❌ Placing filter state in sessionStorage only (would break
+  deep-linking).
+
+**Rule of Return.** Returning to a surface, the operator should
+immediately recognise their previous vantage point. If they have to
+re-orient, State Memory has failed.
+
+**Rule of Fresh Deep Link.** A shared link opened by a *different*
+operator or in a *new tab* delivers CNL fields from the URL but
+starts fresh on scroll/expand/tab. The shared link is the
+*starting configuration*, not the *return desk*.
+
 ---
 
 ## §2 The six operator questions
@@ -717,8 +805,9 @@ Print these; put them next to the workstation.
 11. **Bottom-up monitoring · top-down troubleshooting.** *(new)*
 12. **Everything drills through.** Zero dead-end tiles. *(new)*
 13. **Context is never lost.** One continuous workspace. *(new)*
-14. **Salience ∝ consequence.** The most important tile is the biggest. *(new)*
-15. **The UI never waits.** Optimistic first, reconcile later. *(new)*
+14. **State Memory — every surface remembers its last visitor.** *(new)*
+15. **Salience ∝ consequence.** The most important tile is the biggest. *(new)*
+16. **The UI never waits.** Optimistic first, reconcile later. *(new)*
 
 ---
 

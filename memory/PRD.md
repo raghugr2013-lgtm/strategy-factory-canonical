@@ -779,3 +779,87 @@ Awaiting operator sign-off on Plan v2 §14 before Phase A start.
 See `/app/memory/test_credentials.md`. Production admin credentials (unchanged from session 1):
 - Email: `admin@coinnike.com`
 - Password: `Tmn0SECEyDxV1KqfbHMw` — rotate after first login
+
+---
+
+## Frontend Design Phase — D-series complete (2026-07-20)
+
+**All eight D-series design documents authored and approved by operator.**
+
+Design phase is a **prerequisite for Sprint 1 code**. Backend Feature Freeze remains in effect throughout.
+
+### Approved documents
+
+| # | Document | Lines | Purpose |
+|---|---|---|---|
+| Bible v1.0 | `FRONTEND_DESIGN_BIBLE.md` | 1,072 | Original 21-section spec |
+| Bible v2.0 delta | `FRONTEND_DESIGN_BIBLE_V2_DELTA.md` | 215 | Personalization + signature graphics + Copilot elevation |
+| **Bible v2.1** | `FRONTEND_DESIGN_BIBLE_V2_1.md` | 946 | **Canonical**. Supersedes v1.0 + v2.0 delta |
+| Study | `DESIGN_INSPIRATION_STUDY.md` | 850 | Six-product research (Mission Control · Linear · Palantir · UI/UX Pro Max) |
+| Deltas | `BIBLE_V2.1_DELTAS.md` | 822 | Implementation-ready deltas from the study |
+| D0 | `D0_VISUAL_LANGUAGE_EXPLORATION.md` | 443 | Concept D (50% Mission Control · 35% AI Intelligence · 15% Executive Luxury) |
+| D1 | `D1_MISSION_CONTROL_VISUAL_BENCHMARK.md` | 649 | Visual system codification |
+| D2 | `D2_AI_ACTIVITY_TIMELINE.md` + `D2_ADDENDUM_STORYTELLING_STANDARD.md` | 546 | Timeline + Division-voice storytelling |
+| D3 | `D3_APPROVAL_CENTER.md` | 376 (patched) | Approval Center with Lineage Graph downstream chip |
+| D4 | `D4_MASTER_BOT_WORKFORCE.md` | 880 | Master Bot CEO metaphor + 8-division org chart + Purpose Before Status |
+| D5 | `D5_SIGNATURE_GRAPHIC_GALLERY.md` | 1,025 | G2–G8 signature graphics + Signature Frame recognisability mechanism |
+| D6 | `D6_PERSONALIZATION_MODES.md` | 1,076 | Executive · Operations · Research · Developer modes + Decision Identity invariant |
+| D7 | `D7_EMPTY_LOADING_ERROR_DORMANT.md` | 1,047 | State Template + 45+ authored specimens |
+| D8 | `D8_SPRINT_1_EXECUTION_PLAN.md` | 888 | Sprint 1 execution architecture |
+
+### Foundational principles (Bible v2.1 §1.4)
+
+1. **Invisible Luxury** — craftsmanship over decoration
+2. **Everything Connected** — every artefact carries lineage
+3. **Progressive Disclosure** — Simple → Advanced Lens
+4. **Context Never Lost** (§1.4.4) — state follows the operator across navigation
+5. **State Memory** (§1.4.5) — state stays with the surface on return
+
+### Invariants adopted (mode-orthogonal)
+
+- **Purpose Before Status** (D4 §5.1.1) — every entity answers Why · Now · Produces · Next
+- **Decision Identity** (D6 §8.1a) — truth is invariant across modes; only presentation differs
+- **Signature Frame** (D5 §2) — mechanism of recognisability across all G-graphics
+- **State Template** (D7 §3) — mechanism of consistency across all non-happy states
+
+### Post-D8 gate — E-series (Experience Design Suite)
+
+Before Sprint 1 code begins, the following experience-design documents will be authored:
+
+- **E1** — Strategy Experience (end-to-end journey of one strategy)
+- **E2** — Authentication Experience *(recommended first)*
+- **E3** — First-Time User Journey
+- **E4** — Daily Operator Journey
+- **E5** — Cross-Module Navigation
+
+Recommended authorship order: **E2 → E3 → E4 → E1 → E5**. Estimated timeline ~11 working days.
+
+### Sprint 1 scope (per D8)
+
+- Architectural foundations: workspace state store · State Memory infra · URL scheme · AppShell · design tokens · mode switcher · ⌘K palette · danger ribbon · status rail
+- Primitives: `<Chip>` · `<MetricBlock>` · `<ChartTile>` · `<TableTile>` · `<PipelineStageBar>` · `<ActivityRow>` · `<WorkerCard>` · `<StateTemplate>` · `<ApprovalCard>` · `<EvidenceDrawer>` · `<LineageBar>` · `<ProvenanceTriple>` · `<SignatureFrame>` · `<DivisionCaption>` · `<KeyboardShortcut>` HUD
+- Feature machinery: `<FacetBar>` · `<TimeWindowChip>` · Optimistic UI middleware · adapters for Timeline / Approvals / Factory · Mission Control aggregator
+- Surfaces: Mission Control v1 · Timeline · Approval Center v1 · Master Bot Dashboard skeleton · Strategy Explorer minimal · empty states · Attention severity ordering
+- Tests: Storybook (≥ 115 stories) · Playwright E2E · axe-core CI · visual regression · reduced-motion audit · keyboard walkthrough
+
+**Total Sprint 1 effort: 142 engineer-days.** D8 recommends a 3-sprint stretch for craftsmanship.
+
+### Sprint 1 explicit non-goals (deferred to Sprint 2+)
+
+- Lineage Graph mode (Bible §10.2) → Sprint 2
+- Pinned Preview (§7.12) → Sprint 2
+- Full Master Bot Plan Contract with HITL cross-links → Sprint 2
+- Full Workforce Org Chart → Sprint 2
+- Copilot trace-as-UI (§24) → Sprint 3
+- G3 Knowledge Graph → Sprint 3
+- G5 Execution Constellation → Sprint 3
+- G6 Portfolio Risk Surface → Sprint 4
+- G7 Learning Evolution Timeline → Sprint 3
+- Executive Briefing surface → Sprint 3
+- Research Workspace surface → Sprint 3
+
+### Next actionable steps
+
+1. Operator review of D8.
+2. Author E-series (E2 → E3 → E4 → E1 → E5).
+3. Sprint 1 kick-off after E-series sign-off.
