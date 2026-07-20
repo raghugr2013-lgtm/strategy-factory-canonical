@@ -37,6 +37,7 @@ Every design deliverable must confirm all items. D6 confirms:
 - [x] **Storytelling Copy Standard (D2 Addendum)** — Division voice is used in every mode; Executive adds serif emphasis; Developer adds Advanced chips without changing the underlying sentence.
 - [x] **Context Never Lost (Bible v2.1 §1.4.4)** — switching mode preserves every selection, filter, time-window, pinned item, scroll position, and Advanced Lens state.
 - [x] **Purpose Before Status (D4 §5.1.1)** — every mode-specific screen still leads with purpose captions before state chips.
+- [x] **Decision Identity (§8.3 · new invariant)** — every decision, approval, metric, or evidence object represents the same underlying truth in every mode. Presentation differs. Truth does not.
 
 ---
 
@@ -639,7 +640,107 @@ visited page renders (falling back to Mission Control on first login).
 - Signature Frame (D5 §2) worn by every G-graphic in every mode.
 - Backend Feature Freeze applies identically.
 
-### 8.2 What differs — a single table
+### 8.1a Decision Identity — the truth invariant
+
+Adopted 2026-07-20 as a permanent invariant alongside Context Never Lost.
+
+**Principle.** A decision, approval, metric, or evidence object must
+always represent the **same underlying truth** in every personalization
+mode. Modes may change emphasis, layout, wording, and density, but they
+must never alter the underlying values or meaning.
+
+**What is inviolate across modes:**
+
+| Object | Truth that must not shift |
+|---|---|
+| Approval | `approval_id`, `origin`, `risk` (low/med/high), `evidence_ref`, `rollback_sla_sec`, `actions[]`, `submitted_at`, `submitted_by` |
+| Metric | numeric value, unit, computation method, source endpoint |
+| Evidence | pipeline stage, confidence, method, provenance triple, lineage |
+| Recommendation | recommendation text, affected artefacts, risk classification |
+| Worker state | current state chip, state-history line, current subject |
+| Plan step | state icon (`✓ ▸ ○ ⏸ ⨯ ⤴`), Division-voice sentence, HITL gate identity |
+| Lineage | ancestors + descendants set, edge types, traversal timestamps |
+| Signal chip | letter glyph + colour + underlying data source |
+| Provenance | origin, trust_tier, signed_by |
+| Timestamp | ISO UTC value on hover (presentation may relative-format) |
+
+**What modes MAY alter:**
+
+- Typography (serif vs mono vs sans).
+- Density and spacing.
+- Which fields are visible at first glance (chip-strip visibility).
+- Narrative wording around a number (e.g., "confidence 0.87" vs "high
+  confidence at 0.87" vs "high").
+- Density of ambient motion.
+- Which surface is the landing.
+- Which chips get promoted to the top card row.
+
+**What modes MUST NOT alter:**
+
+- The underlying `0.87` confidence value.
+- The `low/medium/high` risk classification.
+- The set of evidence items linked to an artefact.
+- The approval identity, its recommendation, or its downstream effect.
+- The count of pending approvals, workers online, or open advisories.
+- The letter-glyph on any signal chip (`P W F A I`).
+- The Division voice attribution.
+- The ordering rule of the Attention panel (severity, then age — §8.8
+  in Bible).
+- The eight pipeline stages, in their canonical order.
+
+**Anti-patterns that violate Decision Identity:**
+
+- ❌ Rounding a metric differently per mode (e.g., `91.4 %` in Ops but
+  `91 %` in Executive). Presentation of significant figures follows a
+  single rule (Bible §19.5); mode does not.
+- ❌ Hiding a piece of evidence in one mode that is visible in another
+  as a *filter* rather than as a *lens*. Progressive disclosure hides
+  detail behind Advanced Lens — the underlying evidence set is
+  unchanged.
+- ❌ Reclassifying a `medium` risk as `low` because the current mode
+  filters it out. Filters change *what is shown*; they never change
+  *what is true*.
+- ❌ Renaming the `dedup threshold` metric to *"deduplication sensitivity"*
+  in Executive mode. Terminology dictionary (Bible §19.4) is
+  mode-invariant.
+- ❌ Executive mode reporting "3 approvals pending" while Operations
+  mode reports 4. The count is a truth, not a preference.
+
+**Verification test (per Sprint acceptance):**
+
+Take any artefact / approval / metric visible in one mode. Switch to
+another mode. The identity, count, classification, and lineage must be
+byte-identical. Only rendering may differ.
+
+**Rule of Reversibility:** presenting the same object in every mode
+must round-trip — the exact same operator, seeing the exact same
+object across all four modes, arrives at the same understanding of
+*what it is* (even if the *rendering* moves their attention differently).
+
+**Interaction with Advanced Lens.** Advanced Lens is a lens, not a
+filter (Bible §11 · D1 §11). Toggling Advanced Lens reveals additional
+chips (method, confidence, provenance) but never changes the underlying
+truth. Executive-Advanced-off and Executive-Advanced-on show the *same*
+approval with the *same* recommendation; Advanced-on just adds chips.
+
+**Implementation contract (Sprint 1 architecture):**
+
+- Every domain object has a single canonical shape (see D3 §7 `Approval`,
+  D4 §14 `MasterBotSnapshot`, D2 §12 `TimelineEvent`, D5 §14
+  `SignatureFrame<T>`).
+- Mode-specific rendering happens at the **presentation layer only** —
+  components accept the canonical object plus a `mode` prop.
+- No mode-conditional business logic — no `if (mode === 'executive')
+  round(value, 0)`.
+- Adapters (`services/*.js`) produce canonical objects; components
+  present them.
+- Selectors are mode-agnostic — `selectPendingApprovals()` returns the
+  same set regardless of mode; only the display component decides which
+  to prioritise or annotate.
+
+---
+
+## 8.2 What differs — a single table
 
 | Property | Executive | Operations | Research | Developer |
 |---|---|---|---|---|
@@ -912,6 +1013,7 @@ Personalization Modes ship only if:
 - ✅ A11y — mode change announced; keyboard-navigable switcher (§16)
 - ✅ Mode persists in localStorage
 - ✅ Kill posture fires in every mode (§3.5)
+- ✅ Decision Identity verified — swap between all 4 modes on the same approval / metric / lineage; underlying values byte-identical (§8.1a)
 - ✅ Advanced Lens forced-on in Developer mode (§17)
 - ✅ Screenshot per mode × per posture (12 screenshots for archive)
 - ✅ `data-testid` on mode selector, every mode option, every mode-specific chip

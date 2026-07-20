@@ -726,8 +726,14 @@ Print these; put them next to the workstation.
 
 Unchanged from v2.0 §2 · updated with Context Never Lost.
 
-**Mode is orthogonal to posture** (workstation / tablet / briefing) and
-**preserved across navigation** (§1.4.4).
+**v2.1 addendum:** every mode preserves **Decision Identity** — a
+decision, approval, metric, or evidence object represents the same
+underlying truth in every mode. Modes change emphasis, layout, wording
+and density; they never alter the underlying values or meaning. See
+D6 §8.1a for full spec.
+
+Mode is orthogonal to posture (workstation / tablet / briefing) and
+preserved across navigation (§1.4.4).
 
 ---
 
