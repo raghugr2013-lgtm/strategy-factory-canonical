@@ -28,7 +28,6 @@ import { ApprovalCard } from '../primitives/ApprovalCard';
 import { LineageBar } from '../primitives/LineageBar';
 import { ProvenanceTriple } from '../primitives/ProvenanceTriple';
 import { EvidenceDrawer } from '../primitives/EvidenceDrawer';
-import { Inspector } from './Inspector';
 import { artefactRows, priceSeries, spark, longText, type ArtefactRow } from './fixtures';
 
 const Section: React.FC<{ code: string; title: string; blurb: string; children: React.ReactNode }> = ({
@@ -81,10 +80,8 @@ export const PrimitiveGallery: React.FC = () => {
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) 260px',
+        display: 'flex', flexDirection: 'column',
         gap: 'var(--space-6)',
-        alignItems: 'flex-start',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -105,7 +102,7 @@ export const PrimitiveGallery: React.FC = () => {
             Decision, Evidence. Every element uses the design tokens, honours the
             four canonical states, exposes <span className="mono-num">data-testid</span> attributes,
             and respects the operator's reduced-motion preference. Use the
-            Inspector on the right to drive state permutations.
+            Inspector sheet (◆ PROTO in the header) to drive state permutations.
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
             <Chip tone="info" label="tokens only" />
@@ -510,8 +507,6 @@ export const PrimitiveGallery: React.FC = () => {
           </div>
         </Section>
       </div>
-
-      <Inspector />
 
       <EvidenceDrawer
         open={drawerOpen}

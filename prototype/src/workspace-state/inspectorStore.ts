@@ -14,12 +14,15 @@ interface InspectorState {
   reducedMotion: boolean;
   longContent: boolean;
   scenarioKey: ScenarioKey | null;
+  showSheet: boolean;
 
   setCanonicalState: (s: CanonicalState) => void;
   setReducedMotion: (v: boolean) => void;
   setLongContent: (v: boolean) => void;
   applyScenario: (key: ScenarioKey) => void;
   clearScenario: () => void;
+  toggleSheet: () => void;
+  setShowSheet: (v: boolean) => void;
 }
 
 export const useInspectorStore = create<InspectorState>((set) => ({
@@ -27,6 +30,7 @@ export const useInspectorStore = create<InspectorState>((set) => ({
   reducedMotion: false,
   longContent: false,
   scenarioKey: null,
+  showSheet: false,
 
   setCanonicalState: (canonicalState) => set({ canonicalState, scenarioKey: null }),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
@@ -47,4 +51,6 @@ export const useInspectorStore = create<InspectorState>((set) => ({
     });
   },
   clearScenario: () => set({ scenarioKey: null }),
+  toggleSheet: () => set((s) => ({ showSheet: !s.showSheet })),
+  setShowSheet: (showSheet) => set({ showSheet }),
 }));

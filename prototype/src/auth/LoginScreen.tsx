@@ -27,7 +27,7 @@ const isInformational = (e: LoginErrorKind) => e === 'session-expired-notice';
 export const LoginScreen: React.FC = () => {
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const nextUrl = params.get('next') || '/prototype/gallery';
+  const nextUrl = params.get('next') || '/c/mission';
 
   const { attemptLogin, lastError, stance } = useAuthStore();
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);

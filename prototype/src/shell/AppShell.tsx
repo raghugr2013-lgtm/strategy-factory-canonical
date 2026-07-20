@@ -7,7 +7,9 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { useWorkspaceStore } from '../workspace-state/store';
 import { useAuthStore } from '../workspace-state/authStore';
-import { LeftRailStub } from './LeftRailStub';
+import { useInspectorStore } from '../workspace-state/inspectorStore';
+import { LeftRail } from './LeftRail';
+import { InspectorSheet } from './InspectorSheet';
 import { UserMenu } from '../auth/UserMenu';
 
 export const AppShell: React.FC = () => {
@@ -16,6 +18,8 @@ export const AppShell: React.FC = () => {
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);
   const cmdkHintDismissed = useWorkspaceStore((s) => s.cmdkHintDismissed);
   const authStance = useAuthStore((s) => s.stance);
+  const toggleSheet = useInspectorStore((s) => s.toggleSheet);
+  const activeScenario = useInspectorStore((s) => s.scenarioKey);
   const loc = useLocation();
 
   const isAuthed = authStance === 'authenticated';
@@ -113,6 +117,28 @@ export const AppShell: React.FC = () => {
               ⌘K disabled
             </span>
           )}
+          {isAuthed && (
+            <button
+              data-testid="proto-toggle"
+              onClick={toggleSheet}
+              title="Prototype inspector · scenarios & state toggles"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: activeScenario ? 'var(--sig-info)' : 'transparent',
+                color: activeScenario ? 'var(--surface-0)' : 'var(--content-md)',
+                border: '1px solid var(--stroke-2)',
+                borderRadius: 'var(--radius-1)',
+                padding: '4px 8px',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 'var(--font-caption)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                cursor: 'pointer',
+              }}
+            >
+              ◆ proto{activeScenario && ' · active'}
+            </button>
+          )}
           {isAuthed ? (
             <UserMenu />
           ) : (
@@ -136,7 +162,7 @@ export const AppShell: React.FC = () => {
       </header>
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        <LeftRailStub />
+        <LeftRail />
         <main
           role="main"
           tabIndex={-1}
@@ -178,6 +204,8 @@ export const AppShell: React.FC = () => {
           env prod · @v55
         </span>
       </footer>
+
+      <InspectorSheet />
     </div>
   );
 };

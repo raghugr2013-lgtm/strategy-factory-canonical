@@ -1,51 +1,42 @@
 /*
- * Prototype entry — Phases 1–3.
+ * Prototype entry — Phases 1–4.
  * Route table follows D8 §3.3.
- *   /auth/sign-in            — public login screen (E2 §3)
- *   /prototype/gallery       — primitive gallery (auth-guarded per E2 §5)
- *   /c/mission               — mission placeholder (auth-guarded)
- * Anonymous root redirects to sign-in; authenticated root goes to gallery.
+ *   /auth/sign-in              — public login screen (E2 §3)
+ *   /c/mission                 — Mission Control (P4)
+ *   /c/timeline                — Timeline (P4)
+ *   /c/approvals               — Approval Center (P4)
+ *   /c/workforce               — Master Bot (P4)
+ *   /c/strategies              — Strategy Explorer (P4)
+ *   /c/strategies/:id          — Strategy Passport (P4)
+ *   /c/settings                — placeholder for Sprint 1
+ *   /prototype/gallery         — primitive gallery (P2, retained)
+ * Anonymous root redirects to sign-in; authenticated root goes to Mission.
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
 import { AppShell } from './shell/AppShell';
-import { StateTemplate } from './primitives/StateTemplate';
 import { PrimitiveGallery } from './gallery/PrimitiveGallery';
 import { LoginScreen } from './auth/LoginScreen';
 import { RequireAuth } from './auth/RequireAuth';
 import { useAuthStore } from './workspace-state/authStore';
+import { MissionControl } from './surfaces/MissionControl';
+import { Timeline } from './surfaces/Timeline';
+import { ApprovalCenter } from './surfaces/ApprovalCenter';
+import { MasterBot } from './surfaces/MasterBot';
+import { StrategyExplorer } from './surfaces/StrategyExplorer';
+import { StrategyPassport } from './surfaces/StrategyPassport';
+import { SettingsStub } from './surfaces/SettingsStub';
 import './tokens.css';
-
-const MissionPlaceholder: React.FC = () => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-    <div>
-      <div style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Mission Control · Operations
-      </div>
-      <div style={{ fontSize: 'var(--font-h2)', color: 'var(--content-hi)', marginTop: 'var(--space-2)' }}>
-        You are all caught up.
-      </div>
-    </div>
-    <StateTemplate
-      variant="empty"
-      icon={CheckCircle}
-      tone="ok"
-      code="mc-empty-nothing-pending"
-      headline="The Factory is operating autonomously."
-      purpose="No approvals require your attention."
-      primaryAction={{ label: 'open Timeline', onClick: () => {} }}
-      secondaryLink={{ label: "view yesterday's briefing", onClick: () => {} }}
-      advancedFootnote="master-bot@v55 · plan #47 · step 3/7"
-    />
-  </div>
-);
 
 const RootRedirect: React.FC = () => {
   const stance = useAuthStore((s) => s.stance);
-  return <Navigate to={stance === 'authenticated' ? '/prototype/gallery' : '/auth/sign-in'} replace />;
+  return <Navigate to={stance === 'authenticated' ? '/c/mission' : '/auth/sign-in'} replace />;
 };
+
+const Guarded: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <RequireAuth>{children}</RequireAuth>
+);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -54,14 +45,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route element={<AppShell />}>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/auth/sign-in" element={<LoginScreen />} />
-          <Route
-            path="/prototype/gallery"
-            element={<RequireAuth><PrimitiveGallery /></RequireAuth>}
-          />
-          <Route
-            path="/c/mission"
-            element={<RequireAuth><MissionPlaceholder /></RequireAuth>}
-          />
+          <Route path="/c/mission"    element={<Guarded><MissionControl /></Guarded>} />
+          <Route path="/c/timeline"   element={<Guarded><Timeline /></Guarded>} />
+          <Route path="/c/approvals"  element={<Guarded><ApprovalCenter /></Guarded>} />
+          <Route path="/c/workforce"  element={<Guarded><MasterBot /></Guarded>} />
+          <Route path="/c/strategies" element={<Guarded><StrategyExplorer /></Guarded>} />
+          <Route path="/c/strategies/:id" element={<Guarded><StrategyPassport /></Guarded>} />
+          <Route path="/c/settings"   element={<Guarded><SettingsStub /></Guarded>} />
+          <Route path="/prototype/gallery" element={<Guarded><PrimitiveGallery /></Guarded>} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -56,11 +56,12 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
   const El: React.ElementType = motionEnabled ? motion.article : 'article';
   const motionProps = motionEnabled ? { initial: 'hidden', animate: 'visible', variants: fadeInUp } : {};
   const code = title.toLowerCase().replace(/\W+/g, '-').slice(0, 40);
+  const rootId = testId ?? `approval-${code}`;
   const t = riskTone[risk];
 
   return (
     <El
-      data-testid={testId ?? `approval-${code}`}
+      data-testid={rootId}
       {...motionProps}
       style={{
         display: 'flex', flexDirection: 'column', gap: 'var(--space-3)',
@@ -118,7 +119,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
         <button
-          data-testid={`approval-${code}-approve`}
+          data-testid={`${rootId}-approve`}
           onClick={onApprove}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -134,7 +135,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
           <CheckCircle2 size={14} /> Approve
         </button>
         <button
-          data-testid={`approval-${code}-defer`}
+          data-testid={`${rootId}-defer`}
           onClick={onDefer}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -148,7 +149,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
           <Clock size={14} /> Defer
         </button>
         <button
-          data-testid={`approval-${code}-block`}
+          data-testid={`${rootId}-block`}
           onClick={onBlock}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
