@@ -176,3 +176,13 @@ from .governance_policy import (                                # noqa: F401
     get_governance_policy_engine,
     is_governance_policy_enabled,
 )
+from .health_provider import (                                  # noqa: F401
+    UkieHealthProvider,
+    get_ukie_health_provider,
+    is_ukie_health_provider_enabled,
+)
+from .metrics import (                                          # noqa: F401
+    KnowledgeMetrics,
+    get_knowledge_metrics,
+    is_metrics_enabled,
+)

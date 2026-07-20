@@ -1,0 +1,55 @@
+# Phase 2 Stage 4 P4D — Alertmanager rules skeleton
+#
+# All rules default OFF via per-rule `ALERT_<NAME>_ENABLED` env flags
+# (checked by the alert delivery layer, NOT by Prometheus itself).
+# During Coherent UKIE Activation, the operator flips the desired
+# ALERT_* flags after a 24h baseline observation window.
+#
+# Data source: platform's HTTP surface via the black-box exporter or a
+# purpose-built scraper. Thresholds match PHASE_4_MASTER_PLAN §6.5.
+
+groups:
+  - name: factory-stage-4-p4d
+    interval: 30s
+    rules:
+
+      # HIGH: overall platform health degradation
+      - alert: FactoryPlatformHealthDegraded
+        expr: factory_platform_health_score < 60
+        for: 5m
+        labels: {severity: high, source: p4d, flag: ALERT_PLATFORM_HEALTH_ENABLED}
+        annotations:
+          summary: "Platform health score below threshold ({{ $value }} < 60)"
+          runbook: "docs/observability/runbooks/platform_health.md"
+
+      # HIGH: LLM budget exhaustion imminent
+      - alert: FactoryBudgetHeadroomLow
+        expr: factory_budget_headroom_usd < factory_budget_daily_hard_cap_usd * 0.1
+        for: 2m
+        labels: {severity: high, source: p4d, flag: ALERT_BUDGET_HEADROOM_ENABLED}
+        annotations:
+          summary: "Daily budget headroom < 10% of hard cap"
+
+      # MEDIUM: dead-letter growth
+      - alert: FactoryDeadLetterDepthHigh
+        expr: factory_coe_dead_letter_depth > 100
+        for: 10m
+        labels: {severity: medium, source: p4d, flag: ALERT_DEAD_LETTER_DEPTH_ENABLED}
+
+      # MEDIUM: any connector reporting `failing`
+      - alert: FactoryConnectorFailing
+        expr: sum(factory_ukie_connector_failing_count) > 0
+        for: 5m
+        labels: {severity: medium, source: p4d, flag: ALERT_CONNECTOR_FAILING_ENABLED}
+
+      # LOW: sustained high promote refusal rate
+      - alert: FactoryPromoteRefusalRateHigh
+        expr: factory_ukie_promote_refuse_rate_1h > 0.5
+        for: 30m
+        labels: {severity: low, source: p4d, flag: ALERT_PROMOTE_REFUSAL_RATE_ENABLED}
+
+      # MEDIUM: admission latency creep
+      - alert: FactoryAdmissionLatencyHigh
+        expr: factory_coe_admission_p95_ms > 200
+        for: 5m
+        labels: {severity: medium, source: p4d, flag: ALERT_ADMISSION_LATENCY_ENABLED}

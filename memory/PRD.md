@@ -606,6 +606,66 @@ Remaining Stage-4 work:
 - Validation Gate 5
 - Backend Feature Freeze
 
+## Phase 4 P4D — Observability Finalisation: IMPLEMENTED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_4_P4D_OBSERVABILITY_NOTES.md`
+
+Landed all 7 sub-milestones from PHASE_4_MASTER_PLAN §6:
+- **P4D.1 UKIE health provider** — `/api/knowledge/health`; composes
+  `ukie` block with 23 tracked flags, per-domain row counts, connector
+  fleet snapshots, 24h audit-event counters.
+- **P4D.2 Connector-event persistence helper** —
+  `snapshot_observation_for_persistence()` serialiser (live persistence
+  hook wired at activation).
+- **P4D.3 Knowledge metrics** — `/api/knowledge/metrics` with per-domain
+  aggregates, trust/license distributions, time-windowed counts,
+  promote/retro-score summaries.
+- **P4D.4/5 Dashboards + alerts** — Grafana JSON (10 panels) + 6
+  Alertmanager rules (each opt-in via `ALERT_*_ENABLED`), shipped in
+  `docs/observability/`.
+- **P4D.6 Audit visibility** — 3 read endpoints
+  (`/api/knowledge/promote-events`, `/retro-score-runs`, `/connector-events`)
+  with paged filters.
+- **P4D.8 Subsystem HealthSnapshot retrofits** — 5 additive `/api/<sub>/health`
+  endpoints (meta-learning · mi · execution · portfolio · factory-eval).
+  Pre-existing subsystem diagnostic endpoints UNTOUCHED.
+
+10 new endpoints, all self-guard HTTP 503 when their flag is off.
+
+New feature flags (all default OFF):
+- `UKIE_HEALTH_PROVIDER_ENABLED`
+- `UKIE_METRICS_ENABLED`
+- `UKIE_AUDIT_VISIBILITY_ENABLED`
+- `UKIE_CONNECTOR_EVENTS_PERSIST_ENABLED` (reserved for activation hook)
+- 5 × `<SUB>_HEALTH_PROVIDER_ENABLED`
+- 6 × `ALERT_*_ENABLED` (individual alert rules)
+
+Cumulative unit tests: **323 / 323 passing**
+(302 prior + 21 new P4D).
+
+**Every P4D flag defaults OFF. Zero production behaviour change.**
+
+## Stage 4 COMPLETE
+
+All four workstreams (P4A → P4D) landed, tested, and dormant:
+- P4A Connector Fleet — 58 tests
+- P4B COE γ — 36 tests
+- P4C UKIE γ — 27 tests
+- P4D Observability Finalisation — 21 tests
+- **Total Stage-4 additions: 142 new unit tests**
+
+Cumulative Phase-2 + Stage-4 test count: **323 / 323 passing**.
+
+Remaining before Coherent UKIE Activation:
+- Validation Gate 5 (readiness assessed in P4D notes; **READY**)
+- Backend Feature Freeze
+- (Post-freeze) Coherent UKIE Activation phases A → E
+- VPS deployment
+- Paper Broker validation
+- 24-h / 72-h validation
+- Recommendation Mode
+- Autonomous Mode
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

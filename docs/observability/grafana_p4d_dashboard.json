@@ -1,0 +1,52 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "title": "Factory — Stage 4 Observability (P4D)",
+  "description": "Panels: UKIE state · Connector fleet · Promote pipeline · Retro-score runs · COE γ · Subsystem health matrix. Data source is the platform's HTTP surface via `json` datasource; a Prometheus scrape may be added later.",
+  "tags": ["factory", "stage-4", "p4d"],
+  "timezone": "utc",
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "stat", "id": 1, "title": "UKIE KB row count",
+      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.kb_row_count"}],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green"}]}}}
+    },
+    {
+      "type": "stat", "id": 2, "title": "UKIE status",
+      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.status"}]
+    },
+    {
+      "type": "table", "id": 3, "title": "UKIE — per-domain rows",
+      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.kb_row_count_per_domain"}]
+    },
+    {
+      "type": "table", "id": 4, "title": "Connector fleet — health",
+      "targets": [{"url": "/api/knowledge/connectors/health", "jsonPath": "$.connectors"}]
+    },
+    {
+      "type": "stat", "id": 5, "title": "Promote events (24h)",
+      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.recent_promote_events_24h"}]
+    },
+    {
+      "type": "table", "id": 6, "title": "Retro-score runs (recent)",
+      "targets": [{"url": "/api/knowledge/retro-score-runs?limit=20", "jsonPath": "$.rows"}]
+    },
+    {
+      "type": "table", "id": 7, "title": "Promote events (recent)",
+      "targets": [{"url": "/api/knowledge/promote-events?limit=20", "jsonPath": "$.rows"}]
+    },
+    {
+      "type": "stat", "id": 8, "title": "Dead-letter depth",
+      "targets": [{"url": "/api/coe/dead-letter/depth", "jsonPath": "$.depth"}]
+    },
+    {
+      "type": "table", "id": 9, "title": "Dead-letter rows",
+      "targets": [{"url": "/api/coe/dead-letter?limit=50", "jsonPath": "$.rows"}]
+    },
+    {
+      "type": "table", "id": 10, "title": "Subsystem health matrix",
+      "note": "Aggregates the 5 P4D retrofit endpoints + pre-existing COE/VIE/CTS."
+    }
+  ]
+}

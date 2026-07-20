@@ -185,6 +185,27 @@ class ConnectorObserver:
         self._store.clear()
 
 
+# ── Persistence helper (P4D.2) ───────────────────────────────────────
+#
+# Serialise the observer's current state for one connector into a
+# JSON-friendly dict ready to be `insert_one`'d into
+# `strategy_knowledge_base.connector_events`. Callers invoke this on
+# each state transition; persistence writes are gated by the operator
+# flag `UKIE_CONNECTOR_EVENTS_PERSIST_ENABLED` at composition time.
+
+def snapshot_observation_for_persistence(name: str, observation: _ConnectorObservation) -> Dict[str, Any]:
+    return {
+        "at":                        now_iso(),
+        "connector":                 name,
+        "state":                     observation.state.value,
+        "last_success_at":           observation.last_success_at,
+        "last_failure_at":           observation.last_failure_at,
+        "last_error":                observation.last_error,
+        "retry_events_recent":       list(observation.retry_events[-5:]),
+        "rate_limit_backoff_until":  observation.rate_limit_backoff_until,
+    }
+
+
 # Singleton — one observer per process
 _OBSERVER: Optional[ConnectorObserver] = None
 

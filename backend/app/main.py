@@ -586,6 +586,16 @@ def create_app() -> FastAPI:
     except Exception as _cgx:  # noqa: BLE001
         logger.warning("COE γ router mount skipped: %s", _cgx)
 
+    # ── Subsystem health retrofit router (Phase 2 Stage 4 P4D.8) ──
+    # Additive /api/<subsystem>/health endpoints for the five
+    # subsystems without one. All flag-gated (default OFF → 503).
+    try:
+        from engines.subsystem_health_router import router as _sub_health_router  # type: ignore
+        app.include_router(_sub_health_router)
+        logger.info("mounted subsystem-health retrofit router (5 subsystems, all flag-gated)")
+    except Exception as _shx:  # noqa: BLE001
+        logger.warning("subsystem-health router mount skipped: %s", _shx)
+
     # ── Legacy full-recovery mount ───────────────────────────────
     # Mounts every preserved v01 router at `/api/*`. Runs BEFORE the
     # Phase-1 core `strategies_router` so `/api/strategies/explorer`,

@@ -206,6 +206,7 @@ from .promote_router import router as _promote_router            # noqa: E402
 from .retro_score_router import router as _retro_score_router    # noqa: E402
 from .connector_router import router as _connector_router        # noqa: E402
 from .ukie_gamma_router import router as _ukie_gamma_router      # noqa: E402
+from .observability_router import router as _observability_router  # noqa: E402
 
 # Connector-health routes must be registered BEFORE the Stage-3.α
 # `/connectors/{name}` catch-all — otherwise `{name}="health"` wins
@@ -218,4 +219,6 @@ for _r in _promote_router.routes:
 for _r in _retro_score_router.routes:
     router.routes.append(_r)
 for _r in _ukie_gamma_router.routes:
+    router.routes.append(_r)
+for _r in _observability_router.routes:
     router.routes.append(_r)
