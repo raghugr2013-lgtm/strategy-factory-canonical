@@ -691,6 +691,45 @@ Post-Gate-5 roadmap (all pending operator approval):
 
 **Production posture remains unchanged until explicit activation approval.**
 
+## Backend Feature Freeze — DECLARED (2026-07-20) ✅
+
+Document: `/app/memory/BACKEND_FEATURE_FREEZE.md`
+
+Backend declared **FEATURE-COMPLETE** at v1.1.0-stage4
+(commit `3ed832a`). Deliverables:
+- **Feature inventory** — 12 subsystems (Phase 1 core + Phase 2
+  stages + Phase 4 workstreams)
+- **API inventory** — 71 `/api/*` routes across 18 groups
+- **Database schema inventory** — 2 databases, ~9 new Stage-4
+  collections (all lazy-created, dormant)
+- **Feature-flag inventory** — 40+ flags catalogued; 34 Stage-4
+  flags verified OFF
+- **Operational runbooks** — cross-linked to prior gate reports and
+  workstream notes
+- **Deployment checklist** — VPS boot verification + TTL index list
+- **Rollback checklist** — per-workstream + nuclear + per-data-slice
+- **Validation checklist** — activation-time sanity checks
+- **Known backlog** — non-blocking items carried forward
+- **Production readiness assessment** — PASS across 9 dimensions;
+  3 items explicitly deferred to activation (aggregator wiring,
+  TTL indexes, live network clients)
+
+Cumulative unit tests: **323 / 323 passing**.
+Production posture: **all Stage-4 flags OFF, zero behaviour change**.
+
+Post-freeze roadmap (in strict order, each pending operator approval):
+1. Coherent UKIE Activation (staged phase A → E per Master Plan §8.4)
+2. VPS deployment
+3. Paper broker validation
+4. 24-hour validation
+5. 72-hour validation
+6. Recommendation Mode
+7. Autonomous Mode
+8. Frontend implementation
+
+Bug fixes and operational wiring are permitted between freeze and
+activation without lifting the freeze.
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)
