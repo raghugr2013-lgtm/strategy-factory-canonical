@@ -4,8 +4,12 @@ Endpoints (all self-guard 503 when their flag is off):
 
   # UKIE health provider — P4D.1
   # (composed into `/api/health/system` by the aggregator; also
-  # exposed here for direct inspection)
-  GET  /api/knowledge/health
+  # exposed here for direct inspection). Uses a distinct
+  # `/ukie/health` subpath to avoid a route collision with the
+  # pre-existing Phase-1 KB probe at `/api/knowledge/health`
+  # (see Phase 0 finding P0-F1). Both endpoints coexist; consumers
+  # pick the one that matches their intent.
+  GET  /api/knowledge/ukie/health
 
   # Knowledge metrics — P4D.3
   GET  /api/knowledge/metrics
@@ -73,7 +77,7 @@ def _get_kb_db():
 
 # ── UKIE health ──────────────────────────────────────────────────────
 
-@router.get("/health")
+@router.get("/ukie/health")
 async def get_ukie_health() -> Dict[str, Any]:
     if not is_ukie_health_provider_enabled():
         raise HTTPException(status_code=503, detail="UKIE_HEALTH_PROVIDER_ENABLED is off")

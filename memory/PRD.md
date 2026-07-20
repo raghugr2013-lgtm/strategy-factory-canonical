@@ -611,7 +611,7 @@ Remaining Stage-4 work:
 Document: `/app/memory/PHASE_4_P4D_OBSERVABILITY_NOTES.md`
 
 Landed all 7 sub-milestones from PHASE_4_MASTER_PLAN §6:
-- **P4D.1 UKIE health provider** — `/api/knowledge/health`; composes
+- **P4D.1 UKIE health provider** — `/api/knowledge/ukie/health` (renamed post-Phase-0 to avoid collision with the Phase-1 KB probe at `/api/knowledge/health`); composes
   `ukie` block with 23 tracked flags, per-domain row counts, connector
   fleet snapshots, 24h audit-event counters.
 - **P4D.2 Connector-event persistence helper** —

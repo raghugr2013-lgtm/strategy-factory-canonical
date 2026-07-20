@@ -56,6 +56,29 @@ async def lifespan(_app: FastAPI):
         await ensure_indexes()
     except Exception:  # noqa: BLE001
         logger.exception("ensure_indexes failed")
+
+    # ── Comprehensive engine-level index hardening (Phase 0 fix P0-F2) ──
+    # `app.db.mongo.ensure_indexes` above handles the minimal auth/audit
+    # indexes owned by `app.*`. The comprehensive spec table lives in
+    # `engines/db_indexes.py` (30+ INDEX_SPECS + 7 TTL_SPECS + 4 cross-DB
+    # KB_TTL_SPECS). Idempotent and best-effort; failures never block
+    # boot. See BACKEND_FEATURE_FREEZE.md §10 and the Phase 0 baseline
+    # report §5.2 for context.
+    try:
+        import sys as _sys, os as _os
+        _lp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "legacy")
+        if _lp not in _sys.path:
+            _sys.path.insert(0, _lp)
+        from engines.db_indexes import ensure_indexes as _engines_ensure_indexes
+        _summary = await _engines_ensure_indexes()
+        logger.info(
+            "engines.db_indexes.ensure_indexes: created=%d existed=%d errors=%d",
+            len(_summary.get("created") or []),
+            len(_summary.get("existed") or []),
+            len(_summary.get("errors") or []),
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("engines.db_indexes.ensure_indexes failed (non-fatal)")
     try:
         await seed_admin()
     except Exception:  # noqa: BLE001

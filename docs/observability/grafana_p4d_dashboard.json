@@ -9,16 +9,16 @@
   "panels": [
     {
       "type": "stat", "id": 1, "title": "UKIE KB row count",
-      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.kb_row_count"}],
+      "targets": [{"url": "/api/knowledge/ukie/health", "jsonPath": "$.kb_row_count"}],
       "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green"}]}}}
     },
     {
       "type": "stat", "id": 2, "title": "UKIE status",
-      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.status"}]
+      "targets": [{"url": "/api/knowledge/ukie/health", "jsonPath": "$.status"}]
     },
     {
       "type": "table", "id": 3, "title": "UKIE — per-domain rows",
-      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.kb_row_count_per_domain"}]
+      "targets": [{"url": "/api/knowledge/ukie/health", "jsonPath": "$.kb_row_count_per_domain"}]
     },
     {
       "type": "table", "id": 4, "title": "Connector fleet — health",
@@ -26,7 +26,7 @@
     },
     {
       "type": "stat", "id": 5, "title": "Promote events (24h)",
-      "targets": [{"url": "/api/knowledge/health", "jsonPath": "$.recent_promote_events_24h"}]
+      "targets": [{"url": "/api/knowledge/ukie/health", "jsonPath": "$.recent_promote_events_24h"}]
     },
     {
       "type": "table", "id": 6, "title": "Retro-score runs (recent)",

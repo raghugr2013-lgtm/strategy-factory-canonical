@@ -151,7 +151,7 @@ so subsequent phases have a "before" to diff against.
 
 | Step | Flag / Action | Verify |
 |---|---|---|
-| A.1 | `UKIE_HEALTH_PROVIDER_ENABLED=true` | `GET /api/knowledge/health` → 200 with `status:"dormant"` |
+| A.1 | `UKIE_HEALTH_PROVIDER_ENABLED=true` | `GET /api/knowledge/ukie/health` → 200 with `status:"dormant"` (Stage-4 endpoint intentionally mounted at `/ukie/health` to avoid collision with the pre-existing Phase-1 KB probe at `/api/knowledge/health` — see Phase 0 finding P0-F1) |
 | A.2 | `META_LEARNING_HEALTH_PROVIDER_ENABLED=true` | `GET /api/meta-learning/health` → 200 |
 | A.3 | `MI_HEALTH_PROVIDER_ENABLED=true` | `GET /api/mi/health` → 200 |
 | A.4 | `EXECUTION_HEALTH_PROVIDER_ENABLED=true` | `GET /api/execution/health` → 200 |
@@ -348,7 +348,7 @@ abort conditions.
 | Step | Flag | Wire-up |
 |---|---|---|
 | D.8 | `UKIE_CONNECTOR_FRAMEWORK_ENABLED=true` | Verify Stage-4 connectors visible in `list_connectors()` |
-| D.9 | `UKIE_CONNECTOR_INTERNAL_MONGO_ENABLED=true` | Read-only source. Wire `db_getter` to `<source_db>.<source_collection>` (concrete DB/collection to be confirmed by operator before Phase D begins — this is the last "deferred to activation" wiring item from Freeze doc §10). Observe `/api/knowledge/health.kb_row_count` growth. |
+| D.9 | `UKIE_CONNECTOR_INTERNAL_MONGO_ENABLED=true` | Read-only source. Wire `db_getter` to `<source_db>.<source_collection>` (concrete DB/collection to be confirmed by operator before Phase D begins — this is the last "deferred to activation" wiring item from Freeze doc §10). Observe `/api/knowledge/ukie/health.kb_row_count` growth. |
 | D.10 | `UKIE_CONNECTOR_ARXIV_ENABLED=true` | Wire live `aiohttp.ClientSession` (or curated seed list) + `ARXIV_API_KEY`. Observe RESEARCH domain row growth. |
 | D.11 | `UKIE_CONNECTOR_PDF_ENABLED=true` | Wire live client + curated seed URLs. |
 | D.12 | `UKIE_CONNECTOR_PROPFIRM_ENABLED=true` | Wire per-firm allow-list + optional OAuth (`PROPFIRM_CLIENT_ID` / `PROPFIRM_CLIENT_SECRET`). |
@@ -379,7 +379,7 @@ mutate the legacy collection — the "read-only" invariant on
 Sampling cadence: connector health every 5 min; KB row count every
 15 min; legacy invariant every 30 min.
 
-- `/api/knowledge/health.kb_row_count` grows predictably per connector
+- `/api/knowledge/ukie/health.kb_row_count` grows predictably per connector
 - `/api/knowledge/connectors/{name}/health.state = "healthy"` for
   every enabled connector
 - **Legacy `ingested_strategies` remains READ-ONLY** — zero writes;

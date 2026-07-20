@@ -206,7 +206,7 @@ class TestObservabilityRouter:
     def test_health_endpoint_503_when_flag_off(self, monkeypatch):
         monkeypatch.delenv("UKIE_HEALTH_PROVIDER_ENABLED", raising=False)
         with TestClient(_make_knowledge_app()) as c:
-            assert c.get("/api/knowledge/health").status_code == 503
+            assert c.get("/api/knowledge/ukie/health").status_code == 503
 
     def test_metrics_endpoint_503_when_flag_off(self, monkeypatch):
         monkeypatch.delenv("UKIE_METRICS_ENABLED", raising=False)

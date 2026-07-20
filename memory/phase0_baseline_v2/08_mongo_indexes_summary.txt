@@ -1,0 +1,77 @@
+=== P0-F2 Mongo index summary ===
+--- main DB: workload_dead_letter indexes (P0-F2 W1) ---
+[
+  {
+    name: '_id_',
+    expireAfterSeconds: undefined
+  },
+  {
+    name: 'ttl_workload_dead_letter',
+    expireAfterSeconds: 7776000
+  }
+]
+
+--- KB DB: 4 audit collection indexes (P0-F2 W1 cross-DB) ---
+=> lifecycle_events
+[
+  {
+    name: '_id_',
+    expireAfterSeconds: undefined
+  },
+  {
+    name: 'ttl_lifecycle_events',
+    expireAfterSeconds: 15552000
+  }
+]
+=> knowledge_endorsement_events
+[
+  {
+    name: '_id_',
+    expireAfterSeconds: undefined
+  },
+  {
+    name: 'ttl_knowledge_endorsement_events',
+    expireAfterSeconds: 7776000
+  }
+]
+=> knowledge_contradiction_events
+[
+  {
+    name: '_id_',
+    expireAfterSeconds: undefined
+  },
+  {
+    name: 'ttl_knowledge_contradiction_events',
+    expireAfterSeconds: 31536000
+  }
+]
+=> connector_events
+[
+  {
+    name: '_id_',
+    expireAfterSeconds: undefined
+  },
+  {
+    name: 'ttl_connector_events',
+    expireAfterSeconds: 15552000
+  }
+]
+
+--- Pre-existing INDEX_SPECS sample (P0-F2 side benefit) ---
+[
+  {
+    name: '_id_'
+  },
+  {
+    name: 'ts_dt_-1'
+  },
+  {
+    name: 'ix_audit_ts'
+  },
+  {
+    name: 'ix_audit_event_ts'
+  },
+  {
+    name: 'ttl_audit_log'
+  }
+]

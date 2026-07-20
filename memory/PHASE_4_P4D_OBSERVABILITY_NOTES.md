@@ -28,7 +28,7 @@ All seven sub-milestones from PHASE_4_MASTER_PLAN §6 delivered.
 
 | Method | Path | Flag |
 |---|---|---|
-| `GET` | `/api/knowledge/health` | `UKIE_HEALTH_PROVIDER_ENABLED` |
+| `GET` | `/api/knowledge/ukie/health` | `UKIE_HEALTH_PROVIDER_ENABLED` |
 | `GET` | `/api/knowledge/metrics` | `UKIE_METRICS_ENABLED` |
 | `GET` | `/api/knowledge/promote-events` | `UKIE_AUDIT_VISIBILITY_ENABLED` |
 | `GET` | `/api/knowledge/retro-score-runs` | `UKIE_AUDIT_VISIBILITY_ENABLED` |
@@ -121,7 +121,7 @@ Modified (3 files):
 
 | Flag | Default | Effect ON |
 |---|---|---|
-| `UKIE_HEALTH_PROVIDER_ENABLED` | `false` | `/api/knowledge/health` served; `ukie` block appears in `/api/health/system` (aggregator wiring is an activation step) |
+| `UKIE_HEALTH_PROVIDER_ENABLED` | `false` | `/api/knowledge/ukie/health` served; `ukie` block appears in `/api/health/system` (aggregator wiring is an activation step) |
 | `UKIE_METRICS_ENABLED` | `false` | `/api/knowledge/metrics` served |
 | `UKIE_AUDIT_VISIBILITY_ENABLED` | `false` | 3 audit read endpoints served |
 | `UKIE_CONNECTOR_EVENTS_PERSIST_ENABLED` | `false` | (Reserved) live persistence hook honoured by observer callers |
@@ -226,7 +226,7 @@ Deferred to activation (not blocking Gate 5):
 ## 6. Live-verification checklist (operator, when ready)
 
 Preview pod, all P4D flags OFF (default):
-- [ ] `GET /api/knowledge/health` → 503
+- [ ] `GET /api/knowledge/ukie/health` → 503
 - [ ] `GET /api/knowledge/metrics` → 503
 - [ ] `GET /api/knowledge/promote-events` → 503
 - [ ] `GET /api/meta-learning/health` → 503 (etc. for all 5 subsystems)

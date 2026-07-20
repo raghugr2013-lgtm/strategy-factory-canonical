@@ -85,7 +85,7 @@ Reference: `PHASE_4_P4D_OBSERVABILITY_NOTES.md`
 
 | Deliverable (plan §6) | Status |
 |---|---|
-| UKIE health provider (`/api/knowledge/health`) | ✅ |
+| UKIE health provider (`/api/knowledge/ukie/health`) | ✅ |
 | Connector-event persistence helper | ✅ (live persistence hook deferred to activation) |
 | Knowledge metrics (`/api/knowledge/metrics`) | ✅ |
 | Grafana dashboard skeleton (10 panels) | ✅ (`docs/observability/`) |
