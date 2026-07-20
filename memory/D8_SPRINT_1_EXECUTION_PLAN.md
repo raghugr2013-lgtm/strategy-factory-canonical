@@ -709,16 +709,78 @@ Each will follow the D-series discipline:
 **Total: ~11 working days.** After E5 sign-off, Sprint 1 implementation
 begins.
 
-### 13.6 Order of authorship (recommended)
+### 13.6 Order of authorship (operator-directed · 2026-07-20)
 
-Recommended order: **E2 → E3 → E4 → E1 → E5.**
+**Recommended order: E1 → E2 → E3 → E4 → E5.**
 
-Rationale:
-- E2 (Auth) is prerequisite for E3 (First-Time).
-- E4 (Daily) codifies the routine after first-time.
-- E1 (Strategy Experience) is orthogonal to auth flow and can slot in
-  parallel.
-- E5 (Cross-Module Navigation) integrates all prior E-docs.
+Operator rationale: Strategy Factory's core purpose is the creation,
+evaluation, governance, deployment, and lifecycle management of
+strategies. Designing this end-to-end experience first establishes the
+central workflow that all remaining journeys support.
+
+Downstream order:
+- E1 (Strategy Experience) sets the central workflow.
+- E2 (Auth) codifies how operators enter the system.
+- E3 (First-Time) codifies moment-zero after auth.
+- E4 (Daily) codifies routine flow.
+- E5 (Cross-Module) integrates all prior E-docs into the transition
+  graph.
+
+### 13.7 Interactive Prototype Gate (new step · operator-directed)
+
+**Between the completed E-series and Sprint 1 React production build,
+an interactive frontend prototype will be built using representative
+data.** This is a mandatory gate.
+
+**Purpose of the prototype gate:**
+
+- Allow the completed design system (D0–D8 + E1–E5) to be *felt*, not
+  just read.
+- Surface interaction defects that only manifest at motion, sequence,
+  and rhythm — never visible in a static spec.
+- Refine the experience before permanent React code lands.
+- Give the operator + stakeholders a walk-through-able artefact to
+  approve.
+
+**Prototype scope:**
+
+- Every Sprint 1 surface (§4.S) rendered end-to-end.
+- Representative data (fixtures) — no live backend, no LLM calls, no
+  networked services.
+- Full four-mode switching with Decision Identity verifiable by hand.
+- Full CNL + State Memory verifiable across navigation.
+- Every non-happy state renderable via a state-fixture toggle.
+- Storybook-adjacent: each primitive walkable in isolation.
+
+**Prototype non-scope:**
+
+- Real backend integration.
+- Production build tooling.
+- Test suites (prototype is throw-away; tests belong to Sprint 1).
+- Auth (represented by a mode selector; real auth arrives in Sprint 1
+  proper).
+
+**Prototype technology:**
+
+The prototype should be React (matching production stack), but built
+with intentionally *throw-away* discipline — no state management
+architecture, no CI/CD, no i18n scaffolding. Its purpose is design
+validation; its purpose is not to become production code.
+
+**Exit criteria for the prototype gate:**
+
+- Operator walks through E1's strategy lifecycle in the prototype.
+- Operator switches modes at 5 arbitrary points and verifies Decision
+  Identity + Context Never Lost + State Memory.
+- Operator experiences every non-happy state via fixture toggles.
+- Operator + design review sign off on interaction rhythms (motion
+  timing, latency-budget-optimistic-UI behaviour, empty-state cadence).
+- Any refinement discovered during walk-through is captured as a
+  D-doc addendum or E-doc addendum *before* Sprint 1 code begins.
+
+**Prototype exit hands off to Sprint 1 per §11 rollout order.**
+
+### 13.8 Full sequence (operator-directed 2026-07-20)
 
 ---
 
@@ -765,20 +827,24 @@ Sprint 1 is complete when:
 
 ---
 
-## 16. Handoff to Sprint 1 (recommended sequence)
+## 16. Handoff to Sprint 1 (operator-directed 2026-07-20)
 
-1. Operator reviews and approves D8.
-2. Operator schedules the E-series (§13).
-3. E-series authored in ~11 working days (§13.5).
-4. Operator reviews and approves each E-doc.
-5. Sprint 1 kick-off with:
+1. Operator reviews and approves D8. ✅ (2026-07-20)
+2. **E-series authored in order E1 → E2 → E3 → E4 → E5** (§13.6).
+3. Operator reviews and approves each E-doc.
+4. **Interactive Prototype built** (§13.7) — representative data;
+   walkable end-to-end.
+5. Operator walk-through of prototype; refinements captured as
+   D-doc / E-doc addenda before Sprint 1 code.
+6. Sprint 1 kick-off with:
    - D-series (D0–D7) as design system
    - Bible v2.1 as canonical spec
    - E-series (E1–E5) as journey spec
    - D8 as execution plan
-6. Sprint 1 begins Day 1 with §11 rollout order.
-7. Sprint 1 exits per §14 criteria.
-8. Sprint 2 planning references §2.2 non-goals list.
+   - Prototype as walkable reference
+7. Sprint 1 begins Day 1 with §11 rollout order.
+8. Sprint 1 exits per §14 criteria.
+9. Sprint 2 planning references §2.2 non-goals list.
 
 ---
 
