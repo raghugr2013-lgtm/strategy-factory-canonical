@@ -140,3 +140,39 @@ from .connectors.pdf import PdfConnector                        # noqa: F401
 from .connectors.propfirm import PropFirmConnector              # noqa: F401
 from .connectors.tradingview import TradingViewConnector        # noqa: F401
 from .connectors.internal_mongo import InternalMongoConnector   # noqa: F401
+
+# Phase 2 Stage 4 — UKIE γ (P4C)
+from .ranking import (                                          # noqa: F401
+    RankingBreakdown,
+    compose as compose_ranking,
+    is_ranking_v2_enabled,
+)
+from .retrieval import (                                        # noqa: F401
+    QueryMatch,
+    QueryRequest,
+    RetrievalEngine,
+    get_retrieval_engine,
+    is_query_api_enabled,
+    rule_based_similarity,
+)
+from .lifecycle import (                                        # noqa: F401
+    LIFECYCLE_EVENTS_COLLECTION,
+    LifecycleSweeper,
+    SweepSummary,
+    get_lifecycle_sweeper,
+    is_lifecycle_sweep_enabled,
+)
+from .confidence import (                                       # noqa: F401
+    CONTRADICTION_EVENTS_COLLECTION,
+    ENDORSEMENT_EVENTS_COLLECTION,
+    ConfidenceStore,
+    get_confidence_store,
+    is_confidence_evolution_enabled,
+)
+from .governance_policy import (                                # noqa: F401
+    POLICIES_COLLECTION,
+    GovernancePolicyEngine,
+    PolicyVerdict,
+    get_governance_policy_engine,
+    is_governance_policy_enabled,
+)

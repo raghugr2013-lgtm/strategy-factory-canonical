@@ -551,6 +551,61 @@ Remaining Stage-4 work:
 - Validation Gate 5
 - Backend Feature Freeze
 
+## Phase 4 P4C — UKIE γ: IMPLEMENTED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_4_P4C_UKIE_GAMMA_NOTES.md`
+
+Landed as additive modules inside `engines/knowledge/`
+(pre-existing Stage 3.α/β/γ untouched):
+- **P4C.1 Retrieval API** — `POST /api/knowledge/query`. Read-only
+  ranking-aware query over `strategy_knowledge_base`. Never returns
+  `content_bytes`; `content_preview` gated on domain `ai_context_policy`.
+- **P4C.2 Ranking v2** — layered multipliers (trust × license ×
+  recency × contested × endorsement) over base similarity.
+  `strong_copyleft` / `proprietary` licences yield 0.0 (structural
+  hide). Flag off → identity (base similarity byte-identical).
+- **P4C.3 Lifecycle sweeper** — respects per-domain
+  `default_retention_policy` (`forever` / `365d` / `180d` / `session`).
+  Decay annotation for market/execution. Audit rows in
+  `lifecycle_events`. Dry-run default.
+- **P4C.4 Confidence evolution** — endorsement + contradiction event
+  stores. Contradiction stamps `contested=true` on both KB rows.
+- **P4C.5 Governance policy language** — **ADVISORY ONLY**. Rule
+  engine over `promote_policies` collection. Stamps `advisory_tags`
+  on KB rows. Never calls the promote bridge; Stage-3.γ per-item
+  operator-approved discipline preserved.
+
+New endpoints (all self-guard 503 when flag off):
+- `POST /api/knowledge/query`
+- `POST /api/knowledge/lifecycle-sweep`
+- `POST /api/knowledge/endorsement`
+- `POST /api/knowledge/contradiction`
+- `POST /api/knowledge/governance/evaluate/{kb_id}`
+
+New feature flags (all default OFF):
+- `UKIE_QUERY_API_ENABLED`
+- `UKIE_RANKING_V2_ENABLED`
+- `UKIE_LIFECYCLE_SWEEP_ENABLED`
+- `UKIE_CONFIDENCE_EVOLUTION_ENABLED`
+- `UKIE_GOVERNANCE_POLICY_ENABLED`
+
+New Mongo collections (created lazily on first write):
+- `lifecycle_events` — retention sweep audit rows
+- `knowledge_endorsement_events` — one row per endorsement
+- `knowledge_contradiction_events` — one row per contradiction pair
+- `promote_policies` — operator-authored policy documents
+
+Cumulative unit tests: **302 / 302 passing**
+(275 prior + 27 new P4C).
+
+**Every P4C flag defaults OFF. Zero production behaviour change.**
+**Governance never auto-promotes** — Stage-3.γ invariant preserved.
+
+Remaining Stage-4 work:
+- P4D — Observability Finalisation
+- Validation Gate 5
+- Backend Feature Freeze
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)
