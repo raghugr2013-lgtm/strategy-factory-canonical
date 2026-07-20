@@ -87,7 +87,8 @@ When operator presses Enter on a timeline row with `actor: approval`, the row ex
 │  Parent: EURUSD Breakout v2  →  4 mutation cycles              │  ← Lineage: source
 │                                                                │
 │  ── downstream ────────────────────────────────────────────── ─  │
-│  Will enter portfolio candidate pool · risk 0.4 % max          │  ← Lineage: destination
+│  Will enter portfolio candidate pool · risk 0.4 % max     →    │  ← click → Lineage Graph
+│  (Bible v2.1 §10.2 · descendants-only subgraph focus)          │
 │                                                                │
 │  ── risk · medium ────────────────────────────────────────────  │
 │  Revertible in one click within 30 s. No live positions at risk.│
@@ -105,7 +106,7 @@ When operator presses Enter on a timeline row with `actor: approval`, the row ex
 | Headline | Division-voice sentence (D2 Addendum) | + method chip |
 | Evidence bullets | 2-4 plain-narrative bullets | + confidence intervals, p-values, method chips |
 | Upstream | one-line lineage: `Parent → chain summary` | + full lineage tree link |
-| Downstream | one-line affected-artefact summary | + explicit counts and links |
+| Downstream | one-line affected-artefact summary. Chip is **clickable** — opens Lineage Graph (Bible v2.1 §10.2) focused on this approval's subject in **descendants-only** mode. | + explicit counts and links inline (Advanced Lens shows counts without opening the graph) |
 | Risk paragraph | one sentence + rollback verb | + affected users, exposure, SLA |
 | Actions | 4 buttons | + `View diff` (visualise the proposed change) |
 
@@ -343,6 +344,8 @@ Approvals are historical events too. Replay reservation:
 - ✅ Every action has `data-testid`
 - ✅ `prefers-reduced-motion` verified
 - ✅ Timeline event round-trips (Timeline row → expand → approve → Timeline records `operator approved …`)
+- ✅ Downstream chip opens Lineage Graph (Bible v2.1 §10.2) in descendants-only subgraph mode
+- ✅ Context Never Lost (Bible v2.1 §1.4) — closing an approval preserves selected filter chips, time-window and scroll position
 
 ---
 
