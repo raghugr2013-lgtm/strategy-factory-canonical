@@ -59,25 +59,62 @@ def register_connector(instance: KnowledgeConnector) -> None:
     logger.debug("[knowledge.registry] registered connector: %s", name)
 
 
+def _flag_env(name: str, default: bool = False) -> bool:
+    import os
+    raw = (os.environ.get(name) or "").strip().lower()
+    if not raw:
+        return default
+    return raw in ("1", "true", "yes", "y", "on")
+
+
+def _framework_enabled() -> bool:
+    """`UKIE_CONNECTOR_FRAMEWORK_ENABLED` — Stage-4 scaffold master switch."""
+    return _flag_env("UKIE_CONNECTOR_FRAMEWORK_ENABLED", False)
+
+
+def _connector_flag_on(instance: KnowledgeConnector) -> bool:
+    """A connector is visible iff its `flag_name` env is on.
+
+    Legacy connectors that predate Stage 4 (no `flag_name` attribute)
+    remain visible unconditionally — this preserves Stage-3.α behaviour
+    exactly (`GithubConnector`, etc.). Stage-4 connectors that declare
+    `flag_name` become invisible when the flag is off.
+
+    When the Stage-4 master switch (`UKIE_CONNECTOR_FRAMEWORK_ENABLED`)
+    is off, per-connector filtering is bypassed and Stage-4 connectors
+    are hidden — so the registry behaves EXACTLY as Stage 3.α did.
+    """
+    flag_name = getattr(instance, "flag_name", None)
+    if not flag_name:
+        return True                                             # legacy — always on
+    if not _framework_enabled():
+        return False                                            # framework off → hide Stage-4 connectors
+    return _flag_env(flag_name, False)
+
+
 def get_connector(name: str) -> Optional[KnowledgeConnector]:
-    """Return the registered connector, or `None` if not present."""
+    """Return the registered connector, or `None` if not present /
+    flag-hidden."""
     with _REGISTRY_LOCK:
-        return _CONNECTOR_REGISTRY.get(name)
+        c = _CONNECTOR_REGISTRY.get(name)
+    if c is None:
+        return None
+    return c if _connector_flag_on(c) else None
 
 
 def list_connectors() -> Tuple[KnowledgeConnector, ...]:
-    """Return all registered connectors in registration order (dict-insert)."""
+    """Return every registered + flag-enabled connector in registration order."""
     with _REGISTRY_LOCK:
-        return tuple(_CONNECTOR_REGISTRY.values())
+        vals = tuple(_CONNECTOR_REGISTRY.values())
+    return tuple(c for c in vals if _connector_flag_on(c))
 
 
 def connectors_for_domain(domain: KnowledgeDomain) -> Tuple[KnowledgeConnector, ...]:
-    """Return connectors declaring support for `domain`."""
-    with _REGISTRY_LOCK:
-        return tuple(
-            c for c in _CONNECTOR_REGISTRY.values()
-            if domain in c.supported_domains
-        )
+    """Return flag-enabled connectors declaring support for `domain`."""
+    return tuple(
+        c for c in list_connectors()
+        if domain in c.supported_domains
+    )
 
 
 def _reset_for_tests() -> None:
@@ -89,19 +126,36 @@ def _reset_for_tests() -> None:
 # ── Bootstrap default connectors ─────────────────────────────────────
 
 def _bootstrap_default_connectors() -> None:
-    """Register the connectors that ship with Stage 3.α.
+    """Register the connectors that ship with Stage 3.α + Stage 4.
 
-    Stage 3.α: `GithubConnector` only. Stage 4 adds the remaining four
-    (`ArxivConnector`, `PdfConnector`, `PropFirmConnector`,
-    `TradingViewConnector`) + `InternalMongoConnector`.
+    Stage 3.α: `GithubConnector` (unflagged; always visible).
+    Stage 4:   `ArxivConnector`, `PdfConnector`, `PropFirmConnector`,
+               `TradingViewConnector`, `InternalMongoConnector` —
+               each flag-gated per PHASE_4_MASTER_PLAN §3.8.
     """
     try:
         from .connectors.github import GithubConnector
         register_connector(GithubConnector())
     except Exception as e:  # noqa: BLE001
-        # Boot must never fail because of a connector wiring error —
-        # log at DEBUG (registry consumers already handle empty state).
         logger.debug("[knowledge.registry] github connector bootstrap skipped: %s", e)
+
+    # Stage 4 connectors — each is FLAG-GATED. When
+    # `UKIE_CONNECTOR_FRAMEWORK_ENABLED` is off (production default),
+    # `list_connectors()` filters them out entirely.
+    for module_name, class_name in [
+        ("arxiv",           "ArxivConnector"),
+        ("pdf",             "PdfConnector"),
+        ("propfirm",        "PropFirmConnector"),
+        ("tradingview",     "TradingViewConnector"),
+        ("internal_mongo",  "InternalMongoConnector"),
+    ]:
+        try:
+            mod = __import__(f"engines.knowledge.connectors.{module_name}",
+                             fromlist=[class_name])
+            cls = getattr(mod, class_name)
+            register_connector(cls())
+        except Exception as e:  # noqa: BLE001
+            logger.debug("[knowledge.registry] %s bootstrap skipped: %s", class_name, e)
 
 
 _bootstrap_default_connectors()

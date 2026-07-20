@@ -204,7 +204,14 @@ async def post_dry_run(payload: Optional[Dict[str, Any]] = Body(default=None)) -
 
 from .promote_router import router as _promote_router            # noqa: E402
 from .retro_score_router import router as _retro_score_router    # noqa: E402
+from .connector_router import router as _connector_router        # noqa: E402
 
+# Connector-health routes must be registered BEFORE the Stage-3.α
+# `/connectors/{name}` catch-all — otherwise `{name}="health"` wins
+# and the request routes to the Stage-3.α gate (which returns 503
+# unless `UKIE_DOMAIN_REGISTRY_ENABLED` is on). Insert at front.
+for _r in reversed(_connector_router.routes):
+    router.routes.insert(0, _r)
 for _r in _promote_router.routes:
     router.routes.append(_r)
 for _r in _retro_score_router.routes:

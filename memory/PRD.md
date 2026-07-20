@@ -434,6 +434,58 @@ Next steps (all pending operator review of this milestone):
 2. BI5 shadow 24-hour observation window
 3. Stage 4 kickoff (connector fleet + COE γ + observability finalisation)
 
+## Phase 4 Master Plan — APPROVED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_4_MASTER_PLAN.md` (1,060 lines)
+
+Approved scope: P4A Connector Fleet · P4B COE γ · P4C UKIE γ · P4D
+Observability Finalisation. Coherent UKIE Activation DEFERRED until
+post-Backend-Feature-Freeze per operator directive.
+
+## Phase 4 P4A — Connector Fleet: IMPLEMENTED (2026-07-20) ✅
+
+Document: `/app/memory/PHASE_4_P4A_CONNECTOR_FLEET_NOTES.md`
+
+Landed:
+- **Scaffolding (P4A.0)**: `connector_auth.py` (NoAuth / ApiKeyAuth /
+  BearerAuth / OAuthClientCredentials) · `connector_retry.py`
+  (RetryPolicy + 3 named policies) · `connector_health.py`
+  (ConnectorState + ConnectorObserver) · `connectors/base.py`
+  (AbstractConnector with retry composition + health snapshots).
+- **Five connectors** (P4A.1–P4A.5): ArxivConnector, PdfConnector,
+  PropFirmConnector, TradingViewConnector, InternalMongoConnector.
+- **Registry**: flag-aware two-level filtering (framework switch +
+  per-connector flag); legacy connectors unaffected.
+- **Health endpoints**: `GET /api/knowledge/connectors/health` and
+  `/api/knowledge/connectors/{name}/health` (both gate on the
+  framework flag → HTTP 503 when off).
+
+New feature flags introduced (all default OFF):
+- `UKIE_CONNECTOR_FRAMEWORK_ENABLED` (master switch)
+- `UKIE_CONNECTOR_ARXIV_ENABLED`
+- `UKIE_CONNECTOR_PDF_ENABLED`
+- `UKIE_CONNECTOR_PROPFIRM_ENABLED`
+- `UKIE_CONNECTOR_TRADINGVIEW_ENABLED`
+- `UKIE_CONNECTOR_INTERNAL_MONGO_ENABLED`
+
+Live network I/O is deferred (seed-mode default). Each connector
+accepts an injectable HTTP client / DB getter — flipping a per-connector
+flag with no client injected keeps behaviour byte-identical to the
+seed list. Live wiring lands post-Freeze during Coherent UKIE Activation.
+
+Cumulative unit tests: **239 / 239 passing**
+(181 prior + 58 new P4A: 30 scaffolding + 28 concrete connectors).
+
+**Every P4A flag defaults OFF. Zero production behaviour change.**
+
+Remaining Stage-4 work (per approved plan, no activation until
+Backend Feature Freeze):
+- P4B — COE γ
+- P4C — UKIE γ
+- P4D — Observability Finalisation
+- Validation Gate 5
+- Backend Feature Freeze
+
 ## Backlog (P2 / cosmetic)
 
 - Duplicate `operation_id` warning at `legacy/api/admin.py:list_users` (30-sec fix)

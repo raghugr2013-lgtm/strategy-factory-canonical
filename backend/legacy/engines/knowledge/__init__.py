@@ -112,3 +112,31 @@ from .retro_score import (                                      # noqa: F401
     is_retro_score_enabled,
     legacy_row_to_item,
 )
+
+# Phase 2 Stage 4 — Connector Fleet (P4A)
+from .connector_auth import (                                   # noqa: F401
+    ApiKeyAuth,
+    BearerAuth,
+    ConnectorAuth,
+    NoAuth,
+    OAuthClientCredentials,
+)
+from .connector_retry import (                                  # noqa: F401
+    CONNECTOR_AGGRESSIVE,
+    CONNECTOR_CONSERVATIVE,
+    CONNECTOR_DEFAULT,
+    DEFAULT_RETRY_STATUSES,
+    RetryPolicy,
+)
+from .connector_health import (                                 # noqa: F401
+    ConnectorHealthSnapshot,
+    ConnectorObserver,
+    ConnectorState,
+    get_observer as get_connector_observer,
+)
+from .connectors.base import AbstractConnector                  # noqa: F401
+from .connectors.arxiv import ArxivConnector                    # noqa: F401
+from .connectors.pdf import PdfConnector                        # noqa: F401
+from .connectors.propfirm import PropFirmConnector              # noqa: F401
+from .connectors.tradingview import TradingViewConnector        # noqa: F401
+from .connectors.internal_mongo import InternalMongoConnector   # noqa: F401
