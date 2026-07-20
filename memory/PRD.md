@@ -907,3 +907,29 @@ Recommended authorship order: **E2 → E3 → E4 → E1 → E5**. Estimated time
 3. Operator walk-through: 5 mode switches; 10-hop navigation; every empty state via fixture toggle; Progressive Confidence milestones fireable via fixture.
 4. Refinements captured as D-doc / E-doc addenda before Sprint 1 code.
 5. Sprint 1 kick-off per D8 §11 rollout order (146 engineer-days recommended 3-sprint stretch).
+
+---
+
+## Interactive Prototype Gate opened (2026-07-20)
+
+**Design Phase closed.** Interactive Prototype Gate entered per D8 §13.7.
+
+### P0 Prototype Blueprint delivered
+
+📄 `/app/memory/P0_PROTOTYPE_BLUEPRINT.md` — formal contract for the prototype build.
+
+- 6 evaluation dimensions codified with executable verification tests (Discoverability · Navigation Predictability · Cognitive Load · Interaction Rhythm · Operator Trust · Product Identity)
+- Full prototype scope, directory layout, fixture strategy, technology (React + Vite + Zustand + Framer + Tailwind + Lucide + throw-away discipline)
+- 6-phase build plan (~14 engineer-days single / ~7 pair)
+- 4-session walk-through protocol
+- Refinement Addendum protocol — every accepted refinement lands as a formal D/E-series addendum, never as in-code override
+- Prototype exit criteria → Design Freeze
+
+### Next actionable steps
+
+1. Operator reviews and approves P0.
+2. Prototype build (per P0 §8).
+3. 4-session walk-through (per P0 §9).
+4. Refinement addenda authored (per P0 §10).
+5. Design Freeze declared (per P0 §11).
+6. Sprint 1 kick-off per D8 §11 rollout order.
