@@ -35,12 +35,13 @@ export const useWorkspaceStore = create(
       ...transientSlice(set, get),
     }),
     {
-      name: 'sf-workspace-v1',
+      name: 'sf-workspace-v2',
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         mode: s.mode,
         advancedLens: s.advancedLens,
         density: s.density,
+        timeWindow: s.timeWindow,
       }),
     }
   )

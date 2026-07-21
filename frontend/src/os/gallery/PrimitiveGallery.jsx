@@ -9,7 +9,7 @@
  * Access: authenticated route `/c/gallery`. Not part of the frozen operator
  * surface set; retained under Freeze §2 as an internal debug affordance.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Bot, Activity, Cpu, Landmark, ShieldAlert } from 'lucide-react';
 import { Chip } from '../primitives/Chip';
 import { MetricBlock } from '../primitives/MetricBlock';
@@ -26,6 +26,14 @@ import { WorkerCard } from '../primitives/WorkerCard';
 import { ApprovalCard } from '../primitives/ApprovalCard';
 import { LineageBar } from '../primitives/LineageBar';
 import { EvidenceDrawer } from '../primitives/EvidenceDrawer';
+import { FacetBar } from '../features/FacetBar';
+import { TimeWindowChip } from '../features/TimeWindowChip';
+import { useOptimistic } from '../adapters/optimistic';
+import { fetchTimeline } from '../adapters/timelineAdapter';
+import { fetchApprovals } from '../adapters/approvalsAdapter';
+import { fetchWorkers, fetchPipeline } from '../adapters/factoryAdapter';
+import { aggregateMission } from '../adapters/missionAggregator';
+import { isLiveMode } from '../adapters/apiClient';
 
 const Section = ({ id, title, children }) => (
   <section id={id} data-testid={`gallery-section-${id}`}
@@ -268,6 +276,83 @@ export const PrimitiveGallery = () => {
                         ]}
                         footerAction={{ label: 'open passport · strat-014', onClick: () => setDrawerOpen(false), testId: 'evidence-open-passport' }} />
       </Section>
+
+      <M3AdapterSection />
     </div>
+  );
+};
+
+// ─── M3 · Feature machinery + adapters verification ──────────────────
+const M3AdapterSection = () => {
+  const [timeline, setTimeline] = useState([]);
+  const [approvals, setApprovals] = useState([]);
+  const [mission, setMission] = useState(null);
+
+  useEffect(() => {
+    fetchTimeline().then(setTimeline);
+    fetchApprovals().then(setApprovals);
+    aggregateMission().then(setMission);
+  }, []);
+
+  const [optimisticList, dispatchRemove] = useOptimistic([{ id: 'A', label: 'Item A' }, { id: 'B', label: 'Item B' }, { id: 'C', label: 'Item C' }], {
+    apply: (state, { id }) => state.filter((i) => i.id !== id),
+    commit: async ({ id }) => { if (id === 'B') throw new Error('simulated fail'); await new Promise((r) => setTimeout(r, 200)); },
+    revert: (previous) => previous,
+  });
+
+  return (
+    <Section id="m3-adapters" title="M3 · Feature machinery + adapters">
+      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
+        <FacetBar axis="actor"
+                  options={[
+                    { key: 'all', label: 'All' },
+                    { key: 'governance', label: 'Governance' },
+                    { key: 'master-bot', label: 'Master Bot' },
+                    { key: 'llm', label: 'LLM' },
+                    { key: 'ingestion', label: 'Ingestion' },
+                  ]}
+                  testIdPrefix="m3-actor" />
+        <FacetBar axis="risk"
+                  options={[
+                    { key: 'all', label: 'All' },
+                    { key: 'low', label: 'Low' },
+                    { key: 'moderate', label: 'Moderate' },
+                    { key: 'high', label: 'High' },
+                  ]}
+                  testIdPrefix="m3-risk" />
+        <TimeWindowChip testId="m3-time-window" />
+        <span data-testid="m3-live-mode" style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)',
+                                                   textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          adapters · {isLiveMode() ? 'live-with-fallback' : 'fixture-only'}
+        </span>
+      </div>
+
+      <div data-testid="m3-adapter-counts"
+           style={{ fontSize: 'var(--font-body-sm)', color: 'var(--content-md)', lineHeight: 1.6 }}>
+        Timeline: <span className="mono-num" data-testid="m3-timeline-count">{timeline.length}</span> events ·{' '}
+        Approvals: <span className="mono-num" data-testid="m3-approvals-count">{approvals.length}</span> ·{' '}
+        Mission bundle: <span className="mono-num" data-testid="m3-mission-count">{mission ? Object.keys(mission).length : 0}</span> keys
+      </div>
+
+      <div>
+        <div style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)',
+                      textTransform: 'uppercase', letterSpacing: '0.08em',
+                      marginBottom: 'var(--space-2)' }}>
+          Optimistic-UI · click removes; item B always fails and rolls back
+        </div>
+        <div data-testid="m3-optimistic-list" style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          {optimisticList.map((i) => (
+            <button key={i.id} data-testid={`m3-opt-item-${i.id}`}
+                    onClick={() => dispatchRemove({ id: i.id })}
+                    style={{ background: 'var(--surface-2)', color: 'var(--content-hi)',
+                             border: '1px solid var(--stroke-2)', borderRadius: 'var(--radius-1)',
+                             padding: '6px 12px', fontSize: 'var(--font-body-sm)',
+                             fontFamily: 'inherit', cursor: 'pointer' }}>
+              {i.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </Section>
   );
 };
