@@ -145,12 +145,28 @@ export const MasterBot = () => {
             ))}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
-                        fontSize: 'var(--font-body-sm)', color: 'var(--content-md)' }}>
+                        fontSize: 'var(--font-body-sm)', color: 'var(--content-md)', flexWrap: 'wrap' }}>
             <Clock size={12} strokeWidth={1.5} aria-hidden />
             <span data-testid="mb-plan-started" className="mono-num">started {currentPlan.startedAt.slice(11, 16)}Z</span>
             <span aria-hidden style={{ color: 'var(--content-lo)' }}>·</span>
             <ShieldCheck size={12} strokeWidth={1.5} aria-hidden />
             <span>{currentPlan.guardrails.length} guardrails · all reporting</span>
+            {currentPlan.nextTickAt && (
+              <>
+                <span aria-hidden style={{ color: 'var(--content-lo)' }}>·</span>
+                <span data-testid="mb-plan-next-tick"
+                      data-next-tick-at={currentPlan.nextTickAt}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4,
+                               padding: '2px 8px', borderRadius: 'var(--radius-1)',
+                               background: 'var(--surface-2)', border: '1px solid var(--stroke-1)',
+                               fontSize: 'var(--font-caption)', color: 'var(--content-md)',
+                               textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {currentPlan.nextTickLabel ?? 'next tick'}
+                  <span aria-hidden style={{ color: 'var(--content-lo)' }}>·</span>
+                  <span className="mono-num">{currentPlan.nextTickAt.slice(11, 16)}Z</span>
+                </span>
+              </>
+            )}
           </div>
         </SignatureFrame>
       </div>

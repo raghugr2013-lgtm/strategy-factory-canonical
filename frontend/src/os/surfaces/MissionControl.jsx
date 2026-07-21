@@ -93,8 +93,8 @@ export const MissionControl = () => {
         </p>
       </div>
 
-      {/* Q1 · What is live · Q2 · What needs me · Q5 · What to watch */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)' }}>
+      {/* Q1 · What is live · Q2 · What needs me · Q5 · What to watch · R1 · Portfolio equity */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)' }}>
         <MetricBlock variant="A" eyebrow="Strategies live"
                      value={isLoading ? '—' : metrics.strategiesLive.value}
                      deltaLabel={metrics?.strategiesLive.delta} deltaTone={metrics?.strategiesLive.tone}
@@ -111,6 +111,12 @@ export const MissionControl = () => {
                      deltaLabel={metrics?.signalsInQueue.delta} deltaTone={metrics?.signalsInQueue.tone}
                      state={isLoading ? 'loading' : 'happy'}
                      footnote="scheduler@v11" />
+        <MetricBlock variant="B" eyebrow="Portfolio equity"
+                     value={isLoading ? '—' : metrics.portfolioEquity.value}
+                     deltaLabel={metrics?.portfolioEquity.delta} deltaTone={metrics?.portfolioEquity.tone}
+                     state={isLoading ? 'loading' : 'happy'}
+                     footnote={metrics?.portfolioEquity.drawdown}
+                     testId="mc-portfolio-equity" />
       </div>
 
       {/* Q3 · Factory Pipeline */}

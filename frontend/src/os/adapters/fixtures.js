@@ -93,6 +93,8 @@ export const MISSION_METRICS_FIXTURE = {
   strategiesLive: { value: '12', delta: '+2 today', tone: 'ok' },
   signalsInQueue: { value: '34', unit: 'jobs', delta: 'steady', tone: 'info' },
   approvalsPending: { value: '3', delta: '1 aged', tone: 'warn' },
+  // Sprint 2.0 tail-patch · R1 · Portfolio Equity metric (legacy Monitoring parity).
+  portfolioEquity: { value: '$142.6K', delta: '+3.2% wk', tone: 'ok', drawdown: '3.1% peak-to-trough' },
   throughput: [12, 15, 14, 18, 22, 20, 26, 24, 28, 30, 27, 32, 34, 30, 36],
 };
 
@@ -114,6 +116,9 @@ export const MASTER_BOT_FIXTURE = {
     epoch: '4/6',
     startedAt: '2026-07-21T04:00:00Z',
     horizonHours: 42,
+    // Sprint 2.0 tail-patch · R2 · Next-tick postmark (legacy Auto-Discovery Scheduler parity).
+    nextTickAt: '2026-07-21T11:15:00Z',
+    nextTickLabel: 'Discovery cycle · next tick',
     strategies: 12,
     guardrails: [
       { key: 'max-drawdown', label: 'Max drawdown', value: '3.4%', tone: 'ok' },

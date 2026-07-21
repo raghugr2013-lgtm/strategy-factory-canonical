@@ -13,6 +13,7 @@ import { fetchApprovals, commitApproval } from '../adapters/approvalsAdapter';
 import { useNavigationStore } from '../workspace-state/navigationStore';
 import { useStream } from '../features/useStream';
 import { StreamPostmark } from '../features/StreamPostmark';
+import { drainProposals, PROPOSAL_EVENT } from '../features/paletteProposals';
 
 const RISK_OPTIONS = [
   { key: 'all', label: 'All' },
@@ -52,15 +53,39 @@ export const Approvals = () => {
 
   useEffect(() => {
     let live = true;
-    fetchApprovals({ risk: riskFacet }).then((list) => { if (live) dispatch({ kind: 'load', list }); });
+    fetchApprovals({ risk: riskFacet }).then((list) => {
+      if (!live) return;
+      // Sprint 2.0 tail-patch · R3 · drain any buffered palette proposals on mount.
+      const buffered = drainProposals();
+      dispatch({ kind: 'load', list: [...buffered, ...list] });
+    });
     return () => { live = false; };
-  }, [riskFacet, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [riskFacet]);
+
+  // Sprint 2.0 tail-patch · R3 · listen for palette-dropped proposals + append them optimistically.
+  useEffect(() => {
+    const onProposalDropped = (e) => {
+      const proposal = e.detail?.approval;
+      if (!proposal) return;
+      // Merge onto whatever the current pending list is via functional update.
+      setState((prev) => ({ ...prev, pending: [proposal, ...(prev.pending ?? [])] }));
+    };
+    window.addEventListener(PROPOSAL_EVENT, onProposalDropped);
+    return () => window.removeEventListener(PROPOSAL_EVENT, onProposalDropped);
+  }, [setState]);
 
   const streamStatus = useStream('approvals', {
     intervalMs: 15_000,
     onTick: (payload) => {
       if (payload.mode === 'initial') return;
-      fetchApprovals({ risk: riskFacet }).then((list) => dispatch({ kind: 'load', list }));
+      fetchApprovals({ risk: riskFacet }).then((list) => {
+        // Preserve any proposal-* items dropped by the palette across polls.
+        setState((prev) => {
+          const proposals = (prev.pending ?? []).filter((a) => a.id?.startsWith('proposal-'));
+          return { ...prev, pending: [...proposals, ...list] };
+        });
+      });
     },
   });
 

@@ -17,6 +17,10 @@ import { ROUTES } from '../routing/routes';
 import { useAuthStore } from '../workspace-state/authStore';
 import { useWorkspaceStore } from '../workspace-state/store';
 import { useFocusTrap } from '../features/useFocusTrap';
+import { queueProposal } from '../features/paletteProposals';
+
+// Sprint 2.0 tail-patch · R3 · thin wrapper — see features/paletteProposals.js.
+const emitProposal = queueProposal;
 
 export const CmdKPalette = () => {
   const [open, setOpen] = useState(false);
@@ -25,6 +29,7 @@ export const CmdKPalette = () => {
   const logout = useAuthStore((s) => s.logout);
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);
   const setKill = useWorkspaceStore((s) => s.setKillPosture);
+  const selectedStrategy = useWorkspaceStore((s) => s.selectedStrategy);
   const inputRef = useRef(null);
   const paletteRef = useRef(null);
   useFocusTrap(paletteRef, open);
@@ -113,6 +118,57 @@ export const CmdKPalette = () => {
                 <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>{r.path}</span>
               </Command.Item>
             ))}
+          </Command.Group>
+
+          <Command.Group heading="Propose (drops into Approvals)" style={groupStyle}>
+            <Command.Item data-testid="cmdk-item-propose-new-strategy"
+                          value="propose new strategy"
+                          onSelect={() => run(() => {
+                            emitProposal({
+                              title: 'Propose new strategy',
+                              origin: 'proposal',
+                              risk: 'low',
+                              summary: 'Operator-initiated. Master Bot will run discover→generate→backtest and return an approval bundle.',
+                              decisionIdentity: 'proposal-new-strategy',
+                            });
+                            navigate('/c/approvals');
+                          })}
+                          style={itemStyle}>
+              Propose new strategy…
+              <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>drops in /c/approvals</span>
+            </Command.Item>
+            <Command.Item data-testid="cmdk-item-optimize-strategy"
+                          value="optimize strategy run optimization cycle"
+                          onSelect={() => run(() => {
+                            emitProposal({
+                              title: selectedStrategy ? `Run optimization cycle · ${selectedStrategy}` : 'Run optimization cycle',
+                              origin: 'compute-quota',
+                              risk: 'moderate',
+                              summary: 'Requests a multi-cycle optimization pass. Compute quota adjusted for the duration of the cycle.',
+                              decisionIdentity: selectedStrategy ?? 'proposal-optimize',
+                            });
+                            navigate('/c/approvals');
+                          })}
+                          style={itemStyle}>
+              Optimize strategy…
+              <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>drops in /c/approvals</span>
+            </Command.Item>
+            <Command.Item data-testid="cmdk-item-promote-to-live"
+                          value="promote to live deployment"
+                          onSelect={() => run(() => {
+                            emitProposal({
+                              title: selectedStrategy ? `Promote ${selectedStrategy} to live` : 'Promote current strategy to live',
+                              origin: 'deployment',
+                              risk: 'high',
+                              summary: 'Moves the selected strategy from paper to live capital. Two governance approvers required.',
+                              decisionIdentity: selectedStrategy ?? 'proposal-promote',
+                            });
+                            navigate('/c/approvals');
+                          })}
+                          style={itemStyle}>
+              Promote to live…
+              <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>drops in /c/approvals</span>
+            </Command.Item>
           </Command.Group>
 
           <Command.Group heading="Session" style={groupStyle}>
