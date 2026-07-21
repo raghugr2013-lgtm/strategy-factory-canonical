@@ -1,5 +1,14 @@
 # D8 — Sprint 1 Detailed Execution Plan
 
+> ✅ **Design Freeze v1.0 accepted 2026-07-21** — this document is now the **binding execution contract** for Sprint 1 Foundation.
+>
+> **Companion contracts:**
+> - `memory/DESIGN_FREEZE_v1.0.md` — authoritative design contract (frozen 2026-07-21)
+> - `memory/P0_PROTOTYPE_EXIT_REPORT.md` — evidence of prototype validation (23/24 PASS · 1 REVIEW · 0 FAIL)
+> - `memory/BACKEND_FEATURE_FREEZE.md` — v1.1.0-stage4 backend contract (approved 2026-07-20)
+>
+> **Supersedes:** `memory/FRONTEND_AUDIT_AND_ROADMAP.md` (2026-07-20 audit doc, retained as historical context only).
+>
 > The bridge document. Turns the completed D-series design system into
 > a Sprint 1 engineering plan without changing a single design rule.
 >

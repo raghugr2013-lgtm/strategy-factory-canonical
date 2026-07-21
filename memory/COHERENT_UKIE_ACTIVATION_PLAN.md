@@ -1,8 +1,9 @@
 # Coherent UKIE Activation Plan (v2)
 
-> **Status:** DRAFT — awaiting operator sign-off.
+> **Status:** ✅ **PLAN APPROVED 2026-07-20** — activation execution remains operator-directed (staged Phase A → E per §5–§9). Ratification does not constitute a flag-flip.
 > Compiled: 2026-07-20 · Revised: 2026-07-20 (v2 — post operator review).
-> Backend: v1.1.0-stage4, feature-frozen (see `BACKEND_FEATURE_FREEZE.md`).
+> Backend: v1.1.0-stage4, feature-frozen (see `BACKEND_FEATURE_FREEZE.md` — approved 2026-07-20).
+> Companion contract: Design Freeze v1.0 (`memory/DESIGN_FREEZE_v1.0.md`) governs the frontend independently. This activation plan may be executed in parallel with Sprint 1 frontend work; each has its own gating.
 > Precondition: Backend Feature Freeze ✅ approved 2026-07-20.
 >
 > **v2 changes vs v1**: (1) preview-vs-production scope preamble; (2)

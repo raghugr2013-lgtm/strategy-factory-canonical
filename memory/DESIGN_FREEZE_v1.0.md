@@ -1,10 +1,10 @@
 # Strategy Factory — Design Freeze v1.0
 
-> **Status:** DRAFT — awaiting operator sign-off.
+> **Status:** ✅ **ACCEPTED 2026-07-21** by operator. Binding design contract for Sprint 1 and every subsequent frontend sprint until an explicit unfreeze event is issued.
 > **Prepared:** 2026-07-21.
 > **Governing documents:** `memory/P0_PROTOTYPE_BLUEPRINT.md` §12, `memory/P0_PROTOTYPE_EXIT_REPORT.md` §12, `memory/D8_SPRINT_1_EXECUTION_PLAN.md`.
 > **Repository anchor:** `v1.1.0-prototype-validation` @ `38194b6…d807d9d3`, plus one post-anchor copy edit to `prototype/src/surfaces/Timeline.tsx` (Timeline briefing).
-> **Operator gate:** the Prototype Validation Report was accepted with Option B; the pre-freeze contract-consistency condition (Timeline copy-code contract) was resolved on 2026-07-21; targeted re-validation passed 4-hop plane-persistence check.
+> **Operator gate:** the Prototype Validation Report was accepted with Option B; the pre-freeze contract-consistency condition (Timeline copy-code contract) was resolved on 2026-07-21; targeted re-validation passed 4-hop plane-persistence check; operator formally accepted the Freeze on 2026-07-21.
 
 ---
 

@@ -1,5 +1,17 @@
 # Frontend Audit & Operator-Center Roadmap
 
+> ⚠️ **STATUS: SUPERSEDED (2026-07-21)** by `memory/D8_SPRINT_1_EXECUTION_PLAN.md` and `memory/DESIGN_FREEZE_v1.0.md`.
+>
+> This document was authored 2026-07-20 as an **audit of the pre-existing v01 CommandShell frontend** with a recommendation to "improve + consolidate, do NOT rebuild". After the D-series design phase (D0–D8), the E-series experience design (E1–E5), and the Interactive Prototype Gate (P0), the operator elected a **different canonical path**: rebuild the operator frontend in Sprint 1 against the frozen D-series contract, using the prototype as design reference. The v01 CommandShell is not being carried forward.
+>
+> **Canonical successor:** `memory/D8_SPRINT_1_EXECUTION_PLAN.md` (frontend Sprint 1 execution) + `memory/DESIGN_FREEZE_v1.0.md` (design contract).
+>
+> This document is retained for historical context only. Do not treat any recommendation below as active — it reflects a superseded plan.
+>
+> ---
+>
+> *(Original document follows for archival purposes.)*
+>
 > **Deliverable:** audit + implementation roadmap only. **No code changes yet.**
 > **Prepared:** 2026-07-20
 > **Target repo:** `/app/frontend/` (canonical) — separate premium repo pending migration

@@ -1,10 +1,12 @@
 # Backend Feature Freeze — v1.1.0-stage4
 
-> **Status:** DRAFT — awaiting operator sign-off.
+> **Status:** ✅ **APPROVED 2026-07-20** — declared FEATURE-COMPLETE by operator.
 > Compiled: 2026-07-20.
 > Backend commit: `3ed832a` (Stage 4 landing HEAD).
 > Cumulative unit tests: **323 / 323 passing**.
 > Production posture: **all Stage-4 flags OFF, zero behaviour change**.
+>
+> **Companion contract:** Design Freeze v1.0 (`memory/DESIGN_FREEZE_v1.0.md`) governs the frontend. Both freezes are in force simultaneously and independently. Sprint 1 frontend implementation runs against **this** backend state without introducing new backend features.
 
 This document declares the backend feature-complete. No new backend
 features will be introduced after this freeze without explicit

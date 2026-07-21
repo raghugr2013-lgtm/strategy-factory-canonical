@@ -1,6 +1,6 @@
 # P0 — Interactive Prototype Exit Report
 
-> **Status:** DRAFT — awaiting operator decision on Design Freeze.
+> **Status:** ✅ **ACCEPTED 2026-07-21** by operator. Prototype cleared for Design Freeze; Design Freeze v1.0 declared and accepted the same day (`memory/DESIGN_FREEZE_v1.0.md`).
 > Compiled: 2026-07-21.
 > Governed by: `P0_PROTOTYPE_BLUEPRINT.md` §9 (walk-through protocol) and §12 (exit criteria).
 > Repository anchor: `v1.1.0-prototype-validation` (commit `38194b6…d807d9d3`).
