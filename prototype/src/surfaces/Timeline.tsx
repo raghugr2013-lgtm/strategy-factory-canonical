@@ -81,7 +81,7 @@ export const Timeline: React.FC = () => {
       <SurfaceHeader
         eyebrow="Timeline · all activity"
         headline="Every action, every actor, one chronological stream."
-        briefing="Filter by actor kind to focus. The facet cascades into Approvals and Explorer. Click any row to open its evidence bundle."
+        briefing="Filter by actor kind to focus. Facet selections persist across surfaces — actor here, risk in Approvals, status in Explorer — so the plane you build is remembered when you return. Click any row to open its evidence bundle."
         status={`${fx.timelineEvents.length} events`}
         testId="timeline-header"
       />

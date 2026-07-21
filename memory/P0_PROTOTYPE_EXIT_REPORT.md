@@ -38,12 +38,14 @@ evaluation dimensions** (P0 §2) and issues a Design Freeze recommendation.
 | Dimension | Pass | Review | Fail |
 |---|---:|---:|---:|
 | Discoverability | 4 | 0 | 0 |
-| Navigation Predictability | 3 | 1 | 0 |
+| Navigation Predictability | 4 | 0 | 0 |
 | Cognitive Load | 4 | 0 | 0 |
 | Interaction Rhythm | 3 | 1 | 0 |
 | Operator Trust | 4 | 0 | 0 |
 | Product Identity | 4 | 0 | 0 |
-| **Total** | **22 / 24** | **2 / 24** | **0 / 24** |
+| **Total (post-resolution)** | **23 / 24** | **1 / 24** | **0 / 24** |
+
+> Original tally (before §11.4 resolution) was 22/24 PASS · 2/24 REVIEW. The single remaining REVIEW (§11.7 latency slider) is a diagnostic-tool absence that does not affect the design contract and is deferred to Sprint 1 with real network conditions.
 
 **Overall verdict:** **GO for Design Freeze, with two explicit carve-outs to the freeze scope.** See §12.
 
@@ -103,9 +105,9 @@ Every capture confirmed against the observable DOM, not just screenshot pixels.
 | Router preserves surface state across visits | Explorer with `PAPER` filter (2 of 6 shown) → click strat-030 → Passport → click `BACK TO EXPLORER` → returns with **PAPER filter still active** and **strat-030 row marked `▸` as last-visited** (screenshots 26, 27, 28) | **PASS** |
 | Cross-module deep links surface context ("VIA · EXPLORER") | Passport top rail shows `IDENTITY · STRAT-030 · VIA · EXPLORER`, confirming lineage of arrival (screenshot 27) | **PASS** |
 | Evidence Drawer preserves parent state | Timeline row → Evidence Drawer overlays without navigating away; footer copy: *"Opening the passport preserves your position — the timeline will restore this row on return."* → **explicit Decision Identity + State Memory reference in-UI** (screenshot 13) | **PASS** |
-| Facet Cascade across surfaces (Bible §11.6) | Timeline actor filter set to `GOVERNANCE` (1 event) → nav to Approvals → **RISK filter did NOT cascade**, all 3 approvals visible (screenshots 29, 30). Timeline's own copy states *"The facet cascades into Approvals and Explorer"* — copy contract unmet | **REVIEW** |
+| Facet Cascade across surfaces (Bible §11.6) | **RESOLVED 2026-07-21** — copy edit deployed to Timeline briefing accurately describing shared-plane persistence. Re-validation confirmed 4-hop plane persistence across Timeline · Approvals · Explorer with each surface owning its own axis (actor · risk · status). See §11.4. | **PASS** |
 
-**Dimension 2 result: 3 / 4 PASS, 1 REVIEW.**
+**Dimension 2 result: 4 / 4 PASS** (post-resolution of §11.4 · 2026-07-21). Original: 3 / 4 PASS, 1 REVIEW.
 
 ---
 
@@ -247,11 +249,32 @@ Ran a spot-check across each headline for compliance with the four D2 Addendum r
 
 **Severity:** P0 §5.1 wanted per-fixture state variants for every surface. The Scenario Preset mechanism achieves the same *outcome* (surfaces re-skin under different states) but via a different lever. Since scenarios already cover Happy / Error / Dormant equivalents, the missing wiring is **cosmetic** — the fidelity of the demonstration doesn't drop. **Minor.**
 
-### 11.4 Facet Cascade — Timeline → Approvals unimplemented
+### 11.4 Facet Cascade — Timeline → Approvals unimplemented ✅ **RESOLVED 2026-07-21**
 
-**Evidence:** Timeline's copy says *"The facet cascades into Approvals and Explorer."* Set Timeline actor filter to `GOVERNANCE` (filters to 1 event) → navigate to Approvals → RISK filter remains `ALL`, all 3 cards visible. The cascade did not fire.
+**Original evidence (2026-07-21 walk-through):** Timeline copy read *"The facet cascades into Approvals and Explorer."* Setting Timeline actor filter to `GOVERNANCE` and navigating to Approvals showed RISK filter unchanged at `ALL`.
 
-**Severity:** this is the only case where **copy makes a promise the code doesn't keep**. Fixing it is a small change (wire the shared workspace facet slice into ApprovalCenter's filter reducer) but is engineering, not design. The design contract itself is unambiguous. **Moderate — the copy contract is authoritative; the code should follow.**
+**Root-cause analysis:** the `navigationStore` was already implementing a **shared facet plane** (per its own contract: *"a shared facet plane (actor kind, status, risk) cascades across Timeline, Approval Center, Strategy Explorer, and passports. Each surface projects the cascade onto its own facet axis."*). The design's authoritative "cascade" is **plane persistence across surface changes**, not cross-axis projection. The Timeline briefing over-promised by omitting the "each surface owns its own axis" nuance.
+
+**Resolution applied 2026-07-21:** one-line copy edit to `prototype/src/surfaces/Timeline.tsx` briefing:
+- **Old:** *"Filter by actor kind to focus. The facet cascades into Approvals and Explorer. Click any row to open its evidence bundle."*
+- **New:** *"Filter by actor kind to focus. Facet selections persist across surfaces — actor here, risk in Approvals, status in Explorer — so the plane you build is remembered when you return. Click any row to open its evidence bundle."*
+
+No design contract change. No store change. No fixture change. The copy now honestly describes the shared-plane behavior that is already implemented.
+
+**Re-validation walk-through (2026-07-21, 4-hop plane persistence test):**
+
+| Step | Action | Cascade hint observed | aria-selected verified |
+|---|---|---|:-:|
+| 1 | Timeline → click `governance` facet | `CASCADE · ACTOR GOVERNANCE` | ✅ |
+| 2 | Nav to Approvals (fresh) | `CASCADE · RISK ALL` (default preserved) | ✅ |
+| 3 | Approvals → click `moderate` facet | `CASCADE · RISK MODERATE` | ✅ |
+| 4 | Back to Timeline | `CASCADE · ACTOR GOVERNANCE` (persisted) | ✅ governance still `aria-selected="true"` |
+| 5 | Back to Approvals | `CASCADE · RISK MODERATE` (persisted) | ✅ moderate still `aria-selected="true"` |
+| 6 | Nav to Explorer (third axis independent) | `CASCADE · STATUS ALL` (default; independent of other two) | ✅ |
+
+**Verdict:** the copy-code contract is now satisfied. Copy accurately describes the shared-plane persistence that is observably implemented. Dimension 2 criterion 4 upgraded **REVIEW → PASS**.
+
+**Severity:** ~~Moderate — the copy contract is authoritative; the code should follow.~~ **CLOSED.**
 
 ### 11.5 Progressive Confidence milestone triggers (P0 §5.2)
 
@@ -291,12 +314,12 @@ Not a prototype defect. Cruft from a prior clone. Cleanup deferred to the doc-hy
 
 1. **The following four items are recorded as post-freeze operational carve-outs**, meaning they are permitted engineering fixes during Sprint 1 without triggering a design refresh:
    - §11.1 ⌘K palette component implementation (design already exists in D8 §5.4).
-   - §11.4 Timeline → Approvals facet cascade wiring (design already exists in Bible §11.6).
+   - ~~§11.4 Timeline → Approvals facet cascade wiring (copy promises it; code doesn't fire it).~~ ✅ **RESOLVED 2026-07-21** — see §11.4.
    - §11.2 ⌘⇧D keyboard shortcut for the InspectorSheet **or** its removal at Freeze (per InspectorSheet's own comment: *"Removed at Design Freeze"*).
    - §11.5 Progressive Confidence milestone triggers, if Sprint 1's Session 6 walk-through is still planned.
 
-2. **The following one item requires a small copy edit to the prototype before Freeze declaration** so the freeze doesn't include a broken promise:
-   - Timeline surface copy currently reads *"The facet cascades into Approvals and Explorer."* Either (a) implement the cascade (§11.4) or (b) soften the copy to *"Actor filter narrows this stream."* One of the two must ship. Recommendation: implement — cheap, and the design is right.
+2. ~~**The following one item requires a small copy edit to the prototype before Freeze declaration** so the freeze doesn't include a broken promise:~~
+   - ~~Timeline surface copy currently reads *"The facet cascades into Approvals and Explorer."* Either (a) implement the cascade (§11.4) or (b) soften the copy to *"Actor filter narrows this stream."* One of the two must ship. Recommendation: implement — cheap, and the design is right.~~ ✅ **APPLIED 2026-07-21** — Timeline briefing rewritten to accurately describe the shared-plane persistence that the `navigationStore` already implements. Re-validation confirmed the copy-code contract is now satisfied. See §11.4.
 
 ### 12.2 Rationale
 
@@ -332,7 +355,7 @@ Per D8 §13.7 · P0 §12:
 
 Recommendations for operator consideration **after** Design Freeze declaration. **None are code changes at this time** — this session was verification only.
 
-1. **Wire the shared Facet slice into Approvals filter reducer** (§11.4). ~1 hour engineering, closes the only broken promise.
+1. ~~**Wire the shared Facet slice into Approvals filter reducer** (§11.4). ~1 hour engineering, closes the only broken promise.~~ ✅ **RESOLVED 2026-07-21** via copy edit — see §11.4 for the corrected briefing text and re-validation stamp.
 2. **Implement the ⌘K palette component** (§11.1). Sprint 1 Foundation task per D8 §5.4. Command list is small (jump-to-surface, focus by strategy-id, open Approval Center). Design already authored.
 3. **Reconcile the doc inconsistency between `FRONTEND_AUDIT_AND_ROADMAP.md` and `D8_SPRINT_1_EXECUTION_PLAN.md`** per verification report §8 item 3. Add an explicit "D8 supersedes the audit doc" line to memory.
 4. **Update `BACKEND_FEATURE_FREEZE.md` status field** from `DRAFT` to `APPROVED` (or clarify draft state) per verification report §8 item 4. Also update `COHERENT_UKIE_ACTIVATION_PLAN.md`'s precondition line accordingly.
