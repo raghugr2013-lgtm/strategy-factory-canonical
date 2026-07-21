@@ -1288,3 +1288,33 @@ Backend Feature Freeze v1.1.0-stage4 ✅ 2026-07-20
              └── Sprint 1 Foundation Kickoff (awaiting operator "go")
 ```
 
+
+
+---
+
+## Sprint 1 Foundation — COMPLETE (2026-07-21) ✅
+
+**Milestone tags:** `v1.2.0-sprint1-{m1,m2,m3,m4,m5}` — five recovery checkpoints.
+**Sprint 1 tag:** `v1.2.0-sprint1-complete` (operator to apply).
+
+### Delivered
+- **43 new files** under `/app/frontend/src/os/**` (~4 900 LoC)
+- 15 primitives, 5 surfaces, 7 adapters, 5 stores, 1 gallery route
+- ~200 `data-testid` attributes for QA hooks
+- Real-auth code path (JWT via `POST /api/auth/login`) with fixture fallback
+- Adapter-first architecture: zero direct `fetch()` from surfaces
+- Backend Feature Freeze: **zero backend commits** across all 5 milestones
+
+### Reports
+- `/app/memory/SPRINT_1_M{1,2,3,4,5}_COMPLETION_REPORT.md` — per-milestone
+- `/app/memory/SPRINT_1_COMPLETION_REPORT.md` — Sprint rollup + backend-integration readiness
+
+### Deferred to Sprint 2 (documented, non-blocking)
+- Master Bot Dashboard as own surface · WebSocket streaming
+- Full Storybook + axe-core CI · Playwright E2E harness against yarn build
+- 60-frame visual regression baseline · Legacy v01 dead-code cleanup
+
+### Next
+Backend Integration per Sprint 1 Completion Report §7.
+Prerequisites: `.env` populated · v1.1.0-stage4 backend healthy · operator account seeded · CORS configured.
+
