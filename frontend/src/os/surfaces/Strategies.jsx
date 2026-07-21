@@ -3,6 +3,7 @@
  * refs DESIGN_FREEZE_v1.0.md §1.4
  */
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LineChart } from 'lucide-react';
 import { FacetBar } from '../features/FacetBar';
 import { TableTile } from '../primitives/TableTile';
@@ -34,6 +35,7 @@ const columns = [
 export const Strategies = () => {
   const statusFacet = useNavigationStore((s) => s.facets.status);
   const [rows, setRows] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let live = true;
@@ -83,6 +85,7 @@ export const Strategies = () => {
         <TableTile caption={`Strategies · ${rows.length}`}
                    columns={columns}
                    rows={rows}
+                   onRowActivate={(r) => navigate(`/c/strategies/${encodeURIComponent(r.id)}`)}
                    testId="strategies-table" />
       )}
     </section>

@@ -32,7 +32,7 @@ module.exports = defineConfig({
     },
   ],
   webServer: process.env.PLAYWRIGHT_NO_SERVER ? undefined : {
-    command: `npx serve -s build -l ${PORT}`,
+    command: `python3 scripts/spa-serve.py build ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

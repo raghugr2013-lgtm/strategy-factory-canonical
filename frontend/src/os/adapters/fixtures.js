@@ -136,3 +136,98 @@ export const MASTER_BOT_FIXTURE = {
       tone: 'ok', rationale: 'Sharpe 1.9 · drawdown 3.1% · regime coverage 84%.' },
   ],
 };
+
+// Sprint 2 N5 · Strategy Passport (D5) fixtures.
+// Keyed by strategy id. Adapter tries live `GET /api/strategies/{id}` first
+// and falls back to the fixture for the id (or a generic hydrated shell)
+// under the current Backend Feature Freeze v1.1.0-stage4.
+const _equityCurve = (base) => Array.from({ length: 42 }, (_, i) =>
+  Math.round((base + i * 1.4 + Math.sin(i / 3) * 5) * 100) / 100
+);
+
+export const STRATEGY_PASSPORT_FIXTURE = {
+  'strat-014': {
+    id: 'strat-014',
+    name: 'flagship-momentum',
+    status: 'live',
+    tone: 'ok',
+    sharpe: 1.62,
+    drawdown: -3.4,
+    turnover: 2.4,
+    aum: '$18.4M',
+    inceptionDate: '2025-11-04',
+    codeSha: '91a2b3c',
+    version: 'flagship-momentum@v2',
+    ambition: 'Capture mid-frequency momentum in high-liquidity global futures with a strict crowded-trade advisory guard.',
+    provenance: { source: 'flagship-momentum-worker@v2', transform: 'plan #47 · step 1', attested: 'gov-warden' },
+    lineage: {
+      self: { id: 'strat-014', label: 'strat-014 · flagship-momentum', kind: 'strategy' },
+      ancestors: [{ id: 'plan-47', label: 'plan #47', kind: 'plan' }, { id: 'proposal-11', label: 'proposal #11', kind: 'proposal' }],
+      descendants: [{ id: 'bt-891', label: 'backtest-891', kind: 'backtest' }, { id: 'live-run-2', label: 'live-run #2', kind: 'deployment' }],
+    },
+    guardrails: [
+      { key: 'max-drawdown', label: 'Max drawdown', value: '3.4%', tone: 'ok' },
+      { key: 'concentration', label: 'Concentration', value: '18%', tone: 'ok' },
+      { key: 'liquidity', label: 'Liquidity floor', value: '$4.1M', tone: 'ok' },
+      { key: 'crowded-trade', label: 'Crowded-trade advisory', value: 'v1.3 match', tone: 'advisory' },
+    ],
+    equityCurve: _equityCurve(100),
+    backtest: {
+      id: 'bt-891',
+      window: '2024-01-01 → 2025-10-31',
+      regimeCoverage: '84%',
+      attestedBy: 'gov-warden',
+      attestedAt: '2026-07-19T14:22:00Z',
+      notes: 'Passes governance policy v2.1. Advisory raised on crowded-trade signature match to 2022-Q4 vol regime.',
+    },
+    approvals: [
+      { id: 'a-01', title: 'Promote from paper to live', verdict: 'approved', by: 'operator@coinnike', at: '2026-06-30T09:12:00Z' },
+      { id: 'a-14', title: 'Increase concentration cap to 20%', verdict: 'deferred', by: 'operator@coinnike', at: '2026-07-11T14:04:00Z' },
+    ],
+  },
+  'strat-030': {
+    id: 'strat-030',
+    name: 'vol-carry',
+    status: 'paper',
+    tone: 'info',
+    sharpe: 0.94, drawdown: -5.1, turnover: 1.8, aum: '$0 (paper)',
+    inceptionDate: '2026-05-02', codeSha: '4d2c1e', version: 'vol-carry@v0.3',
+    ambition: 'Systematic short-vol carry gated by realized-vs-implied dislocation.',
+    provenance: { source: 'vol-carry-worker@v0.3', transform: 'plan #52 · step 2', attested: 'gov-warden' },
+    lineage: {
+      self: { id: 'strat-030', label: 'strat-030 · vol-carry', kind: 'strategy' },
+      ancestors: [{ id: 'plan-52', label: 'plan #52', kind: 'plan' }],
+      descendants: [{ id: 'bt-901', label: 'backtest-901', kind: 'backtest' }],
+    },
+    guardrails: [
+      { key: 'max-drawdown', label: 'Max drawdown', value: '5.1%', tone: 'advisory' },
+      { key: 'concentration', label: 'Concentration', value: '11%', tone: 'ok' },
+      { key: 'liquidity', label: 'Liquidity floor', value: '$2.3M', tone: 'ok' },
+      { key: 'vol-regime', label: 'Vol regime', value: 'low-mid', tone: 'info' },
+    ],
+    equityCurve: _equityCurve(80),
+    backtest: {
+      id: 'bt-901', window: '2024-06-01 → 2026-05-31', regimeCoverage: '61%',
+      attestedBy: 'gov-warden', attestedAt: '2026-07-05T10:10:00Z',
+      notes: 'Suitable for paper only until regime coverage exceeds 70%.',
+    },
+    approvals: [{ id: 'a-22', title: 'Move to paper', verdict: 'approved', by: 'operator@coinnike', at: '2026-05-04T08:00:00Z' }],
+  },
+};
+
+export const STRATEGY_PASSPORT_FALLBACK = (id) => ({
+  id,
+  name: id,
+  status: 'draft',
+  tone: 'dormant',
+  sharpe: 0, drawdown: 0, turnover: 0, aum: '—',
+  inceptionDate: '—', codeSha: '—', version: `${id}@v?`,
+  ambition: 'Passport shell rendered from fallback — no backend record and no fixture for this id.',
+  provenance: { source: '—', transform: '—', attested: '—' },
+  lineage: { self: { id, label: id, kind: 'strategy' }, ancestors: [], descendants: [] },
+  guardrails: [],
+  equityCurve: [],
+  backtest: null,
+  approvals: [],
+  _fallback: true,
+});

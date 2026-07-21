@@ -2,14 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ASF design tokens (Phase U-1, Opus 4.8 source of truth). Loaded ONCE.
- * Defines --asf-* CSS custom properties and the asf-card / asf-skeleton /
- * asf-empty / asf-vbadge / asf-vchip / asf-legend opt-in primitives. */
-@import "./styles/asf-design-tokens.css";
-@import "./styles/asf-u3-interactions.css";
-@import "./styles/asf-u4-a11y.css";
-@import "./styles/asf-u4-responsive.css";
-@import "./styles/asf-rc1-dark-contrast-lifts.css";
+/* Sprint 2 N4 · legacy ASF token/interaction CSS purged with v01 code
+ * (moved to /app/frontend/.archive/v01/styles/). All tokens are now
+ * served exclusively by /app/frontend/src/os/tokens.css. */
 
 body {
     margin: 0;

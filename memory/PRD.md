@@ -1353,3 +1353,57 @@ Backend Integration Track α           ✅ 2026-07-21 ← CURRENT
 └── Backend Activation (UKIE Phase A→E) · ops-driven parallel track
 ```
 
+
+
+---
+
+## Sprint 2 — COMPLETE (2026-07-21) ✅
+
+**Recommended tag:** `v1.3.0-sprint2-complete`
+
+### Delivered (N1 → N5)
+- **N1 QA infrastructure baseline** — Storybook 8.6 · 69 stories · axe-core `.axerc.json` waiver ledger · Playwright + axe-playwright · 4-job CI (`frontend-qa.yml`) · `check-testids.js` + `check-pr-title.js`
+- **N2 Master Bot Dashboard** — `/c/masterbot` surface (identity strip · gold plan card · 5-decision log) + `masterBotAdapter.js` (fixture-only) + ⌘K palette entry
+- **N3 Streaming surfaces** — `streamAdapter.js` (WSS + polling fallback) · `useStream` hook · `StreamPostmark` on Timeline · Approvals · StatusRail
+- **N4 Sprint 1 latent-risk closure** — `useFocusTrap` on ⌘K palette · centralized 401 interceptor + `sf-auth-unauthorized` event · `REACT_APP_STRICT_LIVE` diagnostic flag · `Promise.allSettled` + `mc-partial-notice` boundary · legacy v01 archived to `.archive/v01/` · absolute-path splat catch-all fix (verified iter-3)
+- **N5 Strategy Passport** — `/c/strategies/:id` surface with all seven sections (signature · metrics · provenance · lineage · guardrails · equity curve · backtest · approvals) · `fetchStrategy(id)` live→fixture fallback · Strategy Explorer row-click wiring
+
+### Test evidence
+- **12/12 Playwright tests passing** on `yarn build` static output
+- **69 Storybook stories** rendered; 0 build errors
+- **0 unwaived axe-core violations** on 3 surfaces; 1 documented `color-contrast` waiver (token layer, Design-Freeze-owned)
+- **Testing agent 3-iteration cycle:** iter-1 11/12 · iter-2 caught CRITICAL regression · iter-3 7/7 clean
+
+### Freeze compliance
+- **Backend edits: 0** (v1.1.0-stage4 preserved)
+- **Design token edits: 0** (v1.0 preserved)
+- **5 semantic ARIA additions only** (non-visual metadata)
+
+### Reports produced
+- `/app/memory/SPRINT_2_N1_COMPLETION_REPORT.md`
+- `/app/memory/SPRINT_2_N1_COMPATIBILITY_REPORT.md`
+- `/app/memory/SPRINT_2_MID_REVIEW_PACKAGE.md`
+- `/app/memory/SPRINT_2_COMPLETION_REPORT.md`
+- `/app/memory/SPRINT_2_VPS_DEPLOYMENT_PACKAGE.md`
+- `/app/memory/SPRINT_2_PRODUCTION_CANDIDATE_REPORT.md`
+- `/app/test_reports/iteration_{1,2,3}.json`
+
+### Roadmap update
+```
+Backend Feature Freeze v1.1.0-stage4  ✅ 2026-07-20
+Design Freeze v1.0                    ✅ 2026-07-21
+Sprint 1 Foundation                   ✅ 2026-07-21
+Backend Integration Track α           ✅ 2026-07-21
+Sprint 2 (N1 → N5)                    ✅ 2026-07-21 ← CURRENT
+├── VPS deployment · single coherent  · queued
+├── Production Candidate smoke tests  · queued
+└── Sprint 3 planning                 · gated on VPS validation
+```
+
+### Deferred to Sprint 3
+- 60-frame visual regression matrix (currently 3 baselines)
+- `color-contrast` token remediation (Design Token Review)
+- `@emotion/is-prop-valid` framer-motion warn
+- `check-testids.js` → `@babel/parser` upgrade
+- Storybook Vite migration (optional)
+- Backend routers for streaming, master-bot, timeline, approvals, factory, workforce (blocked by Backend Feature Freeze — awaits Backend Activation Roadmap)

@@ -10,7 +10,7 @@
  *                       flag OFF) · fixture only (breadcrumb).
  */
 import { isLiveMode, fixtureOrLive, unavailableBreadcrumb } from './apiClient';
-import { WORKERS_FIXTURE, PIPELINE_FIXTURE, STRATEGIES_FIXTURE } from './fixtures';
+import { WORKERS_FIXTURE, PIPELINE_FIXTURE, STRATEGIES_FIXTURE, STRATEGY_PASSPORT_FIXTURE, STRATEGY_PASSPORT_FALLBACK } from './fixtures';
 
 // StrategyOut (backend) → Strategy Explorer row (frontend)
 const transformStrategy = (s) => ({
@@ -46,6 +46,47 @@ export const fetchStrategies = async ({ status = 'all' } = {}) => {
 export const fetchWorkers = async () => {
   unavailableBreadcrumb('fetchWorkers', 'GET /api/ai-workforce/workers', 'router not exposed in v1.1.0-stage4');
   return WORKERS_FIXTURE;
+};
+
+// Sprint 2 N5 · Strategy Passport (D5).
+// Tries live `GET /api/strategies/{id}` first. If backend serves a record
+// we hydrate the passport shell with any missing fields from the fixture
+// (backend does not yet surface guardrails / equity curve / lineage).
+// Falls back to fixture-only or a generic shell when 404 / freeze.
+const hydrate = (id, backendRow, fixture) => {
+  const base = fixture || STRATEGY_PASSPORT_FALLBACK(id);
+  if (!backendRow) return base;
+  return {
+    ...base,
+    id: backendRow.strategy_id ?? backendRow.id ?? id,
+    name: backendRow.name ?? base.name,
+    status: backendRow.status ?? base.status,
+    codeSha: backendRow.code_sha ?? base.codeSha,
+    version: backendRow.version ?? base.version,
+    ambition: backendRow.ambition ?? base.ambition,
+    _source: 'live+hydrated',
+  };
+};
+
+export const fetchStrategy = async (id) => {
+  const fixture = STRATEGY_PASSPORT_FIXTURE[id];
+  if (isLiveMode()) {
+    try {
+      const raw = await (await import('./apiClient')).apiFetch(`/api/strategies/${encodeURIComponent(id)}`);
+      return hydrate(id, raw, fixture);
+    } catch (e) {
+      if (e.status !== 401 && e.status !== 404) {
+        console.warn('[adapter] fetchStrategy live failed, falling back:', e.message);
+      }
+      if (e.status === 404) {
+        unavailableBreadcrumb(`fetchStrategy:${id}`,
+          `GET /api/strategies/${id}`,
+          'strategy not present in backend store (freeze · unseeded db)');
+      }
+      return fixture ? { ...fixture, _source: 'fixture' } : STRATEGY_PASSPORT_FALLBACK(id);
+    }
+  }
+  return fixture ? { ...fixture, _source: 'fixture' } : STRATEGY_PASSPORT_FALLBACK(id);
 };
 
 export const fetchPipeline = async () => {
