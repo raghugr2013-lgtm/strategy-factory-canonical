@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    "node_modules",
+    "build",
+    "storybook-static",
+    "playwright-report",
+    "test-results",
+    ".archive",
+    "tests/e2e/**/*.spec.cjs-snapshots"
+  ]
+}

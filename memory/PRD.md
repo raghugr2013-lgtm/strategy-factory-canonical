@@ -1407,3 +1407,30 @@ Sprint 2 (N1 → N5)                    ✅ 2026-07-21 ← CURRENT
 - `check-testids.js` → `@babel/parser` upgrade
 - Storybook Vite migration (optional)
 - Backend routers for streaming, master-bot, timeline, approvals, factory, workforce (blocked by Backend Feature Freeze — awaits Backend Activation Roadmap)
+
+
+---
+
+## Sprint 2.0 · Tail-patch (post-Legacy-Audit) — COMPLETE (2026-07-21) ✅
+
+**Post-audit refinements landed after operator approved Option B of `SPRINT_2_LEGACY_CAPABILITY_AUDIT.md`.**
+
+### R1/R2/R3 landed
+- **R1** — 4th metric block on Mission Control: `Portfolio equity` (legacy Monitoring parity)
+- **R2** — Next-tick postmark on Master Bot plan card (legacy Auto-Discovery Scheduler parity)
+- **R3** — Three ⌘K palette proposals: `Propose new strategy…` · `Optimize strategy…` · `Promote to live…` — all drop `<ApprovalCard>` onto `/c/approvals` via new `features/paletteProposals.js` module-level buffer
+
+### Validation
+- **17 Playwright tests pass** (12 pre-existing + 5 new tail-refinement tests)
+- **12/12 testing-agent assertions pass** on preview URL (iteration_4.json)
+- **0 backend edits · 0 token edits · 0 new sidebar items · 0 new primitives**
+
+### Docs
+- `/app/memory/SPRINT_2_LEGACY_CAPABILITY_AUDIT.md` — Audit
+- `/app/memory/SPRINT_2_FINAL_VALIDATION_REPORT.md` — Tail-patch validation
+- `/app/test_reports/iteration_4.json` — Independent verification
+
+### Deferred (Sprint 3 candidates newly identified)
+- DEF-7 · `paletteProposals.js` buffer clear on logout
+- DEF-8 · Portfolio-equity block variant='C' when 4-variant grid authorised
+- DEF-9 · Refactor Master Bot next-tick postmark to reuse StreamPostmark primitive
