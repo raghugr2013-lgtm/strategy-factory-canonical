@@ -13,6 +13,7 @@ import { Approvals } from '../surfaces/Approvals';
 import { Workforce } from '../surfaces/Workforce';
 import { Strategies } from '../surfaces/Strategies';
 import { Settings } from '../surfaces/Settings';
+import { PrimitiveGallery } from '../gallery/PrimitiveGallery';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -35,6 +36,7 @@ export const AppRouter = () => (
         <Route path="workforce"  element={<Workforce />} />
         <Route path="strategies" element={<Strategies />} />
         <Route path="settings"   element={<Settings />} />
+        <Route path="gallery"    element={<PrimitiveGallery />} />
         <Route index element={<Navigate to="mission" replace />} />
       </Route>
 

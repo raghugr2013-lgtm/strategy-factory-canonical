@@ -12,7 +12,9 @@ export const useInspectorStore = create((set) => ({
   open: false,
   canonicalState: 'happy',
   scenarioKey: null,
+  reducedMotion: false,
   toggle: () => set((s) => ({ open: !s.open })),
   setCanonicalState: (canonicalState) => set({ canonicalState }),
   setScenario: (scenarioKey) => set({ scenarioKey }),
+  setReducedMotion: (reducedMotion) => set({ reducedMotion }),
 }));
