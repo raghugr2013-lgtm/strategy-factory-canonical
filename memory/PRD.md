@@ -1318,3 +1318,38 @@ Backend Feature Freeze v1.1.0-stage4 ✅ 2026-07-20
 Backend Integration per Sprint 1 Completion Report §7.
 Prerequisites: `.env` populated · v1.1.0-stage4 backend healthy · operator account seeded · CORS configured.
 
+
+
+---
+
+## Backend Integration Track α — COMPLETE (2026-07-21) ✅
+
+**Recommended tag:** `v1.2.0-integration-complete`
+
+### Milestone summary
+- **2 adapters wire-verified live:** `fetchStrategies` (`GET /api/strategies`) · `authStore.login` (`POST /api/auth/login`)
+- **1 adapter contract-preserved:** `commitApproval` — 404/409 collapse to OBSERVE-mode ack
+- **4 adapters fixture-only under Backend Feature Freeze:** fetchWorkers · fetchPipeline · fetchTimeline · fetchApprovals — each emits single-shot `console.info` breadcrumb naming its expected endpoint and the freeze reason
+- **Zero backend source-code changes** · **zero frontend behaviour changes**
+
+### Compatibility boundary declared
+The adapter layer under `/app/frontend/src/os/adapters/**` is the **official contract seam** between the Sprint 1 frontend and the Backend Feature Freeze v1.1.0-stage4 backend. Backend Activation Phases (Coherent UKIE Activation Plan) can proceed on the ops track independently — as each phase lands, the corresponding adapter breadcrumb auto-clears because `fixtureOrLive()` starts receiving live data. NO frontend changes required at activation time.
+
+### Configuration (dev workspace only)
+- `backend/.env` populated · dev-only JWT_SECRET generated · CORS locked to preview origin only
+- `frontend/.env` populated · REACT_APP_BACKEND_URL = pod preview URL
+
+### Reports
+- `/app/memory/BACKEND_INTEGRATION_COMPLETION_REPORT.md` — full report + API contract matrix + adapter mappings
+- `/app/memory/SPRINT_2_PLANNING.md` — 5-milestone Sprint 2 plan (N1 QA · N2 Master Bot · N3 Streaming · N4 Housekeeping · N5 Passport) · 34 engineer-days · 6-week calendar
+
+### Roadmap update
+```
+Backend Feature Freeze v1.1.0-stage4 ✅ 2026-07-20
+Design Freeze v1.0                    ✅ 2026-07-21
+Sprint 1 Foundation (M1→M5)           ✅ 2026-07-21
+Backend Integration Track α           ✅ 2026-07-21 ← CURRENT
+├── Sprint 2 (frontend, N1→N5)        · queued (see SPRINT_2_PLANNING.md)
+└── Backend Activation (UKIE Phase A→E) · ops-driven parallel track
+```
+
