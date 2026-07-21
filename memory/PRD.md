@@ -1434,3 +1434,21 @@ Sprint 2 (N1 → N5)                    ✅ 2026-07-21 ← CURRENT
 - DEF-7 · `paletteProposals.js` buffer clear on logout
 - DEF-8 · Portfolio-equity block variant='C' when 4-variant grid authorised
 - DEF-9 · Refactor Master Bot next-tick postmark to reuse StreamPostmark primitive
+
+
+---
+
+## Sprint 2 · Sign-Off Packet — READY (2026-07-21) 📦
+
+**Canonical release artefact: `/app/memory/SPRINT_2_SIGN_OFF_PACKET.md`** (973 lines · 64 KB · 14 sections)
+
+Consolidates: Executive Summary · Completion Report · Legacy Capability & UX Audit · Compatibility Report · Final Validation Report · Production Candidate Report · VPS Deployment Package · Test Evidence Summary (17 Playwright / 12 iter-4 · 69 stories · 0 unwaived a11y) · Deferred Backlog (DEF-1..DEF-9) · Release Notes · Deployment Checklist (12-item smoke) · Sign-Off Table · Release Readiness Statement.
+
+**Verdict: ✅ READY FOR RELEASE.**
+
+### Immediate operator actions
+1. Cut annotated tag `v1.3.0-sprint2-complete`
+2. Draft GitHub Release using §10 Release Notes; attach the Sign-Off Packet
+3. Single coherent VPS deployment per §11.3
+4. Execute 12-item smoke checklist per §11.4
+5. Sign §12 · then open Sprint 3 planning
