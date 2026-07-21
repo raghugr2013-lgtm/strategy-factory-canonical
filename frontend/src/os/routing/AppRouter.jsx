@@ -40,6 +40,7 @@ export const AppRouter = () => (
         <Route path="settings"   element={<Settings />} />
         <Route path="gallery"    element={<PrimitiveGallery />} />
         <Route index element={<Navigate to="mission" replace />} />
+        <Route path="*" element={<Navigate to="mission" replace />} />
       </Route>
 
       <Route path="/" element={<Navigate to={DEFAULT_AUTHENTICATED_ROUTE} replace />} />
