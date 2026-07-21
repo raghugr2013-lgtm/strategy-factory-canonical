@@ -1,22 +1,22 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "@/index.css";
-import App from "@/App";
-import { bootstrapA11yPatcher } from "@/a11y/formNamePatcher";
-import { installAuthFetchInterceptor } from "@/services/auth";
+/*
+ * Strategy Factory — Sprint 1 Foundation entry.
+ * refs DESIGN_FREEZE_v1.0.md · D8_SPRINT_1_EXECUTION_PLAN.md · M1
+ *
+ * Legacy v01 CommandShell files remain under /app/frontend/src/{command,components,styles,...}
+ * as unimported dead code; they were superseded by the Design Freeze (see
+ * memory/FRONTEND_AUDIT_AND_ROADMAP.md SUPERSEDED banner).
+ */
+import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// RC1 · AX-1 / AX-2 — runtime accessible-name patcher for form controls.
-// See /app/frontend/src/a11y/formNamePatcher.js for the resolution order.
-bootstrapA11yPatcher();
+import './os/tokens.css';
+import { AppRouter } from './os/routing/AppRouter';
 
-// RC1 · AUTH-FIX — install global Authorization: Bearer interceptor at boot.
-// Resolves the cascading HTTP 401 chips on Ingestion Health, Parity Cert,
-// Pipeline Logs, Strategy Ingestion, Auto Data Maintenance, Monitoring &
-// Control, Soak/CPU/Cluster, Flags/Realism/Tuning, LLM Live River, and the
-// downstream "body stream already read" cosmetic error. See
-// /app/memory/AUTHENTICATION_AUDIT.md for the audit trail.
-installAuthFetchInterceptor();
+// Ensure token variables apply — attach `os-body` class before render.
+if (typeof document !== 'undefined') {
+  document.body.classList.add('os-body');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,11 +27,25 @@ const queryClient = new QueryClient({
   },
 });
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <React.StrictMode>
+const App = () => {
+  useEffect(() => {
+    document.body.classList.add('os-body');
+    document.title = 'Strategy Factory';
+    return () => document.body.classList.remove('os-body');
+  }, []);
+  return (
     <QueryClientProvider client={queryClient}>
-      <App />
+      <AppRouter />
     </QueryClientProvider>
-  </React.StrictMode>,
-);
+  );
+};
+
+const rootEl = document.getElementById('root');
+if (rootEl) {
+  const root = ReactDOM.createRoot(rootEl);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
