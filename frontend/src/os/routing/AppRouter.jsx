@@ -8,6 +8,7 @@ import { AppShell } from '../shell/AppShell';
 import { LoginScreen } from '../auth/LoginScreen';
 import { RequireAuth } from '../auth/RequireAuth';
 import { MissionControl } from '../surfaces/MissionControl';
+import { MasterBot } from '../surfaces/MasterBot';
 import { Timeline } from '../surfaces/Timeline';
 import { Approvals } from '../surfaces/Approvals';
 import { Workforce } from '../surfaces/Workforce';
@@ -31,6 +32,7 @@ export const AppRouter = () => (
         }
       >
         <Route path="mission"    element={<MissionControl />} />
+        <Route path="masterbot"  element={<MasterBot />} />
         <Route path="timeline"   element={<Timeline />} />
         <Route path="approvals"  element={<Approvals />} />
         <Route path="workforce"  element={<Workforce />} />

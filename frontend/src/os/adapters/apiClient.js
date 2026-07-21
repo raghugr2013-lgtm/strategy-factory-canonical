@@ -1,23 +1,36 @@
 /*
- * apiClient — Backend Integration edition.
- * refs SPRINT_1_COMPLETION_REPORT.md §6.1 + operator directive
- *     "Adapter layer is the compatibility boundary between the frozen backend
- *      and the Sprint 1 frontend."
+ * apiClient — Sprint 2 N4 edition.
+ * refs SPRINT_2_PLANNING.md §2 N4 (401 interceptor + strict-live flag)
  *
- * `isLiveMode()` gates live traffic on REACT_APP_BACKEND_URL presence.
- * `apiFetch()` injects Bearer JWT from sessionStorage.
- * `fixtureOrLive()` tries the endpoint and falls back to the fixture on any
- *   error (with console.warn), so surfaces cannot break under partial backend.
- * `unavailableBreadcrumb(name)` — single-shot dev-only log for adapters whose
- *   endpoint is not exposed under the current v1.1.0-stage4 Backend Feature
- *   Freeze. Emits once per adapter per session.
+ * • isLiveMode()           — REACT_APP_BACKEND_URL present.
+ * • isStrictLive()         — REACT_APP_STRICT_LIVE=1 disables fixture fallback
+ *                            so surfaces surface adapter errors instead of
+ *                            silently substituting fixtures (dev diagnostic).
+ * • apiFetch()             — Bearer JWT + centralized 401 interceptor.
+ *                            On 401 the interceptor clears the session token
+ *                            and dispatches a browser event that RequireAuth
+ *                            listens for → forces sign-in redirect.
+ * • fixtureOrLive()        — tries live, falls back to fixture (unless strict).
+ * • unavailableBreadcrumb  — single-shot dev breadcrumb for gated endpoints.
  */
 const BACKEND_URL = (typeof process !== 'undefined' && process.env.REACT_APP_BACKEND_URL) || '';
+const STRICT_LIVE = (typeof process !== 'undefined' && process.env.REACT_APP_STRICT_LIVE) === '1';
 
 export const isLiveMode = () => Boolean(BACKEND_URL);
+export const isStrictLive = () => STRICT_LIVE;
 
 const readToken = () => {
   try { return sessionStorage.getItem('sf-auth-token') || null; } catch { return null; }
+};
+
+const clearToken = () => {
+  try { sessionStorage.removeItem('sf-auth-token'); } catch { /* noop */ }
+};
+
+const dispatchUnauthorized = (path) => {
+  try {
+    window.dispatchEvent(new CustomEvent('sf-auth-unauthorized', { detail: { path } }));
+  } catch { /* noop */ }
 };
 
 export const apiFetch = async (path, opts = {}) => {
@@ -26,6 +39,14 @@ export const apiFetch = async (path, opts = {}) => {
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${BACKEND_URL}${path}`, { ...opts, headers });
+  if (res.status === 401) {
+    // Sprint 2 N4 · centralized 401 interceptor.
+    clearToken();
+    dispatchUnauthorized(path);
+    const err = new Error(`api ${path} 401 unauthorized`);
+    err.status = 401;
+    throw err;
+  }
   if (!res.ok) {
     const err = new Error(`api ${path} ${res.status}`);
     err.status = res.status;
@@ -40,18 +61,16 @@ export const fixtureOrLive = async (endpoint, fixture, opts) => {
   try {
     return await apiFetch(endpoint, opts);
   } catch (e) {
+    if (STRICT_LIVE) throw e;
     console.warn(`[adapter] live fetch failed for ${endpoint}, falling back to fixture:`, e.message);
     return fixture;
   }
 };
 
-// Adapter-unavailability breadcrumbs (single-shot per adapter name).
 const _seen = new Set();
 export const unavailableBreadcrumb = (adapterName, expectedEndpoint, reason) => {
   if (_seen.has(adapterName)) return;
   _seen.add(adapterName);
-  // Not warn-level — this is expected and documented; use info so it doesn't
-  // pollute the dev console with fake alarms.
   console.info(
     `[adapter] ${adapterName} · endpoint ${expectedEndpoint} unavailable under Backend Feature Freeze v1.1.0-stage4 · reason: ${reason} · using fixture data.`
   );

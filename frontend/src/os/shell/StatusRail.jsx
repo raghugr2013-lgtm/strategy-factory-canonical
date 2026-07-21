@@ -10,6 +10,8 @@
  */
 import React from 'react';
 import { useWorkspaceStore } from '../workspace-state/store';
+import { useStream } from '../features/useStream';
+import { StreamPostmark } from '../features/StreamPostmark';
 
 const CHIPS = [
   { id: 'orchestrator', label: 'Orchestrator', tone: 'P', detail: 'Idle · nominal' },
@@ -29,12 +31,16 @@ const TONE_COLORS = {
 
 export const StatusRail = ({ preAuth = false }) => {
   const killPostureArmed = useWorkspaceStore((s) => s.killPostureArmed);
+  const streamStatus = useStream('status-rail', { intervalMs: 10_000 });
   const killChip = killPostureArmed
     ? { id: 'kill', label: 'Kill posture', tone: 'F', detail: 'ARMED' }
     : { id: 'kill', label: 'Kill posture', tone: 'I', detail: 'Disarmed' };
 
   return (
+    <footer data-testid="status-rail-region" role="contentinfo" aria-label="System status" style={{ display: 'block' }}>
     <div data-testid="status-rail"
+         tabIndex={0}
+         aria-label="System status rail"
          style={{
            background: 'var(--surface-1)',
            borderTop: '1px solid var(--stroke-1)',
@@ -58,9 +64,14 @@ export const StatusRail = ({ preAuth = false }) => {
           <span style={{ color: 'var(--content-lo)' }}>· {c.detail}</span>
         </div>
       ))}
-      <div style={{ marginLeft: 'auto', color: 'var(--content-lo)' }} data-testid="status-rail-postmark">
-        {preAuth ? 'Pre-auth · public status' : 'System status · live'}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
+           data-testid="status-rail-postmark">
+        <StreamPostmark status={streamStatus} testId="status-rail-stream-postmark" />
+        <span style={{ color: 'var(--content-lo)' }}>
+          {preAuth ? 'Pre-auth · public status' : 'System status · live'}
+        </span>
       </div>
     </div>
+    </footer>
   );
 };

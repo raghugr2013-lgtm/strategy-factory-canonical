@@ -2,9 +2,8 @@
  * Strategy Factory — Sprint 1 Foundation entry.
  * refs DESIGN_FREEZE_v1.0.md · D8_SPRINT_1_EXECUTION_PLAN.md · M1
  *
- * Legacy v01 CommandShell files remain under /app/frontend/src/{command,components,styles,...}
- * as unimported dead code; they were superseded by the Design Freeze (see
- * memory/FRONTEND_AUDIT_AND_ROADMAP.md SUPERSEDED banner).
+ * Sprint 2 N4 · legacy v01 CommandShell code has been archived to
+ * /app/frontend/.archive/v01/ (outside src/) and is no longer compiled.
  */
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';

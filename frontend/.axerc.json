@@ -1,0 +1,12 @@
+{
+  "$comment": "Sprint 2 N1 axe-core allowlist. Per SPRINT_2_PLANNING.md §7 R4.",
+  "$owners": "Design + QA · reviewed at each milestone exit.",
+  "waivers": [
+    {
+      "rule": "color-contrast",
+      "reason": "Design Freeze v1.0 §1.5 pins tokens (--content-md, --content-lo) at the token layer. axe-core WCAG-AA thresholds flag intentional editorial low-contrast typography (surface eyebrows, mono-num postmarks). Adjusting tokens is out-of-scope for Sprint 2 (Design Freeze §4 rule 3). Contrast remediation is tracked as a Sprint 3 design-token revision candidate under DESIGN_FREEZE_v1.0.md §Retro-A.",
+      "scope": "surfaces/*.jsx, shell/*.jsx, primitives/DivisionCaption.jsx, primitives/Chip.jsx",
+      "waived_until": "sprint-3-design-token-review"
+    }
+  ]
+}

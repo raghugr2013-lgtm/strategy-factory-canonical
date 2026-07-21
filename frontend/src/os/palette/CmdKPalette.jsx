@@ -16,6 +16,7 @@ import { Command } from 'cmdk';
 import { ROUTES } from '../routing/routes';
 import { useAuthStore } from '../workspace-state/authStore';
 import { useWorkspaceStore } from '../workspace-state/store';
+import { useFocusTrap } from '../features/useFocusTrap';
 
 export const CmdKPalette = () => {
   const [open, setOpen] = useState(false);
@@ -25,6 +26,8 @@ export const CmdKPalette = () => {
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);
   const setKill = useWorkspaceStore((s) => s.setKillPosture);
   const inputRef = useRef(null);
+  const paletteRef = useRef(null);
+  useFocusTrap(paletteRef, open);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -65,6 +68,7 @@ export const CmdKPalette = () => {
            paddingTop: '12vh',
          }}>
       <Command data-testid="cmdk-palette"
+               ref={paletteRef}
                onClick={(e) => e.stopPropagation()}
                style={{
                  width: 600,

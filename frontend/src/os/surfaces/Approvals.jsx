@@ -11,6 +11,8 @@ import { Chip } from '../primitives/Chip';
 import { useOptimistic } from '../adapters/optimistic';
 import { fetchApprovals, commitApproval } from '../adapters/approvalsAdapter';
 import { useNavigationStore } from '../workspace-state/navigationStore';
+import { useStream } from '../features/useStream';
+import { StreamPostmark } from '../features/StreamPostmark';
 
 const RISK_OPTIONS = [
   { key: 'all', label: 'All' },
@@ -54,6 +56,14 @@ export const Approvals = () => {
     return () => { live = false; };
   }, [riskFacet, dispatch]);
 
+  const streamStatus = useStream('approvals', {
+    intervalMs: 15_000,
+    onTick: (payload) => {
+      if (payload.mode === 'initial') return;
+      fetchApprovals({ risk: riskFacet }).then((list) => dispatch({ kind: 'load', list }));
+    },
+  });
+
   const pending = state.pending ?? [];
   const highCount = pending.filter((a) => a.risk === 'high').length;
   const modCount = pending.filter((a) => a.risk === 'moderate').length;
@@ -88,6 +98,7 @@ export const Approvals = () => {
 
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <FacetBar axis="risk" options={RISK_OPTIONS} testIdPrefix="approvals-facet" />
+        <StreamPostmark status={streamStatus} testId="approvals-stream-postmark" />
         <span data-testid="approvals-cascade-hint"
               style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)',
                        textTransform: 'uppercase', letterSpacing: '0.08em' }}>

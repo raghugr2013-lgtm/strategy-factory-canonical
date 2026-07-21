@@ -12,6 +12,8 @@ import { StateTemplate } from '../primitives/StateTemplate';
 import { fetchTimeline } from '../adapters/timelineAdapter';
 import { useNavigationStore } from '../workspace-state/navigationStore';
 import { useWorkspaceStore } from '../workspace-state/store';
+import { useStream } from '../features/useStream';
+import { StreamPostmark } from '../features/StreamPostmark';
 
 const ACTOR_ICON = { governance: Landmark, 'master-bot': Bot, llm: Sparkles,
                      ingestion: Cpu, operator: ClipboardList, validator: Activity,
@@ -34,6 +36,12 @@ export const Timeline = () => {
   const [events, setEvents] = useState(null);
   const [selected, setSelected] = useState(null);
 
+  const refetch = React.useCallback(() => {
+    fetchTimeline({ actor: actorFacet, window: timeWindow })
+      .then((e) => setEvents(e))
+      .catch(() => setEvents([]));
+  }, [actorFacet, timeWindow]);
+
   useEffect(() => {
     let live = true;
     setEvents(null);
@@ -42,6 +50,11 @@ export const Timeline = () => {
       .catch(() => { if (live) setEvents([]); });
     return () => { live = false; };
   }, [actorFacet, timeWindow]);
+
+  const streamStatus = useStream('timeline', {
+    intervalMs: 15_000,
+    onTick: (payload) => { if (payload.mode !== 'initial') refetch(); },
+  });
 
   const totalCount = events?.length ?? 0;
 
@@ -72,6 +85,7 @@ export const Timeline = () => {
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <FacetBar axis="actor" options={ACTOR_OPTIONS} testIdPrefix="timeline-facet" />
         <TimeWindowChip testId="timeline-time-window" />
+        <StreamPostmark status={streamStatus} testId="timeline-stream-postmark" />
         <span data-testid="timeline-cascade-hint"
               style={{ marginLeft: 'auto', fontSize: 'var(--font-caption)',
                        color: 'var(--content-lo)', textTransform: 'uppercase',

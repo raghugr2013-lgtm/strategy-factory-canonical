@@ -1,0 +1,81 @@
+name: Frontend QA · N1 baseline
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-qa.yml'
+  push:
+    branches: [main]
+
+jobs:
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enforce PR title convention (N1 · summary)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        working-directory: frontend
+        run: node scripts/check-pr-title.js "$PR_TITLE"
+
+  testids:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: data-testid coverage
+        run: node scripts/check-testids.js
+
+  storybook-a11y:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - name: Build storybook (verifies stories + addon-a11y wiring)
+        run: yarn build-storybook --quiet
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storybook-static
+          path: frontend/storybook-static
+
+  playwright-e2e:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - name: CRA production build
+        env:
+          CI: 'false'
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8001' }}
+        run: yarn build
+      - name: Install playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E + axe-core
+        run: yarn test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report

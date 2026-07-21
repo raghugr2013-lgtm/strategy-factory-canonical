@@ -156,6 +156,8 @@ export const MissionControl = () => {
                          status={`${timeline.length} recent events`}
                          purpose="A ranked feed of the last few decisions the Factory took." />
         <div data-testid="mc-timeline"
+             role="list"
+             aria-label="Latest factory activity"
              style={{ background: 'var(--surface-1)', border: '1px solid var(--stroke-1)',
                       borderRadius: 'var(--radius-3)', overflow: 'hidden' }}>
           {isLoading ? (
@@ -175,6 +177,26 @@ export const MissionControl = () => {
         </div>
       </div>
 
+      {/* Partial-failure notice · Sprint 2 N4 · Promise.allSettled slots */}
+      {bundle?.partial?.length > 0 && (
+        <div data-testid="mc-partial-notice"
+             role="status"
+             style={{ background: 'var(--surface-1)', border: '1px solid var(--sig-warn)',
+                      borderRadius: 'var(--radius-3)', padding: 'var(--space-3) var(--space-4)',
+                      fontSize: 'var(--font-body-sm)', color: 'var(--content-md)' }}>
+          <div style={{ fontSize: 'var(--font-caption)', color: 'var(--sig-warn)',
+                        textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+            Partial — {bundle.partial.length} data slot{bundle.partial.length > 1 ? 's' : ''} unavailable
+          </div>
+          {bundle.partial.map((p) => (
+            <span key={p.slot} data-testid={`mc-partial-${p.slot}`} className="mono-num"
+                  style={{ marginRight: 12, color: 'var(--content-lo)' }}>
+              {p.slot} · {p.error?.slice(0, 60)}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* System attention (degraded workers) */}
       {degradedWorkers > 0 && (
         <div data-testid="mc-attention"
@@ -189,7 +211,8 @@ export const MissionControl = () => {
             {workers.filter((w) => ['error', 'blocked'].includes(w.state))
                     .map((w) => `${w.name} · ${w.state}`).join(' · ')}
           </div>
-          <a href="/c/workforce" style={{ color: 'var(--sig-info)', textDecoration: 'none',
+          <a href="/c/workforce" data-testid="mc-open-workforce"
+             style={{ color: 'var(--sig-info)', textDecoration: 'none',
                                           fontSize: 'var(--font-body-sm)', marginTop: 'var(--space-1)' }}>
             → open AI workforce
           </a>

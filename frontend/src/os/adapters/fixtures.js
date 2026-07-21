@@ -95,3 +95,44 @@ export const MISSION_METRICS_FIXTURE = {
   approvalsPending: { value: '3', delta: '1 aged', tone: 'warn' },
   throughput: [12, 15, 14, 18, 22, 20, 26, 24, 28, 30, 27, 32, 34, 30, 36],
 };
+
+// Sprint 2 N2 · Master Bot Dashboard (D4) fixtures — fixture-only until
+// backend exposes `/api/master-bot/*` (currently gated by Backend Feature Freeze).
+export const MASTER_BOT_FIXTURE = {
+  identity: {
+    codename: 'Master Bot · Nike-01',
+    role: 'Factory Overseer',
+    version: 'mb@v4.2.0',
+    uptimeSeconds: 5 * 24 * 3600 + 14 * 3600 + 22 * 60,
+    lastSeen: '2026-07-21T09:32:14Z',
+    stance: 'observe',              // observe · advise · act
+    trustBudget: { spent: 34, cap: 120, unit: 'kOps' },
+  },
+  currentPlan: {
+    id: 'plan-47',
+    name: 'Weekly rotation · 2026-Q3-W3',
+    epoch: '4/6',
+    startedAt: '2026-07-21T04:00:00Z',
+    horizonHours: 42,
+    strategies: 12,
+    guardrails: [
+      { key: 'max-drawdown', label: 'Max drawdown', value: '3.4%', tone: 'ok' },
+      { key: 'concentration', label: 'Concentration', value: '18%', tone: 'ok' },
+      { key: 'liquidity',    label: 'Liquidity floor', value: '$4.1M', tone: 'ok' },
+      { key: 'regime-fit',   label: 'Regime fit', value: 'trending-med', tone: 'info' },
+    ],
+    ambition: 'Ship signal-forge@v2 into production without exceeding the trust budget or triggering a governance hold.',
+  },
+  lastDecisions: [
+    { id: 'd-142', ts: '09:22Z', verb: 'promoted', subject: 'strategy #47 to production',
+      tone: 'ok', rationale: 'All backtest guardrails clean; validator attested at 09:20Z.' },
+    { id: 'd-141', ts: '08:58Z', verb: 'deferred', subject: 'schema change to trade_events v4',
+      tone: 'warn', rationale: 'Awaiting second governance approver.' },
+    { id: 'd-140', ts: '08:32Z', verb: 'blocked', subject: 'compute quota +25%',
+      tone: 'crit', rationale: 'Would exceed trust budget by 6 kOps this cycle.' },
+    { id: 'd-139', ts: '07:11Z', verb: 'observed', subject: 'volatility spike in EU session',
+      tone: 'info', rationale: 'Below advisory threshold; no action required.' },
+    { id: 'd-138', ts: '06:44Z', verb: 'attested', subject: 'backtest-891',
+      tone: 'ok', rationale: 'Sharpe 1.9 · drawdown 3.1% · regime coverage 84%.' },
+  ],
+};
