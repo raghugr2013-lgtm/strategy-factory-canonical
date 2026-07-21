@@ -35,7 +35,7 @@ require operator decisions before Phase A begins (see §8).
 
 ### 2.1 Target pod
 
-- URL: `https://312f2cec-9639-4931-94d7-5e4666a15e07.preview.emergentagent.com`
+- URL: `https://strategy-factory-v1.preview.emergentagent.com`
 - Backend process: uvicorn `server:app` on 8001 (supervisor-managed)
 - MongoDB: local `mongod` on 27017 (supervisor-managed)
 - **NOTE:** this is the preview pod. Production VPS pod is
