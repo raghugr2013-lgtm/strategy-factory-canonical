@@ -5,6 +5,8 @@
  * Grid: [LeftRail 220px] [Main 1fr] with Header on top and StatusRail on
  * bottom. Danger ribbon appears above the header when kill posture is
  * armed. CmdKPalette is mounted globally.
+ * §12 · ApprovalsModal is mounted once at shell root so any surface can
+ * open the governance channel via `openApproval(...)` without prop drill.
  */
 import React from 'react';
 import { Outlet } from 'react-router-dom';
@@ -14,6 +16,7 @@ import { StatusRail } from './StatusRail';
 import { DangerRibbon } from './DangerRibbon';
 import { CmdKPalette } from '../palette/CmdKPalette';
 import { FactoryWalkthrough } from '../onboarding/FactoryWalkthrough';
+import { ApprovalsModal } from './ApprovalsModal';
 
 export const AppShell = () => (
   <div className="os-body"
@@ -46,5 +49,6 @@ export const AppShell = () => (
 
     <CmdKPalette />
     <FactoryWalkthrough />
+    <ApprovalsModal />
   </div>
 );

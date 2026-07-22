@@ -13,10 +13,12 @@
  *   neighbours · top-k nearest historical strategies (POST /api/knowledge/nearest)
  *   deployments· active broker connections (DEFERRED · §15 execution workspace)
  *
- * §10.3 Passport is the ONLY surface that can promote a strategy. Under
- * Backend Feature Freeze v1.1.0-stage4 the Approvals pattern (§12) is
- * scheduled for Slice γ; promotion buttons here render as DEFERRED with
- * the exact next action they will execute once approvals land.
+ * §10.3 Passport is the ONLY surface that can promote a strategy. The
+ * PROMOTE CTA opens the shell-mounted Approvals modal (§12) pre-filled
+ * with the exact §13 event name it will emit. Under Backend Feature
+ * Freeze v1.1.0-stage4 the executor is a client-side no-op — the modal
+ * writes §13 events to the timelineShim only; the Lineage tab below reads
+ * them back via `useTimelineEvents({ objectId })`.
  *
  * Data path — live, no synthetic fallbacks:
  *   GET  /api/strategies/{id}         · identity + status + tags + timestamps
@@ -35,6 +37,8 @@ import { apiFetch, isLiveMode } from '../adapters/apiClient';
 import { findNearestStrategies, listStrategies } from '../adapters/strategyLabAdapter';
 import { SignalStateBadge, FreezeCaption } from './engineering/LivenessBadge';
 import { useWorkspaceContext } from '../hooks/useWorkspaceContext';
+import { openApproval } from '../shell/ApprovalsModal';
+import { useTimelineEvents } from '../adapters/timelineShim';
 
 const iso = (v) => {
   if (!v) return '—';
@@ -60,15 +64,67 @@ const STATE_ID_OF = (status) => {
   return 'draft';
 };
 
-// §4.2 next-state action — used to label the DEFERRED promotion CTAs so the
-// operator sees the exact transition the Approvals modal will execute once
-// Slice γ lands.
+// §4.2 next-state action — used to label the CTA + drive the Approvals
+// modal (§12) with the exact §13 event name it will emit. Consequences
+// bullets mirror the anatomy in §12.1. Under Backend Feature Freeze
+// v1.1.0-stage4 the executor is a no-op — the modal writes §13 events to
+// the client-side timelineShim only; no backend mutation occurs.
 const NEXT_TRANSITION = {
-  draft:       { label: 'Promote to Backtested',  cite: '§4 · draft → backtested' },
-  backtested:  { label: 'Promote to Champion',    cite: '§4 · backtested → champion' },
-  champion:    { label: 'Deploy to Paper',        cite: '§22 · READY → PAPER TRADING' },
-  deployed:    { label: 'Retire strategy',         cite: '§4 · retire' },
-  retired:     { label: 'Reinstate as draft',      cite: '§4 · retired → draft' },
+  draft: {
+    label: 'Promote to Backtested',
+    cite: '§4 · draft → backtested',
+    event_name: 'operator_strategy_promoted_to_backtested',
+    action_label: 'promote to backtested',
+    consequences: [
+      'transition state draft → backtested',
+      'write timeline event (§13)',
+      'no broker connection is touched (backend freeze)',
+    ],
+  },
+  backtested: {
+    label: 'Promote to Champion',
+    cite: '§4 · backtested → champion',
+    event_name: 'operator_strategy_promoted_to_champion',
+    action_label: 'promote to champion',
+    consequences: [
+      'transition state backtested → champion',
+      'strategy becomes eligible for a Passport gate',
+      'write timeline event (§13)',
+    ],
+  },
+  champion: {
+    label: 'Deploy to Paper',
+    cite: '§22 · READY → PAPER TRADING',
+    event_name: 'operator_strategy_deployed_to_paper',
+    action_label: 'deploy to paper',
+    consequences: [
+      'request paper deployment (execution workspace · §15)',
+      'no money is at risk — paper broker only',
+      'write timeline event (§13)',
+    ],
+  },
+  deployed: {
+    label: 'Retire strategy',
+    cite: '§4 · retire',
+    event_name: 'operator_strategy_retired',
+    action_label: 'retire strategy',
+    consequences: [
+      'transition state deployed → retired',
+      'strategy loses deploy eligibility',
+      'write timeline event (§13)',
+    ],
+  },
+  retired: {
+    label: 'Reinstate as draft',
+    cite: '§4 · retired → draft',
+    event_name: 'operator_strategy_reinstated_as_draft',
+    action_label: 'reinstate as draft',
+    consequences: [
+      'transition state retired → draft',
+      'strategy re-enters the composition ladder',
+      'write timeline event (§13)',
+    ],
+  },
 };
 
 const fetchStrategyLive = async (id) => {
@@ -87,7 +143,7 @@ export const StrategyPassport = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'evidence';
-  const { setContext } = useWorkspaceContext();
+  const { context, setContext } = useWorkspaceContext();
 
   const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null });
   const [neighbourState, setNeighbourState] = useState({ status: 'idle', liveness: 'partial', reason: null, matches: [], total: 0 });
@@ -229,7 +285,7 @@ export const StrategyPassport = () => {
         </div>
       </div>
 
-      {/* PROMOTION BAR (§10.3 · Approvals pattern deferred to Slice γ) */}
+      {/* PROMOTION BAR (§10.3 · Approvals pattern via §12 · ApprovalsModal) */}
       <div data-testid="passport-promotion-bar"
            style={{
              ...panel,
@@ -244,18 +300,36 @@ export const StrategyPassport = () => {
             <span style={{ color: 'var(--content-lo)', marginLeft: 6 }}>· §10.3 promotion boundary</span>
           </span>
         </div>
-        {nextTransition && currentStateId !== 'retired' && (
+        {nextTransition && currentStateId !== 'retired' && strategy && (
           <button type="button"
                   data-testid="passport-promote-cta"
-                  disabled
-                  title="Approvals modal ships in Slice γ · §12"
+                  onClick={() => openApproval({
+                    action_label: nextTransition.action_label,
+                    event_name: nextTransition.event_name,
+                    target: {
+                      type: 'strategy',
+                      id: strategy.strategy_id || strategy.id || id,
+                      name: strategy.name || '(unnamed strategy)',
+                    },
+                    context: {
+                      pair: strategy.symbol || context.pair || null,
+                      timeframe: strategy.timeframe || context.timeframe || null,
+                      cycle_id: context.cycle || null,
+                    },
+                    consequences: nextTransition.consequences,
+                    // Backend freeze v1.1.0-stage4 — no mutation. The modal
+                    // emits the §13 events; the Lineage tab reads them back.
+                    executor: null,
+                  })}
                   style={promoteBtn}>
             <Rocket size={12} strokeWidth={1.75} />
             <span>{nextTransition.label}</span>
           </button>
         )}
-        <SignalStateBadge state="deferred"
-                          reason={nextTransition ? `${nextTransition.cite} · Approvals modal ships in Slice γ (§12).` : 'No transition available'}
+        <SignalStateBadge state={strategy ? 'live' : 'partial'}
+                          reason={strategy
+                            ? `${nextTransition?.cite || 'no transition available'} · Approvals modal ready (§12).`
+                            : 'loading strategy …'}
                           testId="passport-approvals-liveness" />
       </div>
 
@@ -358,6 +432,10 @@ const EvidenceTab = ({ strategy, loading }) => {
 
 const LineageTab = ({ strategy, currentStateId }) => {
   const currentIdx = STATE_LADDER.findIndex((s) => s.id === currentStateId);
+  // §13 · Timeline event query — reads client-side shim; when the backend
+  // exposes a real Timeline endpoint the shim swaps with no UI change.
+  const objectId = strategy?.strategy_id || strategy?.id || null;
+  const events = useTimelineEvents({ objectId });
   return (
     <div data-testid="passport-tab-content-lineage">
       <div data-testid="passport-lineage-ladder" style={{ ...panelBox, marginBottom: 'var(--space-4)' }}>
@@ -393,14 +471,42 @@ const LineageTab = ({ strategy, currentStateId }) => {
       <div data-testid="passport-lineage-events" style={panelBox}>
         <div style={{ ...panelHeaderInline, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>State transitions</span>
-          <SignalStateBadge state="deferred" reason="Timeline event query lands with Slice γ · §13" testId="passport-lineage-events-liveness" />
+          <SignalStateBadge state={events.length > 0 ? 'partial' : 'deferred'}
+                            reason={events.length > 0
+                              ? `${events.length} shim event(s) · backend Timeline endpoint post-freeze (§13)`
+                              : 'Timeline endpoint post-freeze · shim empty (§13)'}
+                            testId="passport-lineage-events-liveness" />
         </div>
-        <div data-testid="passport-lineage-events-empty" style={{ color: 'var(--content-md)', fontSize: 'var(--font-body-sm)', lineHeight: 1.6, padding: 'var(--space-2) 0' }}>
-          Per §13, every state transition writes to Timeline as an event with actor · reason · timestamp. The transition history for this strategy will appear here once the event vocabulary shim lands in Slice γ. Meanwhile the ladder above reflects the live
-          <code style={{ color: 'var(--sig-info)', margin: '0 4px' }}>strategy.status</code>
-          from <code style={{ color: 'var(--sig-info)' }}>GET /api/strategies/{'{'}id{'}'}</code>.
-        </div>
-        <div style={{ padding: 'var(--space-3) 0', display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-body-sm)', borderTop: '1px solid var(--stroke-1)' }}>
+        {events.length === 0 ? (
+          <div data-testid="passport-lineage-events-empty" style={{ color: 'var(--content-md)', fontSize: 'var(--font-body-sm)', lineHeight: 1.6, padding: 'var(--space-2) 0' }}>
+            Per §13, every state transition writes to Timeline as an event with actor · reason · timestamp. Under Backend Feature Freeze v1.1.0-stage4 the emitter is a client-side shim — approve a promotion above and the request/approval events for this strategy will appear here. The ladder above reflects the live
+            <code style={{ color: 'var(--sig-info)', margin: '0 4px' }}>strategy.status</code>
+            from <code style={{ color: 'var(--sig-info)' }}>GET /api/strategies/{'{'}id{'}'}</code>.
+          </div>
+        ) : (
+          <div data-testid="passport-lineage-events-list" role="table" aria-label="Timeline events for this strategy">
+            <div role="row" style={eventRowHead}>
+              <span>Event</span>
+              <span>Actor</span>
+              <span>Reason</span>
+              <span style={{ textAlign: 'right' }}>Timestamp</span>
+            </div>
+            {events.map((e, i) => (
+              <div key={e.event_id} role="row" data-testid={`passport-lineage-event-row-${i}`} style={eventRowBody}>
+                <span className="mono-num" style={{ color: 'var(--content-hi)', fontSize: 'var(--font-caption)' }}>{e.event_name}</span>
+                <span style={{ color: 'var(--content-md)', fontSize: 'var(--font-caption)' }}>
+                  {e.actor?.email || 'anonymous'}
+                  <span style={{ color: 'var(--content-lo)', marginLeft: 4 }}>· {e.actor?.role || '—'}</span>
+                </span>
+                <span style={{ color: 'var(--content-md)', fontSize: 'var(--font-caption)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={e.reason || ''}>
+                  {e.reason || <span style={{ color: 'var(--content-lo)' }}>—</span>}
+                </span>
+                <span className="mono-num" style={{ textAlign: 'right', color: 'var(--content-md)', fontSize: 'var(--font-caption)' }}>{iso(e.ts)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ padding: 'var(--space-3) 0 0 0', display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-body-sm)', borderTop: '1px solid var(--stroke-1)', marginTop: 'var(--space-2)' }}>
           <span style={{ color: 'var(--content-lo)' }}>Latest known transition</span>
           <span className="mono-num" style={{ color: 'var(--content-hi)' }}>
             {iso(strategy?.updated_at)} · <span style={{ color: 'var(--content-md)' }}>{(strategy?.status || '—').toUpperCase()}</span>
@@ -638,16 +744,17 @@ const tabBtn = {
 const promoteBtn = {
   display: 'inline-flex', alignItems: 'center', gap: 6,
   padding: 'var(--space-2) var(--space-4)',
-  background: 'var(--surface-2)',
-  color: 'var(--content-md)',
-  border: '1px solid var(--stroke-2)',
+  background: 'color-mix(in oklab, var(--accent-gold) 12%, var(--surface-2))',
+  color: 'var(--accent-gold)',
+  border: '1px solid color-mix(in oklab, var(--accent-gold) 45%, var(--stroke-2))',
   borderRadius: 'var(--radius-2)',
   fontSize: 'var(--font-caption)',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
   fontFamily: 'inherit',
-  cursor: 'not-allowed',
-  opacity: 0.72,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard)',
 };
 
 const tagChip = {
@@ -681,6 +788,29 @@ const rowBody = {
   fontSize: 'var(--font-body-sm)',
   color: 'var(--content-md)',
   alignItems: 'center',
+};
+
+// Timeline event ledger rows (§13) — narrower grid than neighbours table.
+const eventRowHead = {
+  display: 'grid',
+  gridTemplateColumns: '2.2fr 1.4fr 2fr 1.4fr',
+  padding: '8px 12px',
+  borderBottom: '1px solid var(--stroke-1)',
+  background: 'var(--surface-2)',
+  fontSize: 'var(--font-caption)',
+  color: 'var(--content-lo)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  borderRadius: 'var(--radius-2) var(--radius-2) 0 0',
+};
+
+const eventRowBody = {
+  display: 'grid',
+  gridTemplateColumns: '2.2fr 1.4fr 2fr 1.4fr',
+  padding: '8px 12px',
+  borderBottom: '1px solid var(--stroke-1)',
+  alignItems: 'center',
+  gap: 'var(--space-2)',
 };
 
 const pill = {

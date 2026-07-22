@@ -34,7 +34,7 @@ export const useTimelineShim = create(
           source: partial.source || 'operator-os',
           framework_version: 'v1.1.0-stage4',
         };
-        // eslint-disable-next-line no-console
+        // Developer breadcrumb — the shim is client-side by design.
         console.info('[timeline·shim §13]', evt.event_name, evt);
         set({ events: [...get().events, evt] });
         return evt;
