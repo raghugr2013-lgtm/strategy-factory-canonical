@@ -20,6 +20,7 @@ import { MarketData } from '../surfaces/engineering/MarketData';
 import { Coverage } from '../surfaces/engineering/Coverage';
 import { Datasets } from '../surfaces/engineering/Datasets';
 import { StrategyLab } from '../surfaces/engineering/StrategyLab';
+import { StrategyPipeline } from '../surfaces/engineering/StrategyPipeline';
 import { Optimization } from '../surfaces/engineering/Optimization';
 import { Validation } from '../surfaces/engineering/Validation';
 import { PropFirms } from '../surfaces/engineering/PropFirms';
@@ -59,6 +60,7 @@ export const AppRouter = () => (
         <Route path="engineering/coverage"      element={<Coverage />} />
         <Route path="engineering/datasets"      element={<Datasets />} />
         <Route path="engineering/strategy-lab"  element={<StrategyLab />} />
+        <Route path="engineering/strategy-pipeline" element={<StrategyPipeline />} />
         <Route path="engineering/optimization"  element={<Optimization />} />
         <Route path="engineering/validation"    element={<Validation />} />
         <Route path="engineering/prop-firms"    element={<PropFirms />} />
