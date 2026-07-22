@@ -17,7 +17,7 @@ import requests
 
 BASE_URL = os.environ.get(
     "REACT_APP_BACKEND_URL",
-    "https://strategy-factory-v1.preview.emergentagent.com",
+    "https://stall-debug.preview.emergentagent.com",
 ).rstrip("/")
 
 SEED_RSI = "a649abeabefcc045cc9ef2dc2ec04e1f3f2b55da"   # RSI Reversion, 5 runs, PF 1.60

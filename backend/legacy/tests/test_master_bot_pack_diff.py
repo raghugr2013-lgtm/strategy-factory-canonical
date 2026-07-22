@@ -20,7 +20,7 @@ import pytest
 import requests
 
 BASE_URL = os.environ.get(
-    "REACT_APP_BACKEND_URL", "https://strategy-factory-v1.preview.emergentagent.com"
+    "REACT_APP_BACKEND_URL", "https://stall-debug.preview.emergentagent.com"
 ).rstrip("/")
 API = f"{BASE_URL}/api"
 

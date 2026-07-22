@@ -11,7 +11,7 @@ import pytest
 import requests
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL",
-                          "https://strategy-factory-v1.preview.emergentagent.com").rstrip("/")
+                          "https://stall-debug.preview.emergentagent.com").rstrip("/")
 LOGIN = f"{BASE_URL}/api/auth/login"
 GEN = f"{BASE_URL}/api/dashboard/generate"
 

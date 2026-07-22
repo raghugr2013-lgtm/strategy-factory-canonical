@@ -4,7 +4,7 @@ import time
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://strategy-factory-v1.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://stall-debug.preview.emergentagent.com").rstrip("/")
 PI = f"{BASE_URL}/api/portfolio-intelligence"
 
 
