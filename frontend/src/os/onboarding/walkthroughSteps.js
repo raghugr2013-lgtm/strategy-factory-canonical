@@ -22,6 +22,14 @@ import {
 
 export const WALKTHROUGH_VERSION = '1.3.0-sprint3-phase1';
 
+/**
+ * Frontend shell (product) version — reported in walkthrough lifecycle
+ * events so downstream analytics can pivot adoption metrics by release.
+ * Kept as a plain string constant (framework-agnostic; no build-time
+ * codegen required) — bump alongside WALKTHROUGH_VERSION on shell rev.
+ */
+export const PRODUCT_VERSION = '1.3.0';
+
 export const WALKTHROUGH_STEPS = [
   {
     id: 'intro',

@@ -1514,3 +1514,38 @@ Frontend-additive PR. Backend untouched. Design tokens untouched. Preview build 
 - `frontend/src/os/shell/AppShell.jsx` — mounts `<FactoryWalkthrough />`
 - `frontend/src/os/shell/Header.jsx` — user-menu entries for `Factory Walkthrough` + `Help & About`
 
+
+### Sprint 3 Phase-1 · Walkthrough lifecycle events (2026-07-22)
+
+**Trigger:** operator wanted the walkthrough to expose adoption analytics without changing anything else — frontend-only, framework-agnostic, no SDK, no network, no persistent tracking beyond the existing seen-version key.
+
+**Contract (event PRODUCER only — future adapters subscribe, no changes here):**
+
+| Event name | Fired when |
+| :--------- | :--------- |
+| `walkthrough_started`       | Overlay opens (auto or manual) |
+| `walkthrough_slide_changed` | Index changes while overlay is open (dedup via Set) |
+| `walkthrough_completed`     | Get started button OR last-slide ArrowRight |
+| `walkthrough_skipped`       | Skip button, X close, or Esc |
+
+**Payload keys on every event:** `productVersion` (`1.3.0`) · `walkthroughVersion` (`1.3.0-sprint3-phase1`) · `slidesViewed` · `totalSlides` · `completed` · `skipped` · `elapsedMs`. `slide_changed` also carries `currentSlideId · currentSlideIndex · previousSlideId · previousSlideIndex`.
+
+**Dispatch:** `window.dispatchEvent(new CustomEvent(name, { detail }))`. Guarded — never throws if `window.CustomEvent` is unavailable (SSR / defensive tests) and never leaks a rejection.
+
+**Verification** — iteration_6.json: **100 % (20 / 20 assertions)**. Zero /api/* traffic, zero analytics-domain traffic, zero new storage keys, zero Sprint 3 Phase-1 regressions.
+
+**Files modified:**
+- `frontend/src/os/onboarding/FactoryWalkthrough.jsx` — `emitLifecycle()` helper, `buildPayload()`, three refs (`startedAtRef`, `visitedRef`, `prevIdxRef`), two lifecycle effects, refactored `close(reason)` accepting `'completed'|'skipped'`.
+- `frontend/src/os/onboarding/walkthroughSteps.js` — new `PRODUCT_VERSION = '1.3.0'` export.
+
+**Subscriber example (documentation only — no adapter shipped in this PR):**
+
+```javascript
+['walkthrough_started','walkthrough_slide_changed','walkthrough_completed','walkthrough_skipped']
+  .forEach((name) => window.addEventListener(name, (e) => {
+    // e.detail: { productVersion, walkthroughVersion, slidesViewed, totalSlides,
+    //             completed, skipped, elapsedMs, currentSlideId?, currentSlideIndex? … }
+    myAnalytics.track(name, e.detail);
+  }));
+```
+

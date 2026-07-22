@@ -10,20 +10,47 @@
  *
  * Interaction:
  *   - Left/Right arrow keys advance
- *   - Esc dismisses immediately
+ *   - Esc dismisses immediately (counts as `skipped`)
  *   - Dot navigation
- *   - "Skip walkthrough" button on every slide
- *   - "Get started" on the final slide marks-and-closes
+ *   - "Skip walkthrough" button on every slide (`skipped`)
+ *   - "Get started" on the final slide marks-and-closes (`completed`)
+ *   - Last-slide ArrowRight also completes
+ *   - X close button dismisses (`skipped`)
  *
  * The overlay dismisses to Mission Control if the user was not already
  * on a canonical surface. No routing side-effects otherwise.
  *
+ * ─── Lifecycle events (frontend-only, framework-agnostic) ─────────────
+ * The component is an event PRODUCER only. It dispatches four DOM
+ * CustomEvents on `window` so any future analytics adapter can subscribe
+ * without touching this file:
+ *
+ *   walkthrough_started        (open transitions false → true)
+ *   walkthrough_slide_changed  (idx changes while open)
+ *   walkthrough_completed      (Get started or last-slide ArrowRight)
+ *   walkthrough_skipped        (Skip / X / Esc / dismiss before end)
+ *
+ * Each event carries a `detail` payload with:
+ *   {
+ *     productVersion:     PRODUCT_VERSION,
+ *     walkthroughVersion: WALKTHROUGH_VERSION,
+ *     slidesViewed:       <int, unique slides visited so far>,
+ *     totalSlides:        <int, steps.length for the active variant>,
+ *     completed:          <boolean>,   // true only on _completed
+ *     skipped:            <boolean>,   // true only on _skipped
+ *     elapsedMs:          <int>,       // ms since walkthrough_started
+ *     // slide_changed only:
+ *     currentSlideId, currentSlideIndex, previousSlideId, previousSlideIndex,
+ *   }
+ *
  * No fixture / demo data is inspected. The walkthrough is pure prose.
+ * No network calls. No SDK. No persistent tracking beyond the existing
+ * sf-walkthrough-seen-version localStorage key.
  */
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { WALKTHROUGH_STEPS, WALKTHROUGH_VERSION } from './walkthroughSteps';
+import { WALKTHROUGH_STEPS, WALKTHROUGH_VERSION, PRODUCT_VERSION } from './walkthroughSteps';
 import { useAuthStore } from '../workspace-state/authStore';
 
 const STORAGE_KEY = 'sf-walkthrough-seen-version';
@@ -35,6 +62,20 @@ const readSeen = () => {
 };
 const writeSeen = () => {
   try { localStorage.setItem(STORAGE_KEY, WALKTHROUGH_VERSION); } catch {}
+};
+
+/**
+ * Framework-agnostic lifecycle-event emitter. Uses standard DOM
+ * CustomEvent on `window`. Safe no-op in non-browser environments
+ * (SSR / unit tests without jsdom).
+ */
+const emitLifecycle = (name, detail) => {
+  if (typeof window === 'undefined' || typeof window.CustomEvent !== 'function') return;
+  try {
+    window.dispatchEvent(new window.CustomEvent(name, { detail }));
+  } catch {
+    /* Never let analytics failures reach the user. */
+  }
 };
 
 /**
@@ -67,6 +108,23 @@ export const FactoryWalkthrough = () => {
   const last = idx === steps.length - 1;
   const first = idx === 0;
 
+  // Lifecycle-event refs — persist across renders without triggering re-render.
+  const startedAtRef = useRef(0);
+  const visitedRef   = useRef(new Set());
+  const prevIdxRef   = useRef(0);
+
+  /** Build a common event payload; individual events add reason-specific keys. */
+  const buildPayload = useCallback((extra = {}) => ({
+    productVersion:     PRODUCT_VERSION,
+    walkthroughVersion: WALKTHROUGH_VERSION,
+    slidesViewed:       visitedRef.current.size,
+    totalSlides:        steps.length,
+    completed:          false,
+    skipped:            false,
+    elapsedMs:          startedAtRef.current ? Date.now() - startedAtRef.current : 0,
+    ...extra,
+  }), [steps.length]);
+
   // Auto-open on first authenticated arrival OR when version has bumped.
   useEffect(() => {
     if (stance === 'authenticated' && shouldAutoOpenWalkthrough()) {
@@ -79,11 +137,58 @@ export const FactoryWalkthrough = () => {
   // External-open subscription (user-menu → openWalkthrough()).
   useEffect(() => subscribeOpen(() => { setIdx(0); setOpen(true); }), []);
 
-  const close = useCallback((completed) => {
+  // On open transition: reset trackers, mark the first slide as visited,
+  // and emit walkthrough_started.
+  useEffect(() => {
+    if (!open) return;
+    startedAtRef.current = Date.now();
+    visitedRef.current = new Set([steps[0]?.id].filter(Boolean));
+    prevIdxRef.current = 0;
+    emitLifecycle('walkthrough_started', buildPayload({
+      currentSlideId: steps[0]?.id,
+      currentSlideIndex: 0,
+    }));
+    // steps identity is stable within a single open session (email doesn't
+    // change while overlay is up), so eslint-disable-next-line is safe here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // On idx change while open: mark visited, emit walkthrough_slide_changed.
+  useEffect(() => {
+    if (!open) return;
+    const prev = prevIdxRef.current;
+    if (prev === idx) return;
+    const currentSlide = steps[idx];
+    const previousSlide = steps[prev];
+    if (currentSlide) visitedRef.current.add(currentSlide.id);
+    emitLifecycle('walkthrough_slide_changed', buildPayload({
+      currentSlideId:     currentSlide?.id,
+      currentSlideIndex:  idx,
+      previousSlideId:    previousSlide?.id,
+      previousSlideIndex: prev,
+    }));
+    prevIdxRef.current = idx;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, open]);
+
+  /**
+   * Close the walkthrough with a semantic reason. Both reasons persist the
+   * seen-version so the walkthrough doesn't re-auto-open for the same
+   * major version — only the emitted event differs.
+   */
+  const close = useCallback((reason /* 'completed' | 'skipped' */) => {
+    if (!open) { setIdx(0); return; }
+    const eventName = reason === 'completed' ? 'walkthrough_completed' : 'walkthrough_skipped';
+    emitLifecycle(eventName, buildPayload({
+      completed: reason === 'completed',
+      skipped:   reason === 'skipped',
+      currentSlideId:    step?.id,
+      currentSlideIndex: idx,
+    }));
+    writeSeen();
     setOpen(false);
     setIdx(0);
-    if (completed) writeSeen();
-  }, []);
+  }, [open, step, idx, buildPayload]);
 
   const next = useCallback(() => {
     setIdx((i) => Math.min(i + 1, steps.length - 1));
@@ -93,8 +198,8 @@ export const FactoryWalkthrough = () => {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') { close(true); }
-      else if (e.key === 'ArrowRight') { last ? close(true) : next(); }
+      if (e.key === 'Escape') { close('skipped'); }
+      else if (e.key === 'ArrowRight') { last ? close('completed') : next(); }
       else if (e.key === 'ArrowLeft') { prev(); }
     };
     window.addEventListener('keydown', onKey);
@@ -111,7 +216,7 @@ export const FactoryWalkthrough = () => {
                                   'var(--sig-info)';
 
   const finish = () => {
-    close(true);
+    close('completed');
     // If the operator is not currently on a canonical surface, land on Mission.
     if (!window.location.pathname.startsWith('/c/')) navigate('/c/mission');
   };
@@ -153,7 +258,7 @@ export const FactoryWalkthrough = () => {
 
         {/* Close */}
         <button data-testid="walkthrough-close"
-                onClick={() => close(true)}
+                onClick={() => close('skipped')}
                 aria-label="Close walkthrough"
                 style={closeBtnStyle}>
           <X size={14} strokeWidth={1.5} />
@@ -247,7 +352,7 @@ export const FactoryWalkthrough = () => {
 
           <span style={{ marginLeft: 'auto' }}>
             <button data-testid="walkthrough-skip"
-                    onClick={() => close(true)}
+                    onClick={() => close('skipped')}
                     style={ghostBtnStyle}>
               Skip walkthrough
             </button>
