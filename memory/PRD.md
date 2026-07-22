@@ -1,6 +1,6 @@
 # Strategy Factory — Sprint 3 Phase 2 PRD (Product Requirements Document)
 
-_Last updated · 2026-07-22 · code head `beaf597`_
+_Last updated · 2026-07-22 · Slice γ code head `e6ca966`_
 
 ## Original problem statement (Sprint 3 Phase 2 + Engineering follow-up)
 
@@ -45,12 +45,51 @@ Continue Sprint 3 Phase 2 under Backend Feature Freeze v1.1.0-stage4. First slic
 | 8 | **Optimization** PARTIAL LIVE queue | `800f456` | `GET /api/strategies`, `GET /api/knowledge/statistics` |
 | 9 | **Validation** PARTIAL LIVE ledger | `beaf597` | `GET /api/knowledge/health`, `/statistics`, `/champions`, `GET /api/strategies` |
 
-### Files added (across both slices)
+### Slice α — Workspace context thread + SignalState (2026-07-22)
+
+| # | Deliverable | Commit | Live endpoints |
+|---|---|---|---|
+| 10 | Workspace context (`useWorkspaceContext`) + canonical SignalState (§7, §9) | `7aff84a` | (client-side URL-encoded state) |
+
+### Slice β — Strategy Passport detail view (2026-07-22)
+
+| # | Deliverable | Commit | Live endpoints |
+|---|---|---|---|
+| 11 | Canonical Strategy Passport at `/c/strategies/:id` (§10, §4) | `a17dbe1` | `GET /api/strategies/{id}` · `POST /api/knowledge/nearest` |
+
+### Slice γ — Approvals Modal + Timeline Event Shim (2026-07-22)
+
+Integration wiring only — no new UI concepts, no new backend endpoints.
+
+| # | Deliverable | Commit | Live endpoints |
+|---|---|---|---|
+| 12 | `ApprovalsModal` (§12) + `timelineShim` (§13) canonical implementations | `05cb701` | client-side (sessionStorage zustand) |
+| 13 | Shell mount + Passport PROMOTE wiring + Lineage hydration | `e6ca966` | reads §13 events back via `useTimelineEvents({ objectId })` |
+
+**What Slice γ activates:**
+- `<ApprovalsModal />` is mounted once at the shell root; any surface calls `openApproval(...)` without prop drill.
+- Passport `PROMOTE` CTA is now enabled and opens the modal with the correct §13 event name and §12 consequences bullets per strategy state.
+- Passport Lineage tab shows `_requested` + `_approved` rows verbatim per §13.2 (event · actor · reason · ts).
+- Executor is `null` under freeze — no backend mutation occurs. Verified via preview smoke + `yarn build` (+2.53 kB) + testid coverage + testing agent (100% structural pass, zero mutations).
+
+### Files added (across all slices this sprint)
 ```
 frontend/src/os/adapters/coverageAdapter.js
 frontend/src/os/adapters/strategyLabAdapter.js
+frontend/src/os/adapters/timelineShim.js           ← Slice γ · §13
+frontend/src/os/hooks/useWorkspaceContext.js
+frontend/src/os/shell/ApprovalsModal.jsx           ← Slice γ · §12
+frontend/src/os/shell/WorkspaceContextChip.jsx
+frontend/src/os/surfaces/StrategyPassport.jsx
 frontend/src/os/surfaces/engineering/LivenessBadge.jsx
 frontend/src/os/surfaces/engineering/StrategyPipeline.jsx
+```
+
+### Files modified in Slice γ (three)
+```
+frontend/src/os/shell/AppShell.jsx                 ← mount <ApprovalsModal />
+frontend/src/os/adapters/timelineShim.js           ← lint fix (comment)
+frontend/src/os/surfaces/StrategyPassport.jsx      ← enable CTA + hydrate LineageTab
 ```
 
 ### Files modified (across both slices)
@@ -94,18 +133,19 @@ frontend/src/os/workspace-state/authStore.js
 - Historical KB corpus import (blocked pending compatibility / migration review).
 - Add Strategy Pipeline to the CmdKPalette jump-to-surface list.
 - Progress Portfolio surface using `/api/strategies` (aggregate by symbol/timeframe) — read-only.
-- Passport detail view (`/c/strategies/{id}`) enrichment.
+- Command surface `Approvals inbox` — subscribe to `useTimelineEvents({ eventPrefix: 'operator_' })` and display pending `_requested` events without `_approved`. Zero backend work.
 
 ### P2 (post-freeze · post-Sprint 3)
 - Broker Connections group (waits for freeze to be formally lifted).
 - WSS `/stream/*` bindings for live tick / cycle / log tails.
+- Timeline surface — real read of `POST /api/timeline/events` (swap shim persistence layer; consumers unchanged).
 - Optimization launcher + Approvals bundle generation (`/api/optimize/*`).
 - Prop Firms + Deployments live surfaces.
 
 ## Next action items
-1. **Review the compatibility and migration strategy** for the historical KB corpus import (deferred per user directive).
-2. Confirm this Engineering slice-2 is accepted before starting the next slice.
-3. Consider release tag `v1.1.0-stage4-p2` only after a longer soak on the preview.
+1. **Await user acceptance of Slice γ** before starting Execution Workspace capabilities (P2).
+2. Historical KB import remains **deferred** pending compatibility / migration review by the user.
+3. Consider a release tag `v1.1.0-stage4-slice-gamma` once the preview soak on Slice γ is complete.
 
 ## Confirmation
-Backend Feature Freeze **v1.1.0-stage4** remains fully intact — this session touched only frontend files (`frontend/src/os/surfaces/engineering/*`, `frontend/src/os/routing/navigation.js`). Zero backend source files were modified.
+Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow.
