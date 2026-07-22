@@ -21,20 +21,27 @@ import {
   fetchKnowledgeStatistics,
 } from '../../adapters/strategyLabAdapter';
 import { LivenessBadge, FreezeCaption } from './LivenessBadge';
+import { useWorkspaceContext } from '../../hooks/useWorkspaceContext';
 
 const PAIR_OPTIONS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'BTCUSD', 'ETHUSD', 'SPX', 'NDX'];
 const TIMEFRAME_OPTIONS = ['M15', 'M30', 'H1', 'H4', 'D1'];
 const STYLE_OPTIONS = ['trend-following', 'mean-reversion', 'breakout', 'range-bound', 'momentum'];
 
 export const StrategyLab = () => {
-  const [pair, setPair] = useState('XAUUSD');
-  const [timeframe, setTimeframe] = useState('H4');
+  // Workspace context (§9) — Strategy Lab is both a reader and a writer of
+  // the URL-scoped context. Selectors initialise from context and every
+  // change is written back so downstream surfaces (Coverage, Datasets,
+  // Pipeline) can filter automatically.
+  const { context, setContext } = useWorkspaceContext();
+
+  const [pair, setPair] = useState(context.pair || 'XAUUSD');
+  const [timeframe, setTimeframe] = useState(context.timeframe || 'H4');
   const [style, setStyle] = useState('trend-following');
   const [draftName, setDraftName] = useState('');
 
-  const [generateState, setGenerateState] = useState({ status: 'idle', liveness: 'partial-live', reason: null, text: '' });
-  const [saveState, setSaveState] = useState({ status: 'idle', liveness: 'partial-live', reason: null, strategy: null });
-  const [nearestState, setNearestState] = useState({ status: 'idle', liveness: 'partial-live', reason: null, matches: [], total: 0 });
+  const [generateState, setGenerateState] = useState({ status: 'idle', liveness: 'partial', reason: null, text: '' });
+  const [saveState, setSaveState] = useState({ status: 'idle', liveness: 'partial', reason: null, strategy: null });
+  const [nearestState, setNearestState] = useState({ status: 'idle', liveness: 'partial', reason: null, matches: [], total: 0 });
   const [kbStats, setKbStats] = useState({ total_strategies: 0, canonical_families: 0, backend_available: {} });
 
   // Corpus size chip — helpful signal for "is the KB warm enough for nearest?"
@@ -45,9 +52,17 @@ export const StrategyLab = () => {
     })();
   }, []);
 
+  // Push pair + timeframe back into the workspace context (§9) so other
+  // surfaces filter automatically. This is a fire-and-forget effect —
+  // clearing context in the header is honoured on the next mount.
+  useEffect(() => {
+    setContext({ pair, timeframe });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pair, timeframe]);
+
   const onGenerate = useCallback(async () => {
-    setGenerateState({ status: 'loading', liveness: 'partial-live', reason: null, text: '' });
-    setSaveState({ status: 'idle', liveness: 'partial-live', reason: null, strategy: null });
+    setGenerateState({ status: 'loading', liveness: 'partial', reason: null, text: '' });
+    setSaveState({ status: 'idle', liveness: 'partial', reason: null, strategy: null });
     const res = await generateStrategy({ pair, timeframe, style });
     const text = res.payload?.strategy || '';
     setGenerateState({ status: 'ready', liveness: res.liveness, reason: res.reason, text });
@@ -59,7 +74,7 @@ export const StrategyLab = () => {
     }
     // Auto-run nearest-neighbour lookup against the generated text
     if (text) {
-      setNearestState({ status: 'loading', liveness: 'partial-live', reason: null, matches: [], total: 0 });
+      setNearestState({ status: 'loading', liveness: 'partial', reason: null, matches: [], total: 0 });
       const nn = await findNearestStrategies({ strategy_text: text, pair, timeframe, top_k: 5 });
       setNearestState({
         status: 'ready',
@@ -74,7 +89,7 @@ export const StrategyLab = () => {
   const onSaveDraft = useCallback(async () => {
     if (!generateState.text) return;
     const name = draftName.trim() || `${pair} · ${timeframe} · ${style}`;
-    setSaveState({ status: 'loading', liveness: 'partial-live', reason: null, strategy: null });
+    setSaveState({ status: 'loading', liveness: 'partial', reason: null, strategy: null });
     const res = await saveStrategyDraft({
       name,
       description: `Composed via Strategy Lab · ${style} · ${pair} ${timeframe}`,
@@ -88,7 +103,13 @@ export const StrategyLab = () => {
       reason: res.reason,
       strategy: res.payload,
     });
-  }, [draftName, generateState.text, pair, timeframe, style]);
+    // Bind the freshly persisted draft into the workspace context so
+    // downstream surfaces (Pipeline, Passport once available) light up
+    // the correct row.
+    if (res.payload?.strategy_id) {
+      setContext({ strategy: res.payload.strategy_id });
+    }
+  }, [draftName, generateState.text, pair, timeframe, style, setContext]);
 
   const aggregate = useMemo(() => {
     if (generateState.status === 'ready' && generateState.liveness === 'live') {
@@ -97,7 +118,7 @@ export const StrategyLab = () => {
     if (generateState.status === 'ready' && generateState.liveness !== 'live') {
       return { liveness: generateState.liveness, reason: generateState.reason };
     }
-    return { liveness: 'partial-live', reason: 'Compose a strategy to hit the live pipeline.' };
+    return { liveness: 'partial', reason: 'Compose a strategy to hit the live pipeline.' };
   }, [generateState]);
 
   return (
@@ -183,7 +204,7 @@ export const StrategyLab = () => {
       <div data-testid="strategy-lab-preview" style={{ ...panel, marginBottom: 'var(--space-5)' }}>
         <div style={{ ...panelHeader, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Generated skeleton</span>
-          <LivenessBadge liveness={generateState.status === 'idle' ? 'partial-live' : generateState.liveness}
+          <LivenessBadge liveness={generateState.status === 'idle' ? 'partial' : generateState.liveness}
                          reason={generateState.status === 'idle' ? 'Hit `Compose skeleton` to fetch a live sample.' : generateState.reason}
                          testId="strategy-lab-generate-liveness" />
         </div>
@@ -278,7 +299,7 @@ export const StrategyLab = () => {
         <div style={{ ...panelHeader, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Historical neighbours</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <LivenessBadge liveness={nearestState.status === 'idle' ? 'partial-live' : nearestState.liveness}
+            <LivenessBadge liveness={nearestState.status === 'idle' ? 'partial' : nearestState.liveness}
                            reason={nearestState.status === 'idle' ? 'Runs automatically after Compose.' : nearestState.reason}
                            testId="strategy-lab-nearest-liveness" />
             <span className="mono-num" data-testid="strategy-lab-nearest-count" style={{ color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>

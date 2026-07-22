@@ -20,6 +20,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, RefreshCw, Waves } from 'lucide-react';
 import { fetchCoverage } from '../../adapters/coverageAdapter';
 import { LivenessBadge, FreezeCaption } from './LivenessBadge';
+import { useWorkspaceContext, matchesContext } from '../../hooks/useWorkspaceContext';
 
 const nf = (v) => (typeof v === 'number' ? v.toLocaleString('en-US') : '—');
 const pct = (v) => (typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : '—');
@@ -44,7 +45,8 @@ const panel = {
 };
 
 export const Coverage = () => {
-  const [state, setState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, payload: null, updatedAt: null });
+  const { context, isActive } = useWorkspaceContext();
+  const [state, setState] = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null, updatedAt: null });
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, status: 'loading' }));
@@ -55,13 +57,17 @@ export const Coverage = () => {
   useEffect(() => { load(); }, [load]);
 
   const summary = state.payload?.summary || {};
-  const symbols = state.payload?.symbols || [];
+  const symbolsRaw = state.payload?.symbols || [];
+  const symbols = useMemo(
+    () => (isActive ? symbolsRaw.filter((s) => matchesContext(s, context)) : symbolsRaw),
+    [symbolsRaw, context, isActive]
+  );
   const gaps    = state.payload?.gaps || [];
   const cache   = state.payload?.cache || {};
   const provider = state.payload?.provider || {};
   const health  = state.payload?.health || {};
 
-  const reason = state.liveness === 'partial-live'
+  const reason = state.liveness === 'partial'
     ? (symbols.length === 0
         ? 'Endpoint responded 200 but no symbols have been ingested yet.'
         : `Health score ${summary.cts_health_score ?? '—'} · awaiting steady-state signal.`)
@@ -110,7 +116,7 @@ export const Coverage = () => {
       </div>
 
       {/* PARTIAL LIVE reason ribbon */}
-      {(state.liveness === 'partial-live' || state.liveness === 'gated' || state.liveness === 'error') && (
+      {(state.liveness === 'partial' || state.liveness === 'gated' || state.liveness === 'error') && (
         <div data-testid="coverage-partial-reason"
              style={{
                padding: 'var(--space-3) var(--space-4)',
@@ -190,7 +196,7 @@ export const Coverage = () => {
         <div style={{ ...panelHeader, padding: 'var(--space-3) var(--space-4)', borderBottom: '1px solid var(--stroke-1)', marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Symbol matrix</span>
           <span className="mono-num" data-testid="coverage-symbol-count" style={{ color: 'var(--content-lo)' }}>
-            {symbols.length} rows
+            {symbols.length}{isActive && symbolsRaw.length !== symbols.length ? ` / ${symbolsRaw.length}` : ''} rows
           </span>
         </div>
         {symbols.length === 0 ? (

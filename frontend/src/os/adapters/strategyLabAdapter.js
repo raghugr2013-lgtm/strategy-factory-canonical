@@ -29,7 +29,7 @@ const wrap = async (path, opts, empty) => {
     if (err.status === 503) return { liveness: 'gated',   reason: 'endpoint gated under Backend Feature Freeze v1.1.0-stage4', payload: empty };
     if (err.status === 401) return { liveness: 'error',   reason: 'unauthorized · sign in required', payload: empty };
     if (err.status === 403) return { liveness: 'gated',   reason: 'role insufficient', payload: empty };
-    if (err.status === 404) return { liveness: 'partial-live', reason: 'not found', payload: empty };
+    if (err.status === 404) return { liveness: 'partial', reason: 'not found', payload: empty };
     return { liveness: 'error', reason: err.message || 'network error', payload: empty };
   }
 };

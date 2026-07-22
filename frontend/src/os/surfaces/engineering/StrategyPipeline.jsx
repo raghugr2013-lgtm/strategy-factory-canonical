@@ -26,6 +26,7 @@ import {
   fetchKnowledgeStatistics,
 } from '../../adapters/strategyLabAdapter';
 import { LivenessBadge, FreezeCaption } from './LivenessBadge';
+import { useWorkspaceContext, matchesContext } from '../../hooks/useWorkspaceContext';
 
 const iso = (v) => {
   if (!v) return '—';
@@ -50,9 +51,10 @@ const stageOf = (status) => {
 };
 
 export const StrategyPipeline = () => {
-  const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, list: [] });
-  const [championState, setChampionState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, categories: {} });
-  const [statsState, setStatsState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, stats: {} });
+  const { context, isActive } = useWorkspaceContext();
+  const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial', reason: null, list: [] });
+  const [championState, setChampionState] = useState({ status: 'loading', liveness: 'partial', reason: null, categories: {} });
+  const [statsState, setStatsState] = useState({ status: 'loading', liveness: 'partial', reason: null, stats: {} });
   const [updatedAt, setUpdatedAt] = useState(null);
   const [activeStage, setActiveStage] = useState('drafts');
 
@@ -73,12 +75,14 @@ export const StrategyPipeline = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Bucket the live strategy inventory by stage.
+  // Bucket the live strategy inventory by stage. Context (§9) narrows
+  // the inventory by pair / timeframe / strategy id when active.
   const buckets = useMemo(() => {
+    const filtered = isActive ? strategyState.list.filter((s) => matchesContext(s, context)) : strategyState.list;
     const b = Object.fromEntries(STAGES.map((s) => [s.id, []]));
-    for (const s of strategyState.list) b[stageOf(s.status)].push(s);
+    for (const s of filtered) b[stageOf(s.status)].push(s);
     return b;
-  }, [strategyState.list]);
+  }, [strategyState.list, context, isActive]);
 
   // Champion families flattened for the champions stage — these come from
   // the historical KB (`strategy_kb_champions`), not the live strategies
@@ -110,7 +114,7 @@ export const StrategyPipeline = () => {
     const totalStrategies = strategyState.list.length + championRows.length;
     if (totalStrategies > 0) return { liveness: 'live', reason: null };
     return {
-      liveness: 'partial-live',
+      liveness: 'partial',
       reason: 'Live strategies and champions collections both empty · pipeline shell rendered live.',
     };
   }, [strategyState, championState, championRows.length]);
@@ -230,7 +234,7 @@ export const StrategyPipeline = () => {
       </div>
 
       {/* PARTIAL LIVE ribbon */}
-      {aggregate.liveness === 'partial-live' && (
+      {aggregate.liveness === 'partial' && (
         <div data-testid="strategy-pipeline-partial-reason"
              style={{
                padding: 'var(--space-3) var(--space-4)',
@@ -283,8 +287,16 @@ export const StrategyPipeline = () => {
               <span>Updated</span>
               <span></span>
             </div>
-            {activeRows.map((s, i) => (
-              <div key={s.strategy_id || i} role="row" data-testid={`strategy-pipeline-row-${activeStage}-${i}`} style={rowBody}>
+            {activeRows.map((s, i) => {
+              const highlighted = context.strategy && s.strategy_id === context.strategy;
+              return (
+              <div key={s.strategy_id || i} role="row" data-testid={`strategy-pipeline-row-${activeStage}-${i}`}
+                   data-context-focus={highlighted ? 'true' : undefined}
+                   style={{
+                     ...rowBody,
+                     background: highlighted ? 'color-mix(in oklab, var(--sig-info) 6%, transparent)' : undefined,
+                     borderLeft: highlighted ? '2px solid var(--sig-info)' : rowBody.borderLeft,
+                   }}>
                 <span style={{ color: 'var(--content-hi)' }}>{s.name}</span>
                 <span className="mono-num" style={{ fontSize: 'var(--font-caption)', color: 'var(--content-md)' }}>
                   {s.strategy_id}
@@ -310,7 +322,8 @@ export const StrategyPipeline = () => {
                   )}
                 </span>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

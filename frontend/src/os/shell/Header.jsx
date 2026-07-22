@@ -12,6 +12,7 @@ import { useAuthStore } from '../workspace-state/authStore';
 import { ROUTES } from '../routing/routes';
 import { ChevronDown, LogOut, Compass, Info } from 'lucide-react';
 import { openWalkthrough } from '../onboarding/FactoryWalkthrough';
+import { WorkspaceContextChip } from './WorkspaceContextChip';
 
 const useUtcClock = () => {
   const [t, setT] = useState('');
@@ -54,6 +55,8 @@ export const Header = () => {
       <span data-testid="surface-eyebrow" style={{ color: 'var(--content-hi)' }}>{surfaceLabel}</span>
 
       <span data-testid="cmdk-hint" style={{ marginLeft: 'var(--space-4)', color: 'var(--content-lo)' }}>⌘K · find anything</span>
+
+      <WorkspaceContextChip />
 
       <ModeSwitcher />
       <AdvancedLensToggle />

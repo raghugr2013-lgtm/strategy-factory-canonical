@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Database, RefreshCw, AlertTriangle } from 'lucide-react';
 import { fetchCoverage } from '../../adapters/coverageAdapter';
 import { LivenessBadge, FreezeCaption } from './LivenessBadge';
+import { useWorkspaceContext, matchesContext } from '../../hooks/useWorkspaceContext';
 
 const iso = (v) => {
   if (!v) return '—';
@@ -44,7 +45,8 @@ const cacheTone = (v) => {
 };
 
 export const Datasets = () => {
-  const [state, setState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, payload: null, updatedAt: null });
+  const { context, isActive } = useWorkspaceContext();
+  const [state, setState] = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null, updatedAt: null });
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, status: 'loading' }));
@@ -55,7 +57,11 @@ export const Datasets = () => {
   useEffect(() => { load(); }, [load]);
 
   const summary = state.payload?.summary || {};
-  const symbols = state.payload?.symbols || [];
+  const symbolsRaw = state.payload?.symbols || [];
+  const symbols = useMemo(
+    () => (isActive ? symbolsRaw.filter((s) => matchesContext(s, context)) : symbolsRaw),
+    [symbolsRaw, context, isActive]
+  );
   const cache   = state.payload?.cache || {};
   const gaps    = state.payload?.gaps || [];
   const health  = state.payload?.health || {};
@@ -68,7 +74,7 @@ export const Datasets = () => {
     const parts = [];
     if (symbols.length === 0) parts.push('0 symbols persisted');
     if ((summary.m1_row_count_total || 0) === 0) parts.push('0 m1 rows');
-    return { liveness: 'partial-live', reason: parts.join(' · ') };
+    return { liveness: 'partial', reason: parts.join(' · ') };
   }, [state.liveness, state.reason, symbols.length, summary.m1_row_count_total]);
 
   return (
@@ -167,7 +173,7 @@ export const Datasets = () => {
         <div style={{ ...panelHeader, padding: 'var(--space-3) var(--space-4)', borderBottom: '1px solid var(--stroke-1)', marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Dataset inventory</span>
           <span className="mono-num" data-testid="datasets-card-count" style={{ color: 'var(--content-lo)' }}>
-            {symbols.length} datasets
+            {symbols.length}{isActive && symbolsRaw.length !== symbols.length ? ` / ${symbolsRaw.length}` : ''} datasets
           </span>
         </div>
         {symbols.length === 0 ? (

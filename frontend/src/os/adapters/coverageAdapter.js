@@ -8,7 +8,7 @@
  * ERROR without re-inspecting the shape.
  *
  *   liveness = 'live'         when summary.symbol_count > 0 AND cts_health_score >= 60
- *   liveness = 'partial-live' when the endpoint responded 200 but datasets are sparse
+ *   liveness = 'partial' when the endpoint responded 200 but datasets are sparse
  *   liveness = 'gated'        when the flag COE_COVERAGE_REPORT_ENABLED is off (503)
  *   liveness = 'error'        network / unexpected status
  */
@@ -48,7 +48,7 @@ const classify = (payload) => {
   const health = payload?.health || {};
   const score = typeof health.health_score === 'number' ? health.health_score : summary.cts_health_score;
   if ((summary.symbol_count || 0) > 0 && (score ?? 0) >= 60) return 'live';
-  return 'partial-live';
+  return 'partial';
 };
 
 export const fetchCoverage = async ({ include = 'all', symbol, timeframe } = {}) => {
@@ -94,7 +94,7 @@ export const fetchProviderRoster = async () => {
     // registry is the LLM fleet under freeze, so we return it verbatim for
     // any consumer that wants it; Market Data does not use it.
     const list = Array.isArray(raw) ? raw : (raw?.providers || []);
-    return { liveness: list.length ? 'live' : 'partial-live', reason: null, payload: list };
+    return { liveness: list.length ? 'live' : 'partial', reason: null, payload: list };
   } catch (err) {
     if (err.status === 403) {
       return { liveness: 'gated', reason: 'admin role required', payload: [] };

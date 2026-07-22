@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Radio, RefreshCw } from 'lucide-react';
 import { fetchCoverage } from '../../adapters/coverageAdapter';
 import { LivenessBadge, FreezeCaption } from './LivenessBadge';
+import { useWorkspaceContext, matchesContext } from '../../hooks/useWorkspaceContext';
 
 const iso = (v) => {
   if (!v) return '—';
@@ -41,7 +42,8 @@ const ageSince = (v) => {
 };
 
 export const MarketData = () => {
-  const [state, setState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, payload: null, updatedAt: null });
+  const { context, isActive } = useWorkspaceContext();
+  const [state, setState] = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null, updatedAt: null });
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, status: 'loading' }));
@@ -52,7 +54,11 @@ export const MarketData = () => {
   useEffect(() => { load(); }, [load]);
 
   const summary = state.payload?.summary || {};
-  const symbols = state.payload?.symbols || [];
+  const symbolsRaw = state.payload?.symbols || [];
+  const symbols = useMemo(
+    () => (isActive ? symbolsRaw.filter((s) => matchesContext(s, context)) : symbolsRaw),
+    [symbolsRaw, context, isActive]
+  );
   const providerBlock = state.payload?.provider || {};
   const providerSources = providerBlock.sources || [];
   const providerVerification = providerBlock.verification_status || {};
@@ -65,7 +71,7 @@ export const MarketData = () => {
     const parts = [];
     if (providerSources.length === 0) parts.push('venue roster · empty');
     if (symbols.length === 0) parts.push('symbol feed · 0 rows');
-    return { liveness: 'partial-live', reason: parts.join(' · ') };
+    return { liveness: 'partial', reason: parts.join(' · ') };
   }, [state.liveness, state.reason, symbols.length, providerSources.length]);
 
   return (
@@ -164,7 +170,7 @@ export const MarketData = () => {
         <div style={{ ...panelHeader, padding: 'var(--space-3) var(--space-4)', borderBottom: '1px solid var(--stroke-1)', marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Venue roster</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <LivenessBadge liveness={providerSources.length > 0 ? 'live' : 'partial-live'}
+            <LivenessBadge liveness={providerSources.length > 0 ? 'live' : 'partial'}
                            reason={providerSources.length === 0 ? 'coverage.provider.sources is empty' : null}
                            testId="market-data-venues-liveness" />
             <span className="mono-num" data-testid="market-data-venue-count" style={{ color: 'var(--content-lo)' }}>
@@ -213,11 +219,11 @@ export const MarketData = () => {
         <div style={{ ...panelHeader, padding: 'var(--space-3) var(--space-4)', borderBottom: '1px solid var(--stroke-1)', marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Symbol feed</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <LivenessBadge liveness={symbols.length > 0 ? 'live' : 'partial-live'}
+            <LivenessBadge liveness={symbols.length > 0 ? 'live' : 'partial'}
                            reason={symbols.length === 0 ? 'coverage.symbols is empty' : null}
                            testId="market-data-feed-liveness" />
             <span className="mono-num" data-testid="market-data-symbol-count" style={{ color: 'var(--content-lo)' }}>
-              {symbols.length} symbols
+              {symbols.length}{isActive && symbolsRaw.length !== symbols.length ? ` / ${symbolsRaw.length}` : ''} symbols
             </span>
           </div>
         </div>

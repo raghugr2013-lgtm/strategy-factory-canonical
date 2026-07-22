@@ -60,8 +60,8 @@ const groupBySweepBucket = (list) => {
 };
 
 export const Optimization = () => {
-  const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, list: [] });
-  const [statsState, setStatsState] = useState({ status: 'loading', liveness: 'partial-live', reason: null, stats: {} });
+  const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial', reason: null, list: [] });
+  const [statsState, setStatsState] = useState({ status: 'loading', liveness: 'partial', reason: null, stats: {} });
   const [updatedAt, setUpdatedAt] = useState(null);
 
   const load = useCallback(async () => {
@@ -107,12 +107,12 @@ export const Optimization = () => {
     }
     if (strategies.length > 0 || (stats.total_strategies || 0) > 0) {
       return {
-        liveness: 'partial-live',
+        liveness: 'deferred',
         reason: 'Read-only queue view. /api/optimize/* launcher scheduled post-freeze.',
       };
     }
     return {
-      liveness: 'partial-live',
+      liveness: 'partial',
       reason: 'Strategies and KB corpus both empty · queue rendered live.',
     };
   }, [strategyState, statsState, strategies.length, stats.total_strategies]);

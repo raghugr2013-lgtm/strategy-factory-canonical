@@ -56,10 +56,10 @@ const fetchKnowledgeHealthDirect = async () => {
 const statusOf = (s) => (s?.status || '').toString().toLowerCase();
 
 export const Validation = () => {
-  const [health, setHealth]       = useState({ status: 'loading', liveness: 'partial-live', reason: null, payload: null });
-  const [stats, setStats]         = useState({ status: 'loading', liveness: 'partial-live', reason: null, stats: {} });
-  const [champions, setChampions] = useState({ status: 'loading', liveness: 'partial-live', reason: null, categories: {} });
-  const [inv, setInv]             = useState({ status: 'loading', liveness: 'partial-live', reason: null, list: [] });
+  const [health, setHealth]       = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null });
+  const [stats, setStats]         = useState({ status: 'loading', liveness: 'partial', reason: null, stats: {} });
+  const [champions, setChampions] = useState({ status: 'loading', liveness: 'partial', reason: null, categories: {} });
+  const [inv, setInv]             = useState({ status: 'loading', liveness: 'partial', reason: null, list: [] });
   const [updatedAt, setUpdatedAt] = useState(null);
 
   const load = useCallback(async () => {
@@ -122,7 +122,7 @@ export const Validation = () => {
       return { liveness: 'live', reason: null };
     }
     return {
-      liveness: 'partial-live',
+      liveness: 'partial',
       reason: `Corpus is ${health.payload?.status || 'empty'} · readiness ceiling ${readinessCeiling}. Interface is live.`,
     };
   }, [health, inv, corpusSize, s.canonical_families, champions_.length, validated.length, readinessCeiling]);
