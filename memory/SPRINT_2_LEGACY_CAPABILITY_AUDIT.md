@@ -3,7 +3,7 @@
 > **Prepared:** 2026-07-21
 > **Audit type:** Read-only comparison. No code changes proposed. Design Freeze v1.0 fully respected.
 > **Legacy artefact:** `/app/memory/legacy-ui-screenshots/image{1..18}.png` (extracted from operator's Word document)
-> **New UI:** Sprint 2 preview build at https://ddca5315-4676-42ed-a4b5-9fe6e9538ebb.preview.emergentagent.com/
+> **New UI:** Sprint 2 preview build at https://stall-debug.preview.emergentagent.com/
 > **Freeze status:** Backend Feature Freeze v1.1.0-stage4 + Design Freeze v1.0 both active.
 
 ---
