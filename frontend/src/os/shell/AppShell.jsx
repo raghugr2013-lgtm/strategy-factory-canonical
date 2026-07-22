@@ -13,6 +13,7 @@ import { LeftRail } from './LeftRail';
 import { StatusRail } from './StatusRail';
 import { DangerRibbon } from './DangerRibbon';
 import { CmdKPalette } from '../palette/CmdKPalette';
+import { FactoryWalkthrough } from '../onboarding/FactoryWalkthrough';
 
 export const AppShell = () => (
   <div className="os-body"
@@ -44,5 +45,6 @@ export const AppShell = () => (
     </div>
 
     <CmdKPalette />
+    <FactoryWalkthrough />
   </div>
 );

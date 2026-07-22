@@ -10,7 +10,8 @@ import { useLocation } from 'react-router-dom';
 import { useWorkspaceStore, MODES, DENSITIES } from '../workspace-state/store';
 import { useAuthStore } from '../workspace-state/authStore';
 import { ROUTES } from '../routing/routes';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, Compass, Info } from 'lucide-react';
+import { openWalkthrough } from '../onboarding/FactoryWalkthrough';
 
 const useUtcClock = () => {
   const [t, setT] = useState('');
@@ -177,10 +178,20 @@ const UserMenu = () => {
       </button>
       {open && (
         <div data-testid="user-menu"
-             style={{ ...menuStyle, right: 0, left: 'auto', minWidth: 200 }}>
+             style={{ ...menuStyle, right: 0, left: 'auto', minWidth: 220 }}>
           <div style={{ padding: 'var(--space-3)', fontSize: 'var(--font-caption)', color: 'var(--content-lo)', borderBottom: '1px solid var(--stroke-1)' }}>
             {email || 'anonymous'}
           </div>
+          <button data-testid="user-menu-walkthrough"
+                  onClick={() => { openWalkthrough(); setOpen(false); }}
+                  style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Compass size={12} strokeWidth={1.5} /> Factory Walkthrough
+          </button>
+          <button data-testid="user-menu-help"
+                  onClick={() => { window.open('https://strategy.coinnike.com/docs', '_blank', 'noopener'); setOpen(false); }}
+                  style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)', borderBottom: '1px solid var(--stroke-1)' }}>
+            <Info size={12} strokeWidth={1.5} /> Help &amp; About
+          </button>
           <button data-testid="user-menu-logout"
                   onClick={() => { logout(); setOpen(false); }}
                   style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>

@@ -1490,3 +1490,27 @@ Consolidates: Executive Summary · Completion Report · Legacy Capability & UX A
 ### Ship posture
 Frontend-additive PR. Backend untouched. Design tokens untouched. Preview build compiles clean (`yarn build` — Compiled successfully. main.js 182 kB gzip vs 175 kB pre-Phase-1). Ready for canary + full rollout.
 
+
+### Sprint 3 Phase-1 · Onboarding follow-up — Factory Walkthrough (2026-07-22)
+
+**Trigger:** operator feedback that the initial "Take the Tour" suggestion should be reframed as a product-wide onboarding, not an Engineering walkthrough. Rename adopted: **Factory Walkthrough**.
+
+- **Coverage** — 8 slides for operators (intro → Mission Control → Master Bot → Timeline → Approvals → Workforce → Engineering Workspace → outro), 9 for admins (adds Admin slide before outro). Every slide leads with **why**, then **where** — Operator OS supervises, Engineering Workspace builds.
+- **Trigger rules** — auto-open on first authenticated arrival OR when `localStorage['sf-walkthrough-seen-version']` differs from `WALKTHROUGH_VERSION` ('1.3.0-sprint3-phase1'). Manual re-open from user menu → Factory Walkthrough at any time.
+- **Dismissal** — Skip button on every slide, X close, Esc, or Get started on the outro. All paths persist the seen-version so the walkthrough never re-opens for the same version.
+- **Accessibility** — role=dialog, aria-modal, aria-labelledby; keyboard-navigable (ArrowLeft / ArrowRight / Esc); dot-navigation clickable; a11y-safe close button.
+- **Design** — same tokens as the shell (no new visual language). 4 px accent stripe per slide (blue = intro/outro, gold = engineering/admin, blue = surface slides). Small hint pill shows the target URL for each surface slide.
+
+**User-menu additions** — `Factory Walkthrough` (Compass icon) opens the overlay; `Help & About` (Info icon) opens the external docs.
+
+**Verification** — iteration_5.json: **100% (34/34 assertions)**. Zero regressions on Sprint 3 Phase-1 workspace. Zero /api/* traffic (pure client-side prose).
+
+**Files added:**
+- `frontend/src/os/onboarding/FactoryWalkthrough.jsx` — main component (345 lines)
+- `frontend/src/os/onboarding/walkthroughSteps.js` — content + WALKTHROUGH_VERSION (134 lines)
+- `memory/manual-assets/screenshots/s3_11_*.png` … `s3_23_*.png` — 13 screenshots documenting the walkthrough flow
+
+**Files modified:**
+- `frontend/src/os/shell/AppShell.jsx` — mounts `<FactoryWalkthrough />`
+- `frontend/src/os/shell/Header.jsx` — user-menu entries for `Factory Walkthrough` + `Help & About`
+
