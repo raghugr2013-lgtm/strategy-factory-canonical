@@ -1,12 +1,17 @@
-# Strategy Factory — Architecture Memo v1
+# Strategy Factory — Architecture Memo v1.1
 
-_Version · v1.0 · draft for review_
+_Version · v1.1 · draft for review_
 _Author · Main Agent (E1)_
 _Date · 2026-07-22_
 _Status · under review — **no code changes** until this memo is signed off_
 _Scope · long-term architectural shape of the AI Strategy Factory as a coherent product_
 
 > **Objective.** Validate that the product architecture will scale before we continue implementation. Not a UI redesign. Not a spec. A north-star document that every future slice can be measured against.
+
+### Revision log
+
+- **v1.1** (this revision) — added §18 AI Factory Services Architecture, §19 Factory Event Flow, §20 Autonomy Boundaries, §21 Roadmap Alignment. Renumbered the tail. Broadens the memo from "frontend IA" to a factory-wide architectural blueprint.
+- **v1.0** — original 17-section memo covering Operator OS + Engineering Workspace information architecture, personas, primitives, patterns, execution workspace, portfolio placement, factory lifecycle, and simplification recommendations.
 
 ---
 
@@ -646,7 +651,389 @@ Every gate is a human approval. Every arrow is a timeline event. The KB feeds St
 
 ---
 
-## 18 · Recommendations · simplify without losing depth
+## 18 · AI Factory services architecture
+
+The Factory is composed of **autonomous services** — each with a single responsibility, an explicit contract, and a clear boundary. Some are already implemented; some are latent; some are post-freeze. The architecture is the same regardless.
+
+### 18.1 Service catalogue
+
+Fourteen services. Each row is deliberately small; contracts are what matter, not implementations.
+
+| # | Service | Responsibility |
+|---|---|---|
+| S01 | **Ingestion**            | Pull raw ticks/bars from external venues; normalise timestamps and instrument names. |
+| S02 | **Coverage**             | Compute and publish the "what we can trust" matrix (symbol × timeframe × window × tier). |
+| S03 | **Storage**              | Persist canonical M1 rows, aggregated caches, and gap enumeration. |
+| S04 | **Composition (Lab)**    | Turn CNL / sweep parameters / KB matches into deterministic draft candidates. |
+| S05 | **Optimization Engine**  | Execute parameter sweeps; produce cycle records with reproducible seeds. |
+| S06 | **Validation Engine**    | Run deterministic backtests; produce evidence bundles with replay hashes. |
+| S07 | **Passport Registry**    | Compute canonical hashes; evaluate promotion gates; own lineage transitions. |
+| S08 | **Knowledge Base (KB)**  | Store historical strategies; expose nearest-neighbour and family aggregations; learning-only. |
+| S09 | **Portfolio Composer**   | Score strategy compatibility (correlation, drawdown overlap, style diversity). |
+| S10 | **Risk Governor**        | Own position-sizing envelopes, drawdown limits, kill-switch state, prop-firm rules. |
+| S11 | **Execution Gateway**    | Adapters to broker APIs (paper first, then live); route orders; report fills. |
+| S12 | **Monitor / Alerting**   | Aggregate signal from all services; raise alerts; expose freshness. |
+| S13 | **Timeline (event bus)** | Append-only event log; source of truth for audit + replay. |
+| S14 | **Meta-Learning**        | Long-loop retrospection on deployed outcomes; drift detection; feed recommendations back to Composition. |
+
+Two future services carried on this map but deliberately not counted in v1:
+- **Agent** (v2) — conversational front-end over any service. Requires a stable event vocabulary before it is safe to build.
+- **Attestor** (post-Passport-v2) — cryptographically signs promotion events. Non-repudiation.
+
+### 18.2 Inputs / outputs per service
+
+Every service exposes exactly two contracts: what it *consumes* and what it *produces*. If a proposed capability doesn't fit, it belongs in a new service.
+
+| # | Service | Consumes | Produces (events · artefacts) |
+|---|---|---|---|
+| S01 | Ingestion         | venue websockets/REST · credentials | `market_data_tick_received` · raw rows to Storage |
+| S02 | Coverage          | Storage rows · verification runs    | `coverage_tier_updated` · Coverage payload (already live: `GET /api/data/coverage`) |
+| S03 | Storage           | Ingestion writes · cache aggregates | `dataset_row_written` · `gap_detected` · persisted canonical rows |
+| S04 | Composition (Lab) | CNL text · pair · TF · style · KB neighbours | `strategy_composed` · draft strategy row (live today: `POST /api/strategies/generate` + `POST /api/strategies`) |
+| S05 | Optimization      | Passport registry (candidates) · Coverage (data availability) · Risk envelope | `cycle_launched` · `cycle_progress` · `cycle_completed` · cycle record |
+| S06 | Validation        | Cycle record · fresh replay data    | `evidence_bundle_generated` · `validation_verdict` · evidence artefact hash |
+| S07 | Passport Registry | Strategy row · evidence bundle · human approval | `passport_created` · `passport_gate_evaluated` · `strategy_promoted` · `strategy_retired` · immutable Passport document |
+| S08 | KB                | Historical corpus · CNL matcher     | `kb_nearest_returned` · `kb_family_imported` · KB view (live today: `GET /api/knowledge/*`) |
+| S09 | Portfolio Composer| Passport registry (state=champion+) · fill history | `portfolio_recomposed` · composition report |
+| S10 | Risk Governor     | Portfolio composition · live drawdowns · prop-firm rulebook | `risk_envelope_updated` · `kill_switch_engaged` · `risk_violation_detected` |
+| S11 | Execution Gateway | Deployment intent · broker credentials · Risk envelope | `deployment_created` · `order_placed` · `fill_received` · `deployment_halted` |
+| S12 | Monitor           | All event streams · freshness ticks | `alert_raised` · `alert_cleared` · aggregate health payload |
+| S13 | Timeline          | Every emitted event                 | `timeline_appended` · queryable event stream |
+| S14 | Meta-Learning     | Timeline · Portfolio outcomes · KB corpus | `retro_report_generated` · `drift_detected` · recommendation payload fed back to Composition |
+
+### 18.3 Relationships — the service dependency graph
+
+The graph is deliberately layered. Higher layers may depend on lower layers; the reverse is forbidden.
+
+```
+Layer 5  (LEARN)                 ┌────────────────────┐
+                                  │   Meta-Learning    │ ◀── learns from every layer below
+                                  └─────────┬──────────┘
+Layer 4  (EXECUTE)                          │
+                                            ▼
+                     ┌──────────┐   ┌──────────────┐   ┌──────────────┐
+                     │Portfolio │──▶│ Risk Governor│──▶│  Execution   │
+                     │ Composer │   └──────────────┘   │   Gateway    │
+                     └────┬─────┘                       └──────────────┘
+Layer 3  (VALIDATE)       │
+                          │
+                     ┌────▼──────────┐
+                     │   Passport    │
+                     │   Registry    │
+                     └───┬───┬───────┘
+                         │   │
+                         │   └────────────┐
+                         ▼                ▼
+                  ┌────────────┐   ┌─────────────┐
+                  │ Validation │   │Optimization │
+                  │   Engine   │   │   Engine    │
+                  └─────┬──────┘   └──────┬──────┘
+Layer 2  (COMPOSE)      │                 │
+                        └────────┬────────┘
+                                 ▼
+                         ┌──────────────┐         ┌──────────────┐
+                         │ Composition  │ ◀───────│   KB (S08)   │
+                         │    (Lab)     │         └──────────────┘
+                         └──────┬───────┘
+Layer 1  (DATA)                 │
+                                │
+                         ┌──────▼────────┐
+                         │   Coverage    │
+                         └──────┬────────┘
+                                │
+                         ┌──────▼────────┐        ┌──────────────┐
+                         │    Storage    │ ◀──────│  Ingestion   │
+                         └───────────────┘        └──────────────┘
+
+Cross-cutting:
+   Timeline (S13)   — every service emits into it
+   Monitor  (S12)   — subscribes to every service
+```
+
+**Invariants** (violate any of these, the architecture is broken):
+
+1. **Ingestion never talks to Composition.** Data must flow through Coverage first — no undocumented shortcut symbols.
+2. **KB never talks to Execution.** Historical corpus is `learning_only=true` forever; it can only reach live deployment via a fresh Passport gate.
+3. **Composition never talks to Execution.** Draft candidates are not deployable — Passport Registry is the only bridge.
+4. **Risk Governor is on the critical path for every order.** No Execution call bypasses it, ever.
+5. **Meta-Learning has no write access downstream.** It emits `recommendation payload` events; Composition decides whether to act on them.
+6. **Timeline is append-only.** No service ever rewrites an event.
+
+### 18.4 Interface conventions
+
+Every service exposes:
+- A **read contract** (HTTP GET / WSS subscription) for its outputs.
+- A **write contract** (HTTP POST) for its explicit intake — **plus** an implicit intake via event subscriptions.
+- A **health endpoint** feeding Monitor.
+- An **event emitter** that writes to Timeline synchronously with the persisted state change.
+
+No service exposes raw database rows. Every payload is a versioned DTO owned by the service.
+
+---
+
+## 19 · Factory event flow
+
+The Factory as a set of connected event streams. This is §17 (lifecycle) redrawn from the *events* perspective — the same story a Timeline reader would reconstruct.
+
+### 19.1 The trunk flow (data → deployment)
+
+```
+      venues                            operator          admin
+        │                                  │                │
+        ▼                                  ▼                ▼
+  [S01 Ingestion]                    [S04 Lab]        [Approvals]
+        │                                  │                │
+        │ market_data_tick_received       │strategy_composed│promotion_requested
+        ▼                                  ▼                │
+  [S03 Storage] ─── gap_detected ──▶ [S07 Passport]         │
+        │                                  │                │
+        │ dataset_row_written              │passport_created│
+        ▼                                  ▼                │
+  [S02 Coverage] ─── coverage_tier_updated ─────────────┐   │
+                                            │           │   │
+                                            ▼           ▼   ▼
+                                     [S05 Optimization] [S06 Validation]
+                                            │                 │
+                        cycle_completed◀────┘                 │
+                                            │  evidence_bundle_generated
+                                            ▼                 │
+                                     [S07 Passport gate evaluated]
+                                            │
+                                strategy_promoted (state → champion)
+                                            │
+                                            ▼
+                                     [S09 Portfolio Composer]
+                                            │
+                                     portfolio_recomposed
+                                            │
+                                            ▼
+                                     [S10 Risk Governor]
+                                            │
+                                     risk_envelope_updated
+                                            │
+                                            ▼
+                                     [S11 Execution Gateway]
+                                            │  (paper → live gated by human)
+                                     deployment_created
+                                            │
+                                            ▼
+                                        fills, p&l
+                                            │
+                                            ▼
+                                     [S12 Monitor] ─── alert_raised (if breach)
+                                            │
+                                            ▼
+                                       [S13 Timeline]  ◀── every event above
+                                            │
+                                            ▼
+                                     [S14 Meta-Learning]
+                                            │
+                                     retro_report_generated · drift_detected
+                                            │
+                                            └──────────▶ back to [S04 Lab]
+                                                         (recommendations only)
+```
+
+### 19.2 Read-side event flows
+
+The trunk flow is write-side. Read-side consumers subscribe to filtered streams:
+
+- **Command surface** subscribes to `alert_raised`, `alert_cleared`, `kill_switch_engaged`, `promotion_requested`.
+- **Timeline surface** subscribes to `timeline_appended` (all events).
+- **Passport surface** subscribes to events matching a target `object.id`.
+- **Meta-Learning** subscribes to the whole event stream (batch, not live).
+- **Monitor** subscribes to every service's health emitter.
+
+### 19.3 Event categories
+
+Every event falls into one of six categories (used for filtering, colour-coding, and retention policy):
+
+| Category | Example | Retention |
+|---|---|---|
+| **Data**       | `market_data_tick_received`, `dataset_row_written` | 90d |
+| **Composition**| `strategy_composed`, `kb_nearest_returned` | indefinite |
+| **Evaluation** | `cycle_completed`, `evidence_bundle_generated`, `passport_gate_evaluated` | indefinite |
+| **Governance** | `promotion_requested`, `strategy_promoted`, `strategy_retired`, `risk_envelope_updated` | indefinite (compliance) |
+| **Execution**  | `deployment_created`, `order_placed`, `fill_received`, `kill_switch_engaged` | indefinite (compliance) |
+| **Learning**   | `retro_report_generated`, `drift_detected` | indefinite |
+
+Data events are voluminous and can be aged out. Everything above that line is compliance-relevant and retained indefinitely.
+
+### 19.4 Loop-back edges (deliberately explicit)
+
+Three edges make the Factory a *learning* system rather than a pipeline:
+
+1. **Coverage → Validation** — data quality changes can invalidate previously-valid evidence; validation must re-run when the tier degrades.
+2. **Meta-Learning → Composition** — retro reports surface as recommendation payloads inside Strategy Lab (e.g. "avoid mean-reversion on XAUUSD in the last N days · drift detected").
+3. **Execution → Portfolio Composer** — live fills and drawdowns reshape composition scores; composition is not static.
+
+Each loop-back is *event-driven*, not RPC. No service polls another; they subscribe to Timeline.
+
+---
+
+## 20 · Autonomy boundaries
+
+The single most important governance property of the Factory: **who is allowed to decide what, and how does that widen over time?**
+
+### 20.1 Three-tier taxonomy
+
+Every action in the Factory belongs to exactly one tier:
+
+| Tier | Definition | Who acts | Audit path |
+|---|---|---|---|
+| **H · Human decision**        | A human must click Approve. No automation of the decision itself. | Operator or Admin | Timeline records actor, reason, timestamp |
+| **R · Recommendation-only**   | Automation surfaces a proposal. A human reviews and clicks accept/reject. | Automation proposes; human accepts | Timeline records both the proposal and the accept/reject |
+| **A · Fully autonomous**      | Happens without human intervention, within a pre-approved envelope. Human retains veto/kill. | Automation | Timeline records the autonomous action + envelope reference |
+
+Every autonomous action must have a **veto path** (kill switch or targeted revoke) reachable within 3 seconds from any surface.
+
+### 20.2 Action inventory with initial tier assignments
+
+| Action | v1 tier | Notes |
+|---|---|---|
+| Ingest data from a venue                       | A | Well-bounded, safe. |
+| Persist a normalised row                       | A | Deterministic. |
+| Detect a data gap                              | A | Deterministic. |
+| Backfill a gap                                 | R | Recommendation initially — bandwidth cost + provider throttling. |
+| Compose a strategy draft                       | H | The engineer types it (or approves a Meta-Learning suggestion). |
+| Save a draft                                   | H | Explicit save button. |
+| Launch an optimization cycle                   | H | Engineer-initiated. Cost + noise. |
+| Run a validation replay                        | R | Recommendation with one-click confirm — cheap, deterministic. |
+| Compute a canonical hash                       | A | Pure function. |
+| Evaluate a Passport gate                       | A | Deterministic given inputs; gates are declarative. |
+| Promote to `champion`                          | H | Human decision, Approvals modal. |
+| Promote to paper deployment                    | H | Human decision, Approvals modal. |
+| Promote to live deployment                     | H | Human decision, Approvals modal · two-person rule. |
+| Retire a strategy                              | H | Human decision. |
+| Route an order to a broker                     | A | Only inside an approved deployment envelope. |
+| Auto-halt on drawdown breach                   | A | Risk Governor autonomous. |
+| Auto-halt on connection loss                   | A | Risk Governor autonomous. |
+| Adjust position sizing within envelope         | A | Bounded by Risk Governor. |
+| Adjust position sizing beyond envelope         | H | Human decision. |
+| Emit a Meta-Learning recommendation            | A | Never mutates state — always surfaces. |
+| Import a KB family into `strategies`           | H | Human decision, permanent `learning_only=true`. |
+| Rotate an admin secret                         | H | Human decision. |
+
+### 20.3 Roadmap evolution of autonomy
+
+Autonomy widens **only** as evidence accumulates. Four phases:
+
+**Phase α (LEARNING) — current freeze.**
+- Everything Human. The Factory is under supervised training wheels.
+- The only autonomous work is deterministic data plumbing (Ingestion, Storage, Coverage calculation, canonical hashing).
+- **Objective:** build the trust vocabulary. Timeline, Passport, Approvals.
+
+**Phase β (ASSISTED) — post-freeze, ~6 months.**
+- Data operations remain autonomous.
+- Validation runs become recommendation-only (one-click accept).
+- Optimization cycles remain human-initiated.
+- Deployment decisions remain human.
+- **New:** Risk Governor gains autonomous kill authority (drawdown / connection breach).
+- **Objective:** prove that recommendation-only reduces engineer toil without introducing risk.
+
+**Phase γ (GUIDED AUTONOMY) — ~12–18 months.**
+- Strategy composition graduates: Meta-Learning proposals surface as recommendations that a lightweight approval can accept and route to the Lab.
+- Optimization cycles graduate: cadence-based (e.g. weekly) auto-launch under a pre-approved envelope; results still require human promotion.
+- Deployment to *paper* graduates to recommendation-only (paper is bounded-risk).
+- Live deployment remains Human (two-person rule).
+- **New:** portfolio rebalancing becomes recommendation-only within Composition envelopes.
+
+**Phase δ (SUPERVISED AUTONOMY) — long term.**
+- Live deployment inside a strict envelope becomes Autonomous (with prominent kill).
+- Portfolio rebalancing inside envelope becomes Autonomous.
+- Retirement of underperforming strategies becomes Autonomous.
+- Humans retain: envelope authorship, kill switch, retrospective review, and any action outside an envelope.
+
+**Non-graduation guarantees.** Some actions never graduate above Human, by architectural policy:
+
+- Envelope authorship (who can carry how much money).
+- KB → live-deployment promotion.
+- Admin actions (role changes, secret rotation, integration approval).
+- Two-person-rule actions once written into policy.
+
+### 20.4 Implementation implications for the OS
+
+- Every action in the OS is tagged `H / R / A`.
+- The Approvals modal (§12) is the H channel.
+- The Command surface (Mission Control) is the R channel — it queues proposals for review.
+- Autonomous actions (`A`) appear in Timeline with a `source=system` actor and an `envelope_id`.
+- A **veto surface** is available from Command (and Command Palette): "revoke envelope · halt strategy · engage kill switch".
+
+---
+
+## 21 · Roadmap alignment · how the architecture supports each phase without redesign
+
+The claim of this memo is that the architecture defined in §0–§20 already accommodates Phase α through Phase δ **without structural change**. Each phase is an *extension*, not a rewrite. This section maps that claim to concrete primitives.
+
+### 21.1 Phase α (LEARNING · current)
+
+Everything required is already defined:
+
+- Layered service graph (§18.3): only Layers 1–2 are populated in the frozen backend. Layers 3–5 are latent.
+- SignalState taxonomy (§7) already includes `DEFERRED` for capabilities that are architecturally accounted for but not yet available.
+- Event vocabulary (§13) already emits walkthrough events; every future event follows the same shape.
+
+**What the current frozen backend needs to support Phase α:** nothing new. It already does.
+
+### 21.2 Phase β (ASSISTED · post-freeze)
+
+Adds: Recommendation channel · autonomous Risk Governor kill · one-click validation.
+
+Architectural primitives that make this drop-in:
+
+- **Approvals modal** (§12) already differentiates "confirm" from "propose"; recommendation-only actions land in the same modal with pre-filled fields.
+- **Autonomy tier tag** (§20.1) is attached to every action at design time; upgrading validation from H to R changes a tag, not a code path.
+- **Risk Governor as its own service** (§18, S10) means autonomous kill authority lives in the correct place — no new coupling between broker gateway and UI.
+- **Command surface** already has an alerts + approvals queue slot; recommendations feed the same queue.
+
+**What we need to add:** the `RecommendationCard` primitive (one component). No architectural change.
+
+### 21.3 Phase γ (GUIDED AUTONOMY)
+
+Adds: Meta-Learning as a first-class producer · cadence-based optimization · paper-deployment recommendation.
+
+Architectural primitives:
+
+- **Meta-Learning is already S14** in the service catalogue — it consumes Timeline and produces recommendation events. No new subscription mechanism needed.
+- **Envelope authorship as a Human-non-graduating action** (§20.3) means we do not have to add a new authorisation model; we extend the existing Approvals modal with envelope fields.
+- **Cadence-based optimization** is a scheduler concern on Optimization Engine (S05). The scheduler emits `cycle_launched` events indistinguishable from human-launched ones — same Timeline entry shape, only `actor.source=system`.
+- **Paper-first hard rule** is enforced at Passport gate evaluation (S07), not in the UI. Deployment intent to `live` without a paper predecessor is rejected by the Registry.
+
+**What we need to add:** the `EnvelopeAuthoringModal`. No architectural change.
+
+### 21.4 Phase δ (SUPERVISED AUTONOMY)
+
+Adds: autonomous live deployment inside envelope · autonomous portfolio rebalance · autonomous retirement.
+
+Architectural primitives:
+
+- **Envelope model** is defined at Phase γ; Phase δ increases its coverage, not its shape.
+- **Kill-switch as first-class primitive** (§18 recommendations) means the veto path is already wired.
+- **Portfolio Composer (S09) + Risk Governor (S10)** cleanly separate "what should exist" from "how much money it gets" — the split we already committed to in §16.
+- **Timeline retention policy** (§19.3) already treats Governance and Execution events as indefinite; compliance dossiers are just filtered exports.
+
+**What we need to add:** the `EnvelopeMonitor` surface (a specialised Passport tab) and per-envelope autonomy metrics. No architectural change.
+
+### 21.5 Non-roadmap events the architecture also survives
+
+- **Multi-broker parity** — Execution Gateway (S11) is a boundary layer; adding a broker is a new adapter, not a new service.
+- **Multi-tenant Factory** — services are contract-only; tenants become an actor attribute in Timeline. No cross-cutting rewrite.
+- **Agent (v2)** — S00-like insertion between the operator and every service, subscribing to Timeline and emitting proposals into the recommendation queue. It becomes another producer, not a redesign.
+- **Regulator-facing exports** — Timeline retention + immutability already provide the substrate; export is a query, not a schema.
+
+### 21.6 What could still require redesign (honest list)
+
+Not everything is future-proof. Three categories where a v2 memo will be needed:
+
+1. **Cross-asset portfolio composition** at scale (thousands of strategies) may require breaking S09 into `Composer` + `ScoringWorker` + `ScheduledRecomposer`. Boundary of S09 stays; internals change.
+2. **Real-time WSS at high fan-out** may require a broker-side pub/sub (Redis Streams / NATS) instead of the single `/ws/stream` in §14. The event vocabulary survives; the transport layer changes.
+3. **Non-JSON-RPC integrations** (FIX protocol, exchange-specific binary feeds) may require S01 (Ingestion) to accept plug-in adapters with a formal contract. The service boundary is intact; the adapter model is new.
+
+These are known unknowns. They are not architectural bugs — they are legitimate v2 territory.
+
+---
+
+## 22 · Recommendations · simplify without losing depth
 
 Six principles for keeping the operator experience calm while the Factory grows.
 
@@ -659,26 +1046,40 @@ Six principles for keeping the operator experience calm while the Factory grows.
 
 ---
 
-## 19 · Decision log — what this memo commits us to
+## 23 · Decision log — what this memo commits us to
 
 If you sign this off, these become non-negotiable design axes:
 
+**Frontend / information architecture**
 - ✅ **URL is truth** for every user-visible state.
 - ✅ Six-state canonical **`SignalState`** — no more ad-hoc labels.
 - ✅ **Passport is the only promotion surface** — no side-doors.
-- ✅ **Event vocabulary is versioned and immutable** — new names, not migrations.
-- ✅ **Execution workspace is isolated** from Engineering by group and by banner.
 - ✅ **Kill switch is a first-class primitive**, accessible from anywhere.
 - ✅ **Approvals modal is one component**, wired to every state-changing mutation.
 - ✅ **Workspace context is URL-scoped**, session-lived, and honoured by every surface.
 - ✅ **Portfolio splits into Composition (Engineering) + Allocation (Execution)**.
-- ✅ **Historical KB import goes through Passport** with permanent `learning_only=true`.
 - ✅ **Freshness is one global tick loop**, WebSocket is opt-in per critical surface.
+
+**Factory architecture**
+- ✅ **Fourteen services** in the catalogue; new capabilities become services, not features.
+- ✅ **Layered service graph** — Layer N never depends on Layer N+1.
+- ✅ **Six architectural invariants** (Ingestion↛Composition, KB↛Execution, Composition↛Execution, Risk Governor on-path, Meta-Learning read-only downstream, Timeline append-only) — architectural bugs if violated.
+- ✅ **Event vocabulary is versioned and immutable** — new names, not migrations.
+- ✅ **Six event categories** with declared retention policies; Governance/Execution/Learning are indefinite.
+- ✅ **Loop-back edges are event-driven**, not RPC — Meta-Learning never mutates downstream state.
+
+**Governance / autonomy**
+- ✅ **Three-tier autonomy taxonomy** (H · R · A) applied to every action at design time.
+- ✅ **Every autonomous action has a veto path** reachable in ≤ 3 seconds.
+- ✅ **Non-graduation set** (envelope authorship, KB→live promotion, admin actions, two-person-rule actions) never leaves Human tier.
+- ✅ **Autonomy widens on evidence**, not on schedule — phases α → β → γ → δ are gated by proof.
+- ✅ **Execution workspace is isolated** from Engineering by group and by banner.
+- ✅ **Historical KB import goes through Passport** with permanent `learning_only=true`.
 - ✅ **Backend Feature Freeze v1.1.0-stage4 remains intact** until Execution capabilities are needed.
 
 ---
 
-## 20 · Proposed next slices (post-review)
+## 24 · Proposed next slices (post-review)
 
 **Slice A · Workspace context thread + SignalState primitive.** Foundational. Small backend impact (none). Every future surface inherits both.
 
