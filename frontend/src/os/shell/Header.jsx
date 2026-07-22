@@ -157,6 +157,8 @@ const DensitySwitcher = () => {
 
 const UserMenu = () => {
   const email = useAuthStore((s) => s.email);
+  const role = useAuthStore((s) => s.role);
+  const authMode = useAuthStore((s) => s.authMode);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -178,9 +180,35 @@ const UserMenu = () => {
       </button>
       {open && (
         <div data-testid="user-menu"
-             style={{ ...menuStyle, right: 0, left: 'auto', minWidth: 220 }}>
-          <div style={{ padding: 'var(--space-3)', fontSize: 'var(--font-caption)', color: 'var(--content-lo)', borderBottom: '1px solid var(--stroke-1)' }}>
-            {email || 'anonymous'}
+             style={{ ...menuStyle, right: 0, left: 'auto', minWidth: 240 }}>
+          <div style={{ padding: 'var(--space-3)', borderBottom: '1px solid var(--stroke-1)' }}>
+            <div data-testid="user-menu-email" style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)' }}>
+              {email || 'anonymous'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <span data-testid="user-menu-role"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      background: role === 'admin'
+                        ? 'color-mix(in oklab, var(--accent-gold) 12%, transparent)'
+                        : 'color-mix(in oklab, var(--sig-info) 12%, transparent)',
+                      border: `1px solid color-mix(in oklab, ${role === 'admin' ? 'var(--accent-gold)' : 'var(--sig-info)'} 40%, transparent)`,
+                      color: role === 'admin' ? 'var(--accent-gold)' : 'var(--sig-info)',
+                      fontSize: 'var(--font-caption)',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      fontWeight: 500,
+                    }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor' }} />
+                {role || 'operator'}
+              </span>
+              <span data-testid="user-menu-auth-mode"
+                    style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                {authMode === 'live' ? 'live · /api/auth/me' : 'fixture'}
+              </span>
+            </div>
           </div>
           <button data-testid="user-menu-walkthrough"
                   onClick={() => { openWalkthrough(); setOpen(false); }}

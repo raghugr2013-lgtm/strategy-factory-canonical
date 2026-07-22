@@ -3,17 +3,32 @@
  * refs DESIGN_FREEZE_v1.0.md §1.5 · UX-Review-2026-07-22
  *
  * Three groups: MISSION CONTROL · ENGINEERING · ADMIN. The ADMIN group is
- * role-gated to admin operators (heuristic on email until Phase-2 wires the
- * real role from /api/auth/me).
+ * role-gated. Sprint 3 Phase-2 hydrates the real role from
+ * `/api/auth/me` at login time (see authStore.login) so the Admin group
+ * is only visible for role === 'admin'. When the app is running in the
+ * fixture auth mode (no live backend), we fall back to the historical
+ * email-regex heuristic so the developer preview still surfaces the
+ * Admin section.
  */
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { NAV_GROUPS } from '../routing/navigation';
 import { useAuthStore } from '../workspace-state/authStore';
 
-const isAdmin = (email) => !!email && /(^admin@|admin)/i.test(email);
+const isAdminByEmail = (email) => !!email && /(^admin@|admin)/i.test(email);
 
-const roleFor = (email) => (isAdmin(email) ? 'admin' : 'operator');
+/**
+ * roleFor — derive the effective role.
+ *
+ *   live auth  → the role returned by /api/auth/me (source of truth).
+ *   fixture    → email-regex heuristic (backwards-compat for dev preview).
+ *   anonymous  → 'operator' (safe default; Admin group hidden).
+ */
+const roleFor = ({ role, email, authMode }) => {
+  if (role) return role;
+  if (authMode === 'fixture' && isAdminByEmail(email)) return 'admin';
+  return 'operator';
+};
 
 // Flat list of every deep-link item across all groups. Used to disambiguate
 // active-state when a deep-link's pathname == a canonical item's pathname.
@@ -40,7 +55,9 @@ const isActivePath = (loc, itemPath) => {
 
 export const LeftRail = () => {
   const email = useAuthStore((s) => s.email);
-  const role = roleFor(email);
+  const role = useAuthStore((s) => s.role);
+  const authMode = useAuthStore((s) => s.authMode);
+  const effectiveRole = roleFor({ role, email, authMode });
   const location = useLocation();
 
   return (
@@ -48,7 +65,7 @@ export const LeftRail = () => {
          aria-label="Primary"
          style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
       {NAV_GROUPS
-        .filter((g) => !g.roles || g.roles.includes(role))
+        .filter((g) => !g.roles || g.roles.includes(effectiveRole))
         .map((group) => (
           <div key={group.id} data-testid={group.testId}>
             <div style={groupHeaderStyle}>{group.label}</div>
