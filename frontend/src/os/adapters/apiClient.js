@@ -13,8 +13,20 @@
  * • fixtureOrLive()        — tries live, falls back to fixture (unless strict).
  * • unavailableBreadcrumb  — single-shot dev breadcrumb for gated endpoints.
  */
-const BACKEND_URL = (typeof process !== 'undefined' && process.env.REACT_APP_BACKEND_URL) || '';
-const STRICT_LIVE = (typeof process !== 'undefined' && process.env.REACT_APP_STRICT_LIVE) === '1';
+// CRA / craco replaces `process.env.<var>` with a string literal at build
+// time via DefinePlugin. Wrap in a try/catch so this file is also safe to
+// load in a bare Node context where `process.env` is available but the
+// individual keys may be undefined. The prior `typeof process !== 'undefined'`
+// guard mis-fired at runtime in the browser (where `process` is not defined
+// as a global) and silently forced the entire app into fixture-mode — this
+// unblocks live-mode consumption of the Backend Feature Freeze v1.1.0-stage4
+// endpoints for Sprint 3 Phase-2.
+let _BACKEND_URL = '';
+let _STRICT_LIVE = false;
+try { _BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || '').trim(); } catch { /* noop */ }
+try { _STRICT_LIVE = (process.env.REACT_APP_STRICT_LIVE || '') === '1'; } catch { /* noop */ }
+const BACKEND_URL = _BACKEND_URL;
+const STRICT_LIVE = _STRICT_LIVE;
 
 export const isLiveMode = () => Boolean(BACKEND_URL);
 export const isStrictLive = () => STRICT_LIVE;
