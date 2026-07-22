@@ -1,201 +1,142 @@
-# HANDOVER — Sprint 3 Phase 2 · deployment bundle
+# HANDOVER — Sprint 3 Phase 2 · Engineering slice-2 deployment bundle
 
 **Bundle built · 2026-07-22**
 **Base repo · `github.com/raghugr2013-lgtm/strategy-factory-canonical.git`**
-**Local head · `d7f07a0` (docs) · Phase 2 code head `2dad08b`**
+**Local head · `beaf597` (Validation)**
 
 ---
 
-## 1 · Commit hashes (chronological)
+## 1 · Commit hashes (chronological, newest first)
 
 ```
-d7f07a0  docs(sprint3-phase2): PRD updated for Phase 2 close-out
-2dad08b  feat(auth): Sprint 3 Phase-2 real role integration from /api/auth/me
-25902dc  feat(strategy-pipeline): Sprint 3 Phase-2 new live Strategy Pipeline route
-807be33  feat(strategy-lab): Sprint 3 Phase-2 live Strategy Lab surface
-925383d  feat(market-data): Sprint 3 Phase-2 live Market Data surface (PARTIAL LIVE)
-490d7c3  feat(coverage): Sprint 3 Phase-2 live Coverage surface + apiClient live-mode fix
+beaf597  feat(validation): Sprint 3 Phase-2+ PARTIAL LIVE Validation ledger        ← slice-2
+800f456  feat(optimization): Sprint 3 Phase-2+ PARTIAL LIVE Optimization queue     ← slice-2
+4bf7e70  feat(datasets): Sprint 3 Phase-2+ live Datasets surface                   ← slice-2
+7fbde5a  auto-commit                                                                (platform)
+d7f07a0  docs(sprint3-phase2): PRD updated for Phase 2 close-out                   ← slice-1 docs
+2dad08b  feat(auth): Sprint 3 Phase-2 real role integration from /api/auth/me      ← slice-1
+25902dc  feat(strategy-pipeline): Sprint 3 Phase-2 new live Strategy Pipeline      ← slice-1
+807be33  feat(strategy-lab): Sprint 3 Phase-2 live Strategy Lab surface            ← slice-1
+925383d  feat(market-data): Sprint 3 Phase-2 live Market Data surface              ← slice-1
+490d7c3  feat(coverage): Sprint 3 Phase-2 live Coverage + apiClient live-mode fix  ← slice-1
 --- baseline (Sprint 3 Phase 1) ---
 20af3df  feat(walkthrough): frontend-only lifecycle events
 ```
 
-All Sprint 3 Phase 2 code lives in commits `490d7c3 .. 2dad08b` (five commits + one docs commit `d7f07a0`).
+`slice-2` is the new work in this bundle. If you have already extracted and pushed the previous bundle, only the three commits `4bf7e70`, `800f456`, `beaf597` are new. If you have not yet pushed slice-1, everything from `490d7c3` upward is still pending.
 
-If you need to inspect them locally after extracting the bundle:
+After extracting:
 
 ```bash
-git log --oneline 20af3df..HEAD
-git show 490d7c3       # coverage + apiClient fix
-git show 925383d       # market-data
-git show 807be33       # strategy-lab
-git show 25902dc       # strategy-pipeline route
-git show 2dad08b       # role integration
-git show d7f07a0       # PRD doc update
-```
-
-The `.git/` directory is included in the bundle so you can push directly:
-```bash
-tar -xzf strategy-factory-sprint3-phase2.tar.gz
+tar -xzf strategy-factory-sprint3-phase2-slice2.tar.gz
 cd app
-git remote -v         # verify origin still points to the canonical repo
-git log --oneline -8  # confirm the six commits above
+git log --oneline 20af3df..HEAD    # should show 10 commits
+git remote -v
 git push origin main
 ```
 
 ---
 
-## 2 · Summary of Phase 2 work completed
+## 2 · Summary of slice-2 (this session)
 
 Under **Backend Feature Freeze v1.1.0-stage4** — frontend-additive only. No new backend endpoints. No backend behavior changes. No synthetic data.
 
 | # | Deliverable | Commit | Live endpoints consumed |
 |---|---|---|---|
-| 1 | Foundational fix — `apiClient.js` runtime guard | `490d7c3` | (unblocked live mode for the whole app) |
-| 2 | **Coverage** live surface (was 3-line stub) | `490d7c3` | `GET /api/data/coverage` |
-| 3 | **Market Data** PARTIAL LIVE surface (was 3-line stub) | `925383d` | `GET /api/data/coverage` (provider.sources + verification_status + symbols) |
-| 4 | **Strategy Lab** live authoring surface (was 3-line stub) | `807be33` | `POST /api/strategies/generate`, `POST /api/strategies`, `POST /api/knowledge/nearest`, `GET /api/knowledge/statistics` |
-| 5 | **Strategy Pipeline** new route + surface | `25902dc` | `GET /api/strategies`, `GET /api/knowledge/champions`, `GET /api/knowledge/statistics` |
-| 6 | Real role integration | `2dad08b` | `GET /api/auth/me` (backgrounded refresh) |
+| 1 | **Datasets** live surface (was 3-line stub) | `4bf7e70` | `GET /api/data/coverage` (summary + symbols + cache + gaps + health) |
+| 2 | **Optimization** PARTIAL LIVE queue (was 3-line stub) | `800f456` | `GET /api/strategies`, `GET /api/knowledge/statistics` |
+| 3 | **Validation** PARTIAL LIVE evidence ledger (was 3-line stub) | `beaf597` | `GET /api/knowledge/health` · `/statistics` · `/champions` · `GET /api/strategies` |
 
-### Foundational fix (shipped inside the Coverage commit)
+### Design highlights per surface
 
-`apiClient.js` used `typeof process !== 'undefined'` as a runtime guard around
-`process.env.REACT_APP_BACKEND_URL`. In the browser, `process` is not defined,
-so the guard short-circuited to `false` and `isLiveMode()` always returned
-`false` — silently forcing the entire app into fixture-mode. The prior Sprint
-1/2/3-Phase-1 "live" work therefore never actually reached the backend.
+**Datasets** — 4 metric tiles (datasets tracked · total M1 rows · cache hit ratio · open gaps) with tone-aware accents · per-symbol dataset cards (rows · span · first / last ts · gaps · cache status chip) · cache performance percentiles panel · subsystem health block · gap enumeration list (only rendered when non-empty). Fully live when the ingestion engine has written data.
 
-The fix replaces the runtime guard with a try/catch around the DefinePlugin-
-inlined property access. It is a one-liner but has app-wide effect: real
-live-mode is now genuinely operative.
+**Optimization** — 4 metric tiles (sweep-eligible · sweep buckets · historical corpus · historical PF>1 win rate) · sweep buckets table grouped by (symbol × timeframe) with stage-breakdown chips (draft/backtested/champion/deployed) · "LAUNCHER · POST-FREEZE" chip that explicitly explains why sweeps can't be triggered under the freeze · two-panel bottom split (Historical KB signal + Live inventory by stage).
+
+**Validation** — Learning-only guardrail ribbon (always visible when `guardrails.learning_only=true`) · corpus health block with its own LIVE badge and 4 status tiles (corpus status · corpus size · champion families · readiness ceiling with tone-coded chip) · historical + live evidence two-panel split · validated champion families table with "learning only" verdict column and rich empty state.
 
 ---
 
-## 3 · Files / modules changed (13 files · +2023 / −35 lines)
+## 3 · Files / modules changed in slice-2 (4 files · +1404 / −12 lines)
 
 ```
-frontend/src/os/adapters/apiClient.js               |  16 +/-
-frontend/src/os/adapters/coverageAdapter.js         | 107 ++++  (new)
-frontend/src/os/adapters/strategyLabAdapter.js      |  71 ++++  (new)
-frontend/src/os/routing/AppRouter.jsx               |   2 +
-frontend/src/os/routing/navigation.js               |   9 +/-
-frontend/src/os/shell/Header.jsx                    |  34 +/-
-frontend/src/os/shell/LeftRail.jsx                  |  29 +/-
-frontend/src/os/surfaces/engineering/Coverage.jsx   | 361 ++/-
-frontend/src/os/surfaces/engineering/LivenessBadge.jsx | 52 +  (new)
-frontend/src/os/surfaces/engineering/MarketData.jsx | 398 ++/-
-frontend/src/os/surfaces/engineering/StrategyLab.jsx| 465 ++/-
-frontend/src/os/surfaces/engineering/StrategyPipeline.jsx | 438 +  (new)
-frontend/src/os/workspace-state/authStore.js        |  76 +/-
-memory/PRD.md                                       |  updated for close-out
+frontend/src/os/routing/navigation.js              |   6 +/-
+frontend/src/os/surfaces/engineering/Datasets.jsx  | 417  ++/-
+frontend/src/os/surfaces/engineering/Optimization.jsx | 487 ++/-
+frontend/src/os/surfaces/engineering/Validation.jsx | 506 ++/-
 ```
 
-**Zero backend files were touched.** `backend/**` remains at commit `20af3df` per the Feature Freeze contract.
+Nav flag `emptyState=true` cleared from Datasets · Optimization · Validation entries (they are now live surfaces, not empty-state stubs). Zero backend files touched.
 
 ---
 
-## 4 · Verification results
+## 4 · Verification results (post slice-2)
 
 ### 4.1 Build & lint
 
 | Check | Result |
 |---|---|
-| `yarn build` (craco production build) | ✅ **PASS** — Compiled successfully · 22.3s · main.js 197.24 kB · main.css 989 B |
+| `yarn build` (craco production build) | ✅ **PASS** — Compiled successfully · 19.4s · main.js 219.83 kB (gz) · main.css 989 B |
 | `yarn lint:testids` | ✅ **PASS** — every interactive element in `src/os` has a `data-testid` |
 | ESLint (all touched files) | ✅ **PASS** — no issues found |
 
 ### 4.2 Backend contract (frontend-additive only · read-only checks)
 
-| Endpoint | Method | Status | Notes |
-|---|---|---|---|
-| `/api/health` | GET | 200 | version `1.1.0-stage4` · commit `20af3df` |
-| `/api/version` | GET | 200 | freeze marker intact |
-| `/api/auth/login` | POST | 200 | admin@coinnike.com · JWT returned |
-| `/api/auth/me` | GET | 200 | role hydration path |
-| `/api/data/coverage` | GET | 200 | Coverage + Market Data source (feature flag on) |
-| `/api/strategies` | GET/POST | 200/201 | Strategy Lab draft persistence + Pipeline |
-| `/api/strategies/generate` | POST | 200 | Strategy Lab CNL composer |
-| `/api/knowledge/nearest` | POST | 200 | Strategy Lab neighbours |
-| `/api/knowledge/champions` | GET | 200 | Pipeline champions column |
-| `/api/knowledge/statistics` | GET | 200 | Corpus counters |
+| Endpoint | Purpose in slice-2 |
+|---|---|
+| `GET /api/data/coverage` | Datasets — 200 |
+| `GET /api/strategies` | Optimization + Validation — 200 |
+| `GET /api/knowledge/statistics` | Optimization + Validation — 200 |
+| `GET /api/knowledge/champions` | Validation — 200 |
+| `GET /api/knowledge/health` | Validation — 200 |
 
 ### 4.3 End-to-end preview smoke tests (all executed on the preview URL, admin auth)
 
-- **Sign-in** → live JWT persisted, `/api/auth/me` refresh confirmed.
-- **Coverage** surface loaded → PARTIAL LIVE badge visible, metrics tiles render 0-value real payload, "AWAITING DATA" ribbon shown (correct — no ingestion yet).
-- **Market Data** surface loaded → PARTIAL LIVE at page, venue-roster, and symbol-feed levels; reason ribbon reads `venue roster · empty · symbol feed · 0 rows`.
-- **Strategy Lab** round-trip:
-  - Composed `XAUUSD · H4 · trend-following` skeleton via `POST /api/strategies/generate` (real LLM output ≈ 350 chars).
-  - Persisted draft `84d32cc183274d67` via `POST /api/strategies` (status=draft).
-  - Nearest-neighbour ran automatically against generated text (0/0 matches from empty corpus, PARTIAL LIVE at panel level, overall page LIVE).
-  - Test artefact deleted after screenshot.
-- **Strategy Pipeline** with a seeded draft `c20ec340fe7549c4` at Stage 1 → LIVE overall; 5-stage lineage bar populated (Drafts=1, others=0); Passport → deep-link rendered; test artefact deleted after screenshot.
-- **Role integration**:
-  - `admin@coinnike.com` → Admin group visible in `LeftRail`, gold `ADMIN` chip in `UserMenu`, `LIVE · /API/AUTH/ME` mode label.
-  - Fixture operator → Admin group hidden, `operator` role chip, `FIXTURE` label.
+- **Datasets** — PARTIAL LIVE ribbon `AWAITING FIRST INGESTION TICK · 0 symbols persisted · 0 m1 rows`. Four metric tiles rendered with real 0-values, cache performance panel, subsystem health `cts · 100 · unknown`, empty inventory copy live. All test-ids present.
+- **Optimization** — With three seeded drafts (2× XAUUSD·H4, 1× EURUSD·H1) round-tripped through `POST /api/strategies` and cleaned up after:
+  - `SWEEP-ELIGIBLE · 3` · `SWEEP BUCKETS · 2` · `HISTORICAL CORPUS · 0` · `HISTORICAL PF > 1 · —`
+  - Bucket table: `XAUUSD · H4 · 2 members · 2 eligible · DRAFT·2 · Sweep·deferred`, `EURUSD · H1 · 1 · 1 · DRAFT·1 · Sweep·deferred`
+  - "LAUNCHER · POST-FREEZE" chip visible in the panel header
+- **Validation** — PARTIAL LIVE badge, LEARNING-ONLY GUARDRAIL ribbon visible, Corpus Health block LIVE (its own liveness badge) with `● EMPTY`, corpus size 0, 0 families, `● PENDING VALIDATION` ceiling. Historical + Live evidence panels rendered with real 0-values, rule-based backend `available`, embedding `off`. Champions table `LIVE · 0 families` with rich empty-state copy.
 
 ### 4.4 What was NOT run (out of scope · legacy noise)
 
-- `make tier1` backend pyramid — pre-existing baseline failures (router count 93 vs expected 98, plus 401s from an unauthenticated test harness) that pre-date this session and are unaffected by frontend-additive changes.
-- Playwright E2E specs under `frontend/tests/e2e/*.cjs` — reserved for post-corpus-import.
+- `make tier1` backend pyramid — pre-existing baseline failures unrelated to this session.
+- Playwright E2E specs under `frontend/tests/e2e/*.cjs`.
 
 ---
 
 ## 5 · Backend Feature Freeze v1.1.0-stage4 — INTACT
 
-- **Zero** backend source files modified.
-- `/api/version` returns `1.1.0-stage4` · commit `20af3df` unchanged.
-- No new routes mounted in `app/main.py`.
-- No schema, contract, or behavior changes.
-- The freeze marker in `git diff 20af3df..HEAD -- backend/` shows: **no output** (excluding whitespace/CRLF noise in legacy tests/docs that were untouched by this session).
+- **Zero** backend source files modified in slice-2 (or in slice-1).
+- `/api/version` still returns `1.1.0-stage4` · commit `20af3df` unchanged.
+- `git diff 20af3df..HEAD -- backend/` shows only whitespace/CRLF noise in legacy tests/docs that were untouched by any Phase 2 session.
 
 ---
 
 ## 6 · Known issues & remaining work
 
-### Known issues (pre-existing · not Phase 2 regressions)
+### Known issues (pre-existing · not slice-2 regressions)
 
-1. **`make tier1` backend pyramid** — router count assertion 93 vs 98 (admin execution routers gated behind separate flags), plus 401 errors in the test harness that never signs in. Pre-dates Phase 1 · unchanged by this session.
-2. `.env` files were **missing** when the session started (repo was freshly connected). Recreated locally with the preview URL, Mongo/JWT config, and `COE_COVERAGE_REPORT_ENABLED=true`. Not committed (env-scoped by design). If you extract this bundle on a fresh workspace, you will need to recreate:
+1. **`make tier1` backend pyramid** — pre-existing baseline failures unrelated to this session.
+2. `.env` files must be recreated on a fresh workspace (env-scoped by design):
+   - `/app/backend/.env` — see slice-1 handover §6 for the template.
+   - `/app/frontend/.env` — `REACT_APP_BACKEND_URL=<your preview URL>` plus `WDS_SOCKET_PORT=443`.
 
-    **`/app/backend/.env`**
-    ```
-    MONGO_URL=mongodb://localhost:27017
-    DB_NAME=strategy_factory_v1
-    JWT_SECRET=<64-char hex secret>
-    JWT_ACCESS_TTL_MIN=60
-    JWT_REFRESH_TTL_DAYS=7
-    ADMIN_EMAIL=admin@coinnike.com
-    ADMIN_PASSWORD=admin123
-    CORS_ORIGINS=*
-    ENABLE_LEGACY_ROUTERS=true
-    COE_COVERAGE_REPORT_ENABLED=true
-    BUILD_VERSION=1.1.0-stage4
-    BUILD_COMMIT=20af3df
-    BUILD_DATE=2026-07-22
-    ```
+### Remaining work (P1 · still under freeze · pending user direction)
 
-    **`/app/frontend/.env`**
-    ```
-    REACT_APP_BACKEND_URL=<your preview or production URL>
-    WDS_SOCKET_PORT=443
-    ```
-
-### Remaining work (P1 · under the same freeze)
-
-1. **Historical KB corpus import** — populates the Strategy Pipeline champions column and Strategy Lab nearest-neighbour panel with real matches. Flips the pipeline from `PARTIAL LIVE` (0 corpus) to genuinely `LIVE`.
-2. **Datasets** live surface — no dedicated endpoint yet, but `coverage.symbols` + `coverage.cache` can drive a first pass under the freeze.
-3. **Optimization** — read-only cycle browser using `/api/strategies` history (no `/api/optimize` under freeze).
-4. **Validation** — surface historical backtests from the KB (`/api/knowledge/statistics.positive_return_pf_gt_1`).
-5. Add Strategy Pipeline to the **CmdKPalette** jump-to-surface list.
-6. Prop Firms and Deployments remain deferred (no endpoints under freeze).
-7. **Release tag `v1.1.0-stage4-p2`** — deferred pending user directive. Tag should be created only after the corpus import lands and Pipeline is verifiably LIVE (not partial).
+1. **Historical KB corpus import** — **DEFERRED** per user directive pending review of compatibility & migration strategy. Will flip Strategy Pipeline champions column, Strategy Lab nearest-neighbour panel, and Validation champion families table from `PARTIAL LIVE` to `LIVE`.
+2. Add Strategy Pipeline to the **CmdKPalette** jump list.
+3. Progress **Portfolio** surface using `/api/strategies` (aggregate by symbol / timeframe).
+4. Enrich the Passport detail view `/c/strategies/{id}`.
+5. **Release tag `v1.1.0-stage4-p2`** — still deferred pending soak.
 
 ### Post-freeze backlog (P2)
 
-- Broker Connections group (waits for freeze to be formally lifted).
-- WSS `/stream/*` bindings for live tick, cycle, and log tails.
-- Optimization launcher + Approvals bundle generation.
+- Broker Connections group.
+- WSS `/stream/*` bindings for live tick / cycle / log tails.
+- Optimization launcher (`/api/optimize/*`) + Approvals bundle generation.
+- Prop Firms + Deployments live surfaces.
 
 ---
 
@@ -205,51 +146,43 @@ memory/PRD.md                                       |  updated for close-out
   - email `admin@coinnike.com`
   - password `admin123`
   - role from `/api/auth/me`: `admin`
-- **Fixture operator** (developer preview fallback · Sprint 1 M1 legacy)
+- **Fixture operator** (developer preview fallback)
   - email `operator@coinnike.com`
   - password `prototype123`
   - role: `operator`
 
 ---
 
-## 8 · Bundle contents and directory structure
+## 8 · Bundle contents
 
 ```
 /app/
-├── .git/                          # full git history · six Phase 2 commits present
+├── .git/                          # full git history · 10 Phase 2 commits present
 ├── backend/                       # v1.1.0-stage4 · unchanged
 ├── docs/
 ├── frontend/
 │   ├── package.json · yarn.lock · craco.config.js · tailwind.config.js
-│   ├── scripts/                   # check-testids.js · spa-serve.py
-│   ├── src/                       # Phase 2 changes here
-│   └── tests/e2e/                 # cjs Playwright specs (kept)
+│   ├── scripts/
+│   ├── src/                       # slice-1 + slice-2 changes here
+│   └── tests/e2e/
 ├── infra/
 ├── memory/
-│   └── PRD.md                     # updated for Phase 2 close-out
+│   └── PRD.md                     # updated for slice-2 close-out
 ├── scripts/
-├── HANDOVER.md                    # this file
+├── HANDOVER.md                    # this file (slice-2)
 ├── Makefile
 ├── README.md
 └── VERSION
 ```
 
 **Excluded from the bundle:**
-- `node_modules/`
-- `frontend/build/`
-- `**/__pycache__/`
-- `**/.pytest_cache/` · `**/.mypy_cache/` · `**/.ruff_cache/`
-- `**/*.pyc` · `**/*.pyo`
-- `.emergent/` (Emergent-scoped platform state)
-- `frontend/.env` · `backend/.env` (env-scoped; see §6 to recreate)
-- Assorted `.log` / `.tmp` files
+- `node_modules/`, `frontend/build/`, `backend/venv/`, `.venv/`
+- `**/__pycache__/`, `**/.pytest_cache/`, `**/.mypy_cache/`, `**/.ruff_cache/`
+- `*.pyc`, `*.pyo`, `*.log`, `*.tmp`, `.DS_Store`
+- `.emergent/` (platform-scoped)
+- `backend/.env`, `frontend/.env` (env-scoped — recreate per §6)
 
-The `.git/` directory **is** included so you can push directly after extracting:
-```bash
-tar -xzf strategy-factory-sprint3-phase2.tar.gz
-cd app
-git push origin main
-```
+The `.git/` directory **is** included so you can push directly after extracting.
 
 ---
 
