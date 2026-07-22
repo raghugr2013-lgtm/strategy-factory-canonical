@@ -27,10 +27,10 @@ services:
       context: ../../backend
       dockerfile: Dockerfile
       args:
-        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+        BUILD_VERSION: ${BUILD_VERSION:-1.1.0}
         BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
         BUILD_DATE: ${BUILD_DATE:-unknown}
-    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/backend:${FACTORY_IMAGE_TAG:-1.0.0}
+    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/backend:${FACTORY_IMAGE_TAG:-1.1.0}
     container_name: factory-backend
     restart: unless-stopped
     depends_on:
@@ -49,7 +49,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       VIE_URL: http://factory-vie:8100
       VIE_TIMEOUT_S: "60"
-      BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+      BUILD_VERSION: ${BUILD_VERSION:-1.1.0}
       BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
       BUILD_DATE: ${BUILD_DATE:-unknown}
       # ── Feature flags ────────────────────────────────────────────
@@ -95,7 +95,7 @@ services:
     build:
       context: ../../vie
       dockerfile: Dockerfile
-    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/vie:${FACTORY_IMAGE_TAG:-1.0.0}
+    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/vie:${FACTORY_IMAGE_TAG:-1.1.0}
     container_name: factory-vie
     restart: unless-stopped
     environment:
@@ -131,7 +131,7 @@ services:
     build:
       context: ../../frontend
       dockerfile: Dockerfile
-    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/frontend:${FACTORY_IMAGE_TAG:-1.0.0}
+    image: ${FACTORY_IMAGE_REPO:-strategy-factory}/frontend:${FACTORY_IMAGE_TAG:-1.1.0}
     container_name: factory-frontend
     restart: unless-stopped
     networks:
