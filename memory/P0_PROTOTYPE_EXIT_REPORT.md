@@ -5,7 +5,7 @@
 > Governed by: `P0_PROTOTYPE_BLUEPRINT.md` §9 (walk-through protocol) and §12 (exit criteria).
 > Repository anchor: `v1.1.0-prototype-validation` (commit `38194b6…d807d9d3`).
 > Executed against: `/app/prototype` built with `vite build` (v6.4.3) — 1 981 modules, 0 warnings, 0 errors.
-> Preview served on: `https://stall-debug.preview.emergentagent.com`.
+> Preview served on: `https://sprint3-phase2.preview.emergentagent.com`.
 > Prototype fixture credentials: `operator@coinnike.com` / `prototype123` (in-memory only — no backend, per P0 §4).
 
 This report evaluates the prototype against the **six operator-directed

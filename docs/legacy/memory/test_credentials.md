@@ -22,7 +22,7 @@ Seeded by `backend/auth_utils.seed_admin()` on first boot of the canonical backe
 ## API auth
 
 ```bash
-API="https://stall-debug.preview.emergentagent.com"
+API="https://sprint3-phase2.preview.emergentagent.com"
 
 TOKEN=$(curl -s -X POST "$API/api/auth/login" \
   -H "Content-Type: application/json" \

@@ -2,7 +2,7 @@
 
 > **Prepared:** 2026-07-21
 > **Scope:** N1 → N4 complete · N5 pending your visual review
-> **Preview URL:** https://stall-debug.preview.emergentagent.com/
+> **Preview URL:** https://sprint3-phase2.preview.emergentagent.com/
 > **Fixture credentials:** `operator@coinnike.com` / `prototype123`
 > **Freeze status:** Backend Feature Freeze v1.1.0-stage4 · Design Freeze v1.0 · both preserved
 
