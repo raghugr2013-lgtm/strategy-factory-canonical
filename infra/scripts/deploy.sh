@@ -3,6 +3,15 @@
 # Usage:  ./infra/scripts/deploy.sh          → full flow (precheck + build + up + health)
 #         ./infra/scripts/deploy.sh --skip-precheck   → skip precheck (CI/rollback path)
 # Requires: docker + docker compose plugin, .env at repo root.
+#
+# For one-off compose commands outside this script (logs, ps, restart,
+# exec, …), always use the sibling wrapper `./infra/scripts/compose.sh`
+# — it enforces the same repo-root + --env-file rule regardless of the
+# caller's current working directory. Do NOT `cd infra/compose &&
+# docker compose -f docker-compose.prod.yml …`; the compose file's
+# ${VAR:?…} interpolation guards will refuse to parse without an
+# explicit env file, but the wrapper is the frictionless path. See
+# docs/DEPLOYMENT.md §3 for the canonical rule.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"

@@ -196,8 +196,10 @@ migrated docs — they use the same `_id` as the recovery snapshot.
    ```
    cd /opt/strategy-factory
    git pull
-   docker compose -f infra/compose/docker-compose.prod.yml build factory-backend
-   docker compose -f infra/compose/docker-compose.prod.yml up -d factory-backend
+   # Always run compose from the repo root with --env-file .env (see
+   # docs/DEPLOYMENT.md §3). The wrapper below does both for you.
+   ./infra/scripts/compose.sh build factory-backend
+   ./infra/scripts/compose.sh up -d factory-backend
    ```
 3. Verify dukascopy inside the container:
    ```

@@ -127,10 +127,9 @@ GET /api/health/subsystems → 503 (same)
 ```bash
 # On VPS
 cd /home/raghu/projects/strategy-factory-canonical
-# Append to your production .env (adjust path if different):
-echo "COE_HEALTH_CONTRACT_ENABLED=true" >> infra/compose/env    # or wherever prod .env lives
-docker compose -f infra/compose/docker-compose.prod.yml \
-  --project-name strategy-factory restart factory-backend
+# Append to your production .env (repo-root .env is the canonical location):
+echo "COE_HEALTH_CONTRACT_ENABLED=true" >> .env
+./infra/scripts/compose.sh restart factory-backend
 # Verify
 curl -sS -o /dev/null -w '%{http_code}\n' https://strategy.coinnike.com/api/health/system
 # Expected: 200
@@ -236,13 +235,12 @@ ssh raghu@144.91.78.175
 cd /home/raghu/projects/strategy-factory-canonical
 
 # Locate your production .env (adjust path)
-PROD_ENV="infra/compose/env"          # <-- confirm this matches your deploy
+PROD_ENV=".env"                      # repo-root .env is the canonical location
 grep -c "^COE_HEALTH_CONTRACT_ENABLED" $PROD_ENV     # expect 0
 echo "COE_HEALTH_CONTRACT_ENABLED=true" >> $PROD_ENV
 
 # Restart backend only — no rebuild, no image change
-docker compose -f infra/compose/docker-compose.prod.yml \
-  --project-name strategy-factory restart factory-backend
+./infra/scripts/compose.sh restart factory-backend
 sleep 8
 
 # Verify
@@ -251,7 +249,7 @@ curl -sS -o /dev/null -w 'health/system: %{http_code}\n' \
 # Expected: 200
 ```
 
-Rollback: `sed -i '/^COE_HEALTH_CONTRACT_ENABLED/d' $PROD_ENV && docker compose ... restart factory-backend`
+Rollback: `sed -i '/^COE_HEALTH_CONTRACT_ENABLED/d' $PROD_ENV && ./infra/scripts/compose.sh restart factory-backend`
 
 ### 6.2 F-B (before Phase D — no rush)
 

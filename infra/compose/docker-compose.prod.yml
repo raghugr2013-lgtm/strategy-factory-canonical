@@ -14,10 +14,29 @@
 # possible future Traefik migration — they are INERT under Caddy and
 # have no runtime effect on the current deployment.
 #
-# Bring up:
+# ─── CANONICAL INVOCATION ─────────────────────────────────────────
+# Always run from the **repository root** and always pass an explicit
+# `--env-file`. The prefer path is the wrapper `infra/scripts/compose.sh`
+# which locates the repo root + `.env` no matter where you invoke it
+# from, or the higher-level `infra/scripts/deploy.sh` for a full deploy.
+#
+#   # from repo root (canonical):
 #   docker compose --env-file .env -f infra/compose/docker-compose.prod.yml build
 #   docker compose --env-file .env -f infra/compose/docker-compose.prod.yml up -d
 #   ./infra/scripts/health.sh
+#
+#   # from anywhere (wrapper resolves paths):
+#   ./infra/scripts/compose.sh build
+#   ./infra/scripts/compose.sh up -d
+#   ./infra/scripts/compose.sh logs -f factory-backend
+#
+# ⚠ DO NOT `cd infra/compose && docker compose -f docker-compose.prod.yml …`
+# — docker compose loads `.env` from the current working directory when
+# `--env-file` is omitted, so this variant reads a non-existent
+# `infra/compose/.env` and every interpolation resolves to empty.
+# Historical bug: caused SHARED_MONGO_URL + JWT_SECRET to be empty on a
+# VPS boot on 2026-07-22; backend refused to start. Guarded below via
+# `${VAR:?…}` interpolation errors — see comments on each guarded line.
 # ──────────────────────────────────────────────────────────────────
 
 services:
@@ -38,14 +57,20 @@ services:
         condition: service_healthy
     environment:
       CONFIG_VERSION: ${CONFIG_VERSION:-1}
-      MONGO_URL: ${SHARED_MONGO_URL}
+      # ⚠ Interpolation guards: if any of these resolve to empty (e.g.
+      # `docker compose` was invoked from the wrong directory and `.env`
+      # was not picked up), compose fails at YAML parse time with the
+      # message below — BEFORE any container starts. This replaces the
+      # historical failure mode where the backend booted with empty
+      # MONGO_URL/JWT_SECRET and crashed on first request.
+      MONGO_URL: ${SHARED_MONGO_URL:?SHARED_MONGO_URL is empty — pass --env-file /path/to/.env or use infra/scripts/compose.sh (see docker-compose.prod.yml top-of-file)}
       DB_NAME: ${FACTORY_DB_NAME:-strategy_factory_v1}
       REDIS_URL: ${SHARED_REDIS_URL:-}
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is empty — pass --env-file /path/to/.env or use infra/scripts/compose.sh (see docker-compose.prod.yml top-of-file)}
       JWT_ACCESS_TTL_MIN: ${JWT_ACCESS_TTL_MIN:-60}
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is empty — pass --env-file /path/to/.env or use infra/scripts/compose.sh}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is empty — pass --env-file /path/to/.env or use infra/scripts/compose.sh}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       VIE_URL: http://factory-vie:8100
       VIE_TIMEOUT_S: "60"
@@ -181,7 +206,8 @@ services:
         condition: service_healthy
     environment:
       CONFIG_VERSION: ${CONFIG_VERSION:-1}
-      MONGO_URL: ${SHARED_MONGO_URL}
+      # ⚠ Same interpolation guard as factory-backend — see top-of-file.
+      MONGO_URL: ${SHARED_MONGO_URL:?SHARED_MONGO_URL is empty — pass --env-file /path/to/.env or use infra/scripts/compose.sh (see docker-compose.prod.yml top-of-file)}
       DB_NAME: ${FACTORY_DB_NAME:-strategy_factory_v1}
       VIE_URL: http://factory-vie:8100
       VIE_TIMEOUT_S: "60"

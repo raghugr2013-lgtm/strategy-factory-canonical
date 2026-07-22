@@ -144,13 +144,14 @@ Record the output verbatim in a text file inside `/var/backups/factory_recovery_
 **Meaning:** you have a golden pre-attack snapshot. Attacker got in AFTER 2026-07-12 and hit the volume created 2026-07-15.
 
 **Recovery path:**
-1. Stop the current backend service on the VPS.
+1. Stop the current backend service on the VPS. Run every `docker compose` command from the repository root with `--env-file .env`, or use the `infra/scripts/compose.sh` wrapper (see `docs/DEPLOYMENT.md` §3):
    ```bash
-   docker compose -f /path/to/docker-compose.prod.yml stop backend
+   cd /home/raghu/projects/strategy-factory-canonical
+   ./infra/scripts/compose.sh stop factory-backend
    ```
 2. Stop the current MongoDB and **do not delete** its volume — you already snapshotted it in Phase 0.
    ```bash
-   docker compose -f /path/to/docker-compose.prod.yml stop mongo
+   ./infra/scripts/compose.sh stop mongo
    ```
 3. Edit the compose file so `mongo.volumes` binds to the older volume:
    ```yaml
@@ -164,7 +165,7 @@ Record the output verbatim in a text file inside `/var/backups/factory_recovery_
    ```
 4. Bring Mongo up **on the internal Docker network only** (never on `0.0.0.0`):
    ```bash
-   docker compose -f docker-compose.prod.yml up -d mongo
+   ./infra/scripts/compose.sh up -d mongo
    ```
 5. Enable auth (see Phase 4 — mandatory before backend restart).
 6. Bring the backend up. Verify:

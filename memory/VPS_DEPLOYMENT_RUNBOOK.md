@@ -136,17 +136,25 @@ grep '@router.get("/health")' backend/legacy/engines/knowledge/observability_rou
 
 ## 4. Docker rebuild + restart (5–15 min)
 
+> **Invocation rule (added after the 2026-07-22 incident).** Run every
+> `docker compose` command **from the repository root** with an
+> explicit `--env-file .env`, or use the `infra/scripts/compose.sh`
+> wrapper. Do NOT `cd infra/compose` first — compose then loads
+> `<cwd>/.env` (which does not exist there) and every `${VAR}`
+> interpolation resolves to empty; the compose file now guards
+> `SHARED_MONGO_URL` and `JWT_SECRET` with `${VAR:?…}` so the wrong
+> variant fails at YAML parse time with a clear error. Reference:
+> `docs/DEPLOYMENT.md` §3.
+
 ```bash
-cd /home/raghu/projects/strategy-factory-canonical/infra/compose
+cd /home/raghu/projects/strategy-factory-canonical
 
 # Rebuild only the backend + factory-runner images (both depend on
 # the same backend Dockerfile). Frontend + VIE untouched.
-docker compose -f docker-compose.prod.yml --project-name strategy-factory \
-  build factory-backend factory-runner
+./infra/scripts/compose.sh build factory-backend factory-runner
 
 # Stop + start with the new image. Keeps mongo + caddy + frontend up.
-docker compose -f docker-compose.prod.yml --project-name strategy-factory \
-  up -d --no-deps factory-backend factory-runner
+./infra/scripts/compose.sh up -d --no-deps factory-backend factory-runner
 
 # Wait for the container to settle
 sleep 8
@@ -351,10 +359,9 @@ Choose the smallest rollback that resolves the issue.
 
 If the deploy broke because of `.env` drift only:
 ```bash
-cp /home/raghu/backups/pre-deploy-${TS}/env.snapshot \
-   /home/raghu/projects/.../env
-docker compose -f docker-compose.prod.yml --project-name strategy-factory \
-  restart factory-backend factory-runner
+cd /home/raghu/projects/strategy-factory-canonical
+cp /home/raghu/backups/pre-deploy-${TS}/env.snapshot ./.env
+./infra/scripts/compose.sh restart factory-backend factory-runner
 ```
 Recovery SLA: ≤ 30 s.
 
@@ -363,11 +370,8 @@ Recovery SLA: ≤ 30 s.
 ```bash
 cd /home/raghu/projects/strategy-factory-canonical
 git reset --hard "pre-deploy-${TS}"      # tag from §2
-cd infra/compose
-docker compose -f docker-compose.prod.yml --project-name strategy-factory \
-  build factory-backend factory-runner
-docker compose -f docker-compose.prod.yml --project-name strategy-factory \
-  up -d --no-deps factory-backend factory-runner
+./infra/scripts/compose.sh build factory-backend factory-runner
+./infra/scripts/compose.sh up -d --no-deps factory-backend factory-runner
 ```
 Recovery SLA: 5–10 min (rebuild time dominates).
 

@@ -28,7 +28,9 @@ git rev-parse HEAD > /tmp/deploy_sha.txt
 
 ## 2. Environment file
 
-Copy `.env.example` → `backend/.env` and fill in:
+Copy `.env.example` → `.env` at the **repository root** and fill in:
+
+> The `.env` file MUST live at the repo root (not at `infra/compose/.env`). Every deployment tool in this repo — `deploy.sh`, `precheck.sh`, `health.sh`, `rollback.sh`, the `infra/scripts/compose.sh` wrapper, and every documented `docker compose … --env-file .env -f infra/compose/docker-compose.prod.yml …` invocation — resolves `.env` from the repo root. Placing it anywhere else, or invoking compose from `infra/compose/` without an explicit `--env-file`, silently loads an empty environment (compose defaults to `<cwd>/.env`) and the backend crashes with empty `MONGO_URL` / `JWT_SECRET`. The compose file now emits a hard `${VAR:?…}` interpolation error at YAML parse time if the required variables are missing, so the wrong invocation now fails fast with an explicit message — but the layout rule remains: **`.env` at repo root, always**.
 
 ```
 MONGO_URL=<prod>

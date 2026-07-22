@@ -86,6 +86,14 @@ Once precheck passes, `deploy.sh`:
 
 Version metadata (VERSION + git commit + build date) is baked into all three images at build time and exposed at `GET /api/version`.
 
+> **Never invoke `docker compose` manually from `infra/compose/`.** Docker Compose defaults `--env-file` to `<cwd>/.env`, so running the compose command from `infra/compose/` reads a non-existent env file and every interpolation resolves to empty (this exact failure was observed on 2026-07-22 — `SHARED_MONGO_URL` and `JWT_SECRET` came up empty and the backend refused to start). Use one of these three canonical patterns instead:
+>
+> 1. **`./infra/scripts/deploy.sh`** — full deploy from a clean checkout.
+> 2. **`./infra/scripts/compose.sh <subcommand>`** — wrapper for one-off compose commands (`logs`, `ps`, `restart`, `exec`, …). Works from any working directory.
+> 3. **Explicit form from repo root**: `docker compose --env-file .env -f infra/compose/docker-compose.prod.yml <subcommand>`.
+>
+> The compose file also carries `${VAR:?…}` interpolation guards on `SHARED_MONGO_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`, so the wrong-directory failure now fails **at YAML parse time** with an explicit error naming the missing variable — before any container starts.
+
 ---
 
 ## 4. Verify
@@ -155,9 +163,18 @@ FACTORY_IMAGE_TAG=1.0.0 ./infra/scripts/rollback.sh
 
 ## 9. Diagnostics
 
+> **Canonical rule for every `docker compose` invocation:** run it from the **repository root** and always pass `--env-file .env`. The safer alternative is the `infra/scripts/compose.sh` wrapper — it resolves the repo root and `.env` automatically no matter which directory you invoke it from. **Never** `cd infra/compose && docker compose -f docker-compose.prod.yml …` — that variant reads a non-existent `infra/compose/.env` (compose defaults to `<cwd>/.env` when `--env-file` is omitted), leaving `SHARED_MONGO_URL` and `JWT_SECRET` empty. The compose file now guards against this at parse time with `${VAR:?…}` interpolation errors, but the wrapper is the frictionless path.
+
 ```bash
+# From repo root — canonical form:
 docker compose --env-file .env -f infra/compose/docker-compose.prod.yml logs -f factory-backend
 docker compose --env-file .env -f infra/compose/docker-compose.prod.yml logs -f factory-vie
+
+# From anywhere — wrapper:
+./infra/scripts/compose.sh logs -f factory-backend
+./infra/scripts/compose.sh logs -f factory-vie
+./infra/scripts/compose.sh ps
+
 docker inspect factory-backend --format='{{json .State.Health}}' | jq
 curl -fsS https://${FACTORY_DOMAIN}/api/readiness | jq
 ```
