@@ -52,7 +52,7 @@ export const NAV_GROUPS = [
       { path: '/c/engineering/strategy-lab',  label: 'Strategy Lab',      icon: FlaskConical,      testId: 'nav-strategy-lab',  surface: 'strategy-lab' },
       { path: '/c/engineering/strategy-pipeline', label: 'Strategy Pipeline', icon: GitBranch,       testId: 'nav-strategy-pipeline', surface: 'strategy-pipeline' },
       { path: '/c/engineering/optimization',  label: 'Optimization',      icon: SlidersHorizontal, testId: 'nav-optimization',  surface: 'optimization' },
-      { path: '/c/engineering/validation',    label: 'Validation',        icon: ClipboardCheck,    testId: 'nav-validation',    surface: 'validation',    emptyState: true, phase2: 'GET /api/validation · POST /api/backtest' },
+      { path: '/c/engineering/validation',    label: 'Validation',        icon: ClipboardCheck,    testId: 'nav-validation',    surface: 'validation' },
       { path: '/c/mission?focus=portfolio',   label: 'Portfolio',         icon: PieChart,          testId: 'nav-portfolio',     surface: 'mission',       deepLink: true },
       { path: '/c/engineering/prop-firms',    label: 'Prop Firms',        icon: Building2,         testId: 'nav-prop-firms',    surface: 'prop-firms',    emptyState: true, phase2: 'GET /api/prop-firms · GET /api/prop-firms/{id}/challenges' },
       { path: '/c/engineering/deployments',   label: 'Deployments',       icon: Rocket,            testId: 'nav-deployments',   surface: 'deployments',   emptyState: true, phase2: 'GET /api/deployments · POST /api/deployments/{id}/rollback' },
