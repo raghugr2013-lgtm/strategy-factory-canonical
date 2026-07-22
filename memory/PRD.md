@@ -130,10 +130,10 @@ frontend/src/os/workspace-state/authStore.js
 - ~~Datasets · Optimization · Validation~~ ✅
 
 ### P1 (next, still under freeze — pending user direction)
-- Historical KB corpus import (blocked pending compatibility / migration review).
+- **Historical KB Compatibility & Migration Specification** — DRAFT delivered as `docs/KB_MIGRATION_SPEC.md` (2026-07-22). Planning-only document. Awaiting user review + answers to §11 open questions. No code, no data import, no backend changes.
 - Add Strategy Pipeline to the CmdKPalette jump-to-surface list.
 - Progress Portfolio surface using `/api/strategies` (aggregate by symbol/timeframe) — read-only.
-- Command surface `Approvals inbox` — subscribe to `useTimelineEvents({ eventPrefix: 'operator_' })` and display pending `_requested` events without `_approved`. Zero backend work.
+- Command surface `Approvals inbox` — subscribe to `useTimelineEvents({ eventPrefix: 'operator_' })` and display pending `_requested` events without `_approved`. Zero backend work. (Slice δ · deferred at user direction.)
 
 ### P2 (post-freeze · post-Sprint 3)
 - Broker Connections group (waits for freeze to be formally lifted).
@@ -143,9 +143,9 @@ frontend/src/os/workspace-state/authStore.js
 - Prop Firms + Deployments live surfaces.
 
 ## Next action items
-1. **Await user acceptance of Slice γ** before starting Execution Workspace capabilities (P2).
-2. Historical KB import remains **deferred** pending compatibility / migration review by the user.
-3. Consider a release tag `v1.1.0-stage4-slice-gamma` once the preview soak on Slice γ is complete.
+1. **Review `docs/KB_MIGRATION_SPEC.md` v0.1** and answer the 10 open questions in §11 so the spec can move to accepted status.
+2. Once accepted, Phase M0 (dry-run mapper — frontend-only preview) is the first execution slice. Phases M1–M3 wait for the freeze to lift on schema additions + Timeline endpoint.
+3. Execution Workspace group (Broker Connections · Paper Trading · Live Deployments) remains **DEFERRED** until the migration specification is reviewed and approved.
 
 ## Confirmation
 Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow.
