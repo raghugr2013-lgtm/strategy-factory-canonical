@@ -13,8 +13,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Command } from 'cmdk';
-import { ROUTES } from '../routing/routes';
+import { NAV_GROUPS } from '../routing/navigation';
 import { useAuthStore } from '../workspace-state/authStore';
+
+const isAdminEmail = (email) => !!email && /(^admin@|admin)/i.test(email);
 import { useWorkspaceStore } from '../workspace-state/store';
 import { useFocusTrap } from '../features/useFocusTrap';
 import { queueProposal } from '../features/paletteProposals';
@@ -27,6 +29,8 @@ export const CmdKPalette = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuthStore((s) => s.logout);
+  const email = useAuthStore((s) => s.email);
+  const isAdmin = isAdminEmail(email);
   const killArmed = useWorkspaceStore((s) => s.killPostureArmed);
   const setKill = useWorkspaceStore((s) => s.setKillPosture);
   const selectedStrategy = useWorkspaceStore((s) => s.selectedStrategy);
@@ -106,19 +110,23 @@ export const CmdKPalette = () => {
           <Command.Empty style={{ padding: 'var(--space-4)', color: 'var(--content-lo)', fontSize: 'var(--font-body-sm)' }}>
             No matching command.
           </Command.Empty>
-          <Command.Group heading="Jump to surface" style={groupStyle}>
-            {ROUTES.map((r) => (
-              <Command.Item key={r.path}
-                            data-testid={`cmdk-item-${r.surface}`}
-                            value={`jump ${r.label}`}
-                            onSelect={() => run(() => navigate(r.path))}
-                            style={itemStyle}>
-                <r.icon size={14} strokeWidth={1.5} />
-                <span>Go to {r.label.toLowerCase()}</span>
-                <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>{r.path}</span>
-              </Command.Item>
+          {NAV_GROUPS
+            .filter((g) => !g.roles || (g.roles.includes('admin') ? isAdmin : true))
+            .map((group) => (
+              <Command.Group key={group.id} heading={group.label} style={groupStyle}>
+                {group.items.map((r) => (
+                  <Command.Item key={r.path}
+                                data-testid={r.testId.replace(/^nav-/, 'cmdk-item-')}
+                                value={`jump ${group.label} ${r.label}`}
+                                onSelect={() => run(() => navigate(r.path))}
+                                style={itemStyle}>
+                    <r.icon size={14} strokeWidth={1.5} />
+                    <span>Go to {r.label.toLowerCase()}</span>
+                    <span style={{ marginLeft: 'auto', color: 'var(--content-lo)', fontSize: 'var(--font-caption)' }}>{r.path}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
             ))}
-          </Command.Group>
 
           <Command.Group heading="Propose (drops into Approvals)" style={groupStyle}>
             <Command.Item data-testid="cmdk-item-propose-new-strategy"

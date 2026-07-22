@@ -1452,3 +1452,41 @@ Consolidates: Executive Summary · Completion Report · Legacy Capability & UX A
 3. Single coherent VPS deployment per §11.3
 4. Execute 12-item smoke checklist per §11.4
 5. Sign §12 · then open Sprint 3 planning
+
+---
+
+## Sprint 3 · Phase 1 — Engineering Workspace (2026-07-22) 🧭
+
+**Trigger:** operator UX review of the shipped `v1.3.0-sprint2-complete`. The Operator OS is the right direction, but engineering-user workflows (Market Data · Coverage · Datasets · Strategy Lab · Optimization · Validation · Portfolio · Prop Firms · Deployments · Strategy Passports) had become undiscoverable. Framed as an **information-architecture gap**, not a missing-feature gap.
+
+### User-locked decisions (verbatim)
+- **1a** — Phase 1 only. Frontend-additive. Backend Feature Freeze `v1.1.0-stage4` intact.
+- **2a** — Grouped rail with 3 section headers: MISSION CONTROL · ENGINEERING · ADMIN.
+- **3c** — Hybrid overlap resolution: deep-link `Portfolio` → `/c/mission?focus=portfolio`; deep-link `Strategy Passports` → `/c/strategies`; new surface for `Deployments`.
+- **4c** — Professional "Scheduled for Phase 2" empty state on every surface without a stable live backend. **Zero fixture / demo data** on Engineering surfaces.
+- **5a** — Engineering visible to operator + admin. Admin section (Users · Integrations · Logs) admin-only.
+
+### What shipped
+- **New nav model** — `frontend/src/os/routing/navigation.js` defines `NAV_GROUPS` (3 groups, role-scoped) and `ENGINEERING_SURFACES` metadata (per-slug: title · headline · briefing · capabilities[] · phase2Sources[] · related[]).
+- **Grouped LeftRail** — rewritten with role gating (`isAdmin(email)` heuristic) and deep-link-aware active state so a canonical item is *not* highlighted while a sibling deep-link owns the current URL.
+- **11 new surfaces** — 8 engineering + 3 admin, all thin wrappers around a single premium empty-state template `EngineeringSurface.jsx`. Every surface exposes phase-tag chip, capability list, `Live data sources` panel with expected Phase-2 endpoints, freeze annotation, and `Available today` related-pill row.
+- **⌘K palette** — now iterates NAV_GROUPS with the same headings (MISSION CONTROL · ENGINEERING · ADMIN role-gated) and per-item unique testids (`cmdk-item-<slug>`).
+- **`test_credentials.md`** — created with operator + simulated-admin instructions.
+- **10 screenshot assets** — `memory/manual-assets/screenshots/s3_*.png` documenting the new workspace.
+
+### Verification
+- iteration_3.json — 92% first pass. One MEDIUM active-state bug found on `/c/mission?focus=portfolio` (both nav-mission and nav-portfolio active).
+- iteration_4.json — **100% pass** after the LeftRail `isActivePath` fix. Zero regressions on Sprint 2 surfaces. Zero `/api/*` traffic from any of the 11 new surfaces (freeze intact).
+
+### Deferred to Phase 2 (backlog)
+- **P0** · Live wiring of Market Data (highest leverage — unlocks Coverage · Datasets · Strategy Lab downstream).
+- **P0** · Live wiring of Strategy Lab + Optimization (primary engineering workflow).
+- **P1** · Real `role` on `/api/auth/me` to replace the client-side `isAdmin(email)` heuristic.
+- **P1** · Deployments live table + rollback ApprovalCard.
+- **P2** · Admin Users CRUD, Integrations connector matrix, Logs stream tail.
+- **P2** · Real time-series chart on Strategy Passport §5.
+- **P2** · Docs polish — `docs/PRODUCTION_CONFIGURATION.md` still shows `FACTORY_IMAGE_TAG=1.0.0` (canonical is `1.1.0`).
+
+### Ship posture
+Frontend-additive PR. Backend untouched. Design tokens untouched. Preview build compiles clean (`yarn build` — Compiled successfully. main.js 182 kB gzip vs 175 kB pre-Phase-1). Ready for canary + full rollout.
+
