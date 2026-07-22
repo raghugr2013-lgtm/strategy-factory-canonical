@@ -76,16 +76,25 @@ export const fetchCoverage = async ({ include = 'all', symbol, timeframe } = {})
 
 /**
  * fetchProviderRoster — Phase-2 pull for Market Data adjacency.
- * Uses /api/admin/providers under Backend Feature Freeze v1.1.0-stage4.
- * Requires admin role; returns { available: [], gated: true } on 403.
+ *
+ * Under Backend Feature Freeze v1.1.0-stage4 the only admin-visible provider
+ * registry endpoint returns the LLM provider fleet (OpenAI · Anthropic ·
+ * Gemini …), not market-data venues. Market-data venues live inside the
+ * Coverage payload at `coverage.provider.sources`. This helper is retained
+ * for future use but returns a gated result so Market Data doesn't
+ * mis-represent LLMs as market-data venues.
  */
 export const fetchProviderRoster = async () => {
   if (!isLiveMode()) {
     return { liveness: 'gated', reason: 'REACT_APP_BACKEND_URL not configured', payload: [] };
   }
   try {
-    const payload = await apiFetch('/api/admin/providers');
-    return { liveness: 'live', reason: null, payload };
+    const raw = await apiFetch('/api/admin/providers');
+    // Backend returns `{ providers: [...] }` — unwrap and normalise. The
+    // registry is the LLM fleet under freeze, so we return it verbatim for
+    // any consumer that wants it; Market Data does not use it.
+    const list = Array.isArray(raw) ? raw : (raw?.providers || []);
+    return { liveness: list.length ? 'live' : 'partial-live', reason: null, payload: list };
   } catch (err) {
     if (err.status === 403) {
       return { liveness: 'gated', reason: 'admin role required', payload: [] };
