@@ -51,7 +51,7 @@ export const NAV_GROUPS = [
       { path: '/c/engineering/datasets',      label: 'Datasets',          icon: Database,          testId: 'nav-datasets',      surface: 'datasets' },
       { path: '/c/engineering/strategy-lab',  label: 'Strategy Lab',      icon: FlaskConical,      testId: 'nav-strategy-lab',  surface: 'strategy-lab' },
       { path: '/c/engineering/strategy-pipeline', label: 'Strategy Pipeline', icon: GitBranch,       testId: 'nav-strategy-pipeline', surface: 'strategy-pipeline' },
-      { path: '/c/engineering/optimization',  label: 'Optimization',      icon: SlidersHorizontal, testId: 'nav-optimization',  surface: 'optimization',  emptyState: true, phase2: 'POST /api/optimize · GET /api/optimize/{id}' },
+      { path: '/c/engineering/optimization',  label: 'Optimization',      icon: SlidersHorizontal, testId: 'nav-optimization',  surface: 'optimization' },
       { path: '/c/engineering/validation',    label: 'Validation',        icon: ClipboardCheck,    testId: 'nav-validation',    surface: 'validation',    emptyState: true, phase2: 'GET /api/validation · POST /api/backtest' },
       { path: '/c/mission?focus=portfolio',   label: 'Portfolio',         icon: PieChart,          testId: 'nav-portfolio',     surface: 'mission',       deepLink: true },
       { path: '/c/engineering/prop-firms',    label: 'Prop Firms',        icon: Building2,         testId: 'nav-prop-firms',    surface: 'prop-firms',    emptyState: true, phase2: 'GET /api/prop-firms · GET /api/prop-firms/{id}/challenges' },
