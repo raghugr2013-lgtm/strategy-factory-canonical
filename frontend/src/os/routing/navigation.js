@@ -48,7 +48,7 @@ export const NAV_GROUPS = [
     items: [
       { path: '/c/engineering/market-data',   label: 'Market Data',       icon: Radio,             testId: 'nav-market-data',   surface: 'market-data' },
       { path: '/c/engineering/coverage',      label: 'Coverage',          icon: Waves,             testId: 'nav-coverage',      surface: 'coverage' },
-      { path: '/c/engineering/datasets',      label: 'Datasets',          icon: Database,          testId: 'nav-datasets',      surface: 'datasets',      emptyState: true, phase2: 'GET /api/datasets · POST /api/datasets/download' },
+      { path: '/c/engineering/datasets',      label: 'Datasets',          icon: Database,          testId: 'nav-datasets',      surface: 'datasets' },
       { path: '/c/engineering/strategy-lab',  label: 'Strategy Lab',      icon: FlaskConical,      testId: 'nav-strategy-lab',  surface: 'strategy-lab' },
       { path: '/c/engineering/strategy-pipeline', label: 'Strategy Pipeline', icon: GitBranch,       testId: 'nav-strategy-pipeline', surface: 'strategy-pipeline' },
       { path: '/c/engineering/optimization',  label: 'Optimization',      icon: SlidersHorizontal, testId: 'nav-optimization',  surface: 'optimization',  emptyState: true, phase2: 'POST /api/optimize · GET /api/optimize/{id}' },
