@@ -16,7 +16,7 @@
 import {
   Activity, ShieldCheck, Users as UsersIcon, LineChart, Settings as SettingsIcon,
   Compass, Bot, Database, Radio, Waves, FlaskConical, SlidersHorizontal, ClipboardCheck,
-  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch, Cpu, Brain, Gauge, Layers,
+  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch, Cpu, Brain, Gauge, Layers, Sparkles,
 } from 'lucide-react';
 
 /**
@@ -51,6 +51,7 @@ export const NAV_GROUPS = [
       { path: '/c/factory/meta-learning',    label: 'Meta-Learning',     icon: Brain,   testId: 'nav-meta-learning',     surface: 'meta-learning' },
       { path: '/c/factory/evaluation',       label: 'Evaluation',        icon: Gauge,   testId: 'nav-factory-eval',      surface: 'factory-eval' },
       { path: '/c/factory/data-governance',  label: 'Data & Governance', icon: ShieldCheck, testId: 'nav-data-governance', surface: 'data-governance' },
+      { path: '/c/factory/curated',          label: 'Curated Library',   icon: Sparkles, testId: 'nav-curated-library', surface: 'curated-library' },
     ],
   },
   {

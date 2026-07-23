@@ -33,6 +33,7 @@ import { MetaLearningDashboard } from '../surfaces/factory/MetaLearningDashboard
 import { FactoryEvalDashboard } from '../surfaces/factory/FactoryEvalDashboard';
 import { DataGovernanceDashboard } from '../surfaces/factory/DataGovernanceDashboard';
 import { FactoryCockpit } from '../surfaces/factory/FactoryCockpit';
+import { CuratedLibraryDashboard } from '../surfaces/factory/CuratedLibraryDashboard';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -66,6 +67,7 @@ export const AppRouter = () => (
         <Route path="factory/meta-learning" element={<MetaLearningDashboard />} />
         <Route path="factory/evaluation" element={<FactoryEvalDashboard />} />
         <Route path="factory/data-governance" element={<DataGovernanceDashboard />} />
+        <Route path="factory/curated" element={<CuratedLibraryDashboard />} />
 
         {/* Engineering — Phase 1 empty states */}
         <Route path="engineering/market-data"   element={<MarketData />} />
