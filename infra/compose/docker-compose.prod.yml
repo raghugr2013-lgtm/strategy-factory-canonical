@@ -101,6 +101,18 @@ services:
       # activation surface — backend workers short-circuit their
       # scheduler-restore paths on this flag.
       FACTORY_RUNNER_OWNS_SCHEDULERS: ${FACTORY_RUNNER_OWNS_SCHEDULERS:-false}
+      # ── Phase 2 orchestration activation ─────────────────────────
+      # Per-task passive kill switches for the 4 autonomous writers
+      # (strategy_generate / backtest / mutation / learning_cycle).
+      # Default TRUE so activating the orchestrator via
+      # ORCHESTRATOR_ENABLED=true keeps observational-only semantics
+      # unless the operator explicitly opts a task in by setting the
+      # var to false. Read by
+      # `engines.orchestrator.registry.is_passive_via_env()`.
+      ORCH_TASK_STRATEGY_GENERATE_PASSIVE: ${ORCH_TASK_STRATEGY_GENERATE_PASSIVE:-true}
+      ORCH_TASK_BACKTEST_PASSIVE:          ${ORCH_TASK_BACKTEST_PASSIVE:-true}
+      ORCH_TASK_MUTATION_PASSIVE:          ${ORCH_TASK_MUTATION_PASSIVE:-true}
+      ORCH_TASK_LEARNING_CYCLE_PASSIVE:    ${ORCH_TASK_LEARNING_CYCLE_PASSIVE:-true}
       ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
       LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
       LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}
@@ -258,6 +270,18 @@ services:
       SUPERVISOR_FACTORY_EVAL_CRON: ${SUPERVISOR_FACTORY_EVAL_CRON:-}
       SUPERVISOR_META_LEARNING_CRON: ${SUPERVISOR_META_LEARNING_CRON:-}
       SUPERVISOR_GOVERNANCE_CRON: ${SUPERVISOR_GOVERNANCE_CRON:-}
+      # ── Phase 2 orchestration activation ─────────────────────────
+      # Per-task passive kill switches for the 4 autonomous writers
+      # (strategy_generate / backtest / mutation / learning_cycle).
+      # Default TRUE so activating the orchestrator via
+      # ORCHESTRATOR_ENABLED=true keeps observational-only semantics
+      # unless the operator explicitly opts a task in by setting the
+      # var to false. Read by
+      # `engines.orchestrator.registry.is_passive_via_env()`.
+      ORCH_TASK_STRATEGY_GENERATE_PASSIVE: ${ORCH_TASK_STRATEGY_GENERATE_PASSIVE:-true}
+      ORCH_TASK_BACKTEST_PASSIVE:          ${ORCH_TASK_BACKTEST_PASSIVE:-true}
+      ORCH_TASK_MUTATION_PASSIVE:          ${ORCH_TASK_MUTATION_PASSIVE:-true}
+      ORCH_TASK_LEARNING_CYCLE_PASSIVE:    ${ORCH_TASK_LEARNING_CYCLE_PASSIVE:-true}
       ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
       LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
       LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}

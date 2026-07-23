@@ -83,6 +83,17 @@ services:
       ENABLE_LEGACY_ROUTERS: "${ENABLE_LEGACY_ROUTERS:-true}"
       ENABLE_FACTORY_RUNNER: "${ENABLE_FACTORY_RUNNER:-true}"
       ENABLE_DYNAMIC_MARKET_UNIVERSE: "${ENABLE_DYNAMIC_MARKET_UNIVERSE:-false}"
+      # ── Phase 2 orchestration activation ─────────────────────────
+      # Master switch + per-task passive kill switches for the 4
+      # autonomous writers. Default all passive-flags TRUE so
+      # activating the orchestrator keeps observational-only
+      # semantics unless the operator explicitly opts in per task.
+      # See engines.orchestrator.registry.is_passive_via_env.
+      ORCHESTRATOR_ENABLED: "${ORCHESTRATOR_ENABLED:-false}"
+      ORCH_TASK_STRATEGY_GENERATE_PASSIVE: "${ORCH_TASK_STRATEGY_GENERATE_PASSIVE:-true}"
+      ORCH_TASK_BACKTEST_PASSIVE:          "${ORCH_TASK_BACKTEST_PASSIVE:-true}"
+      ORCH_TASK_MUTATION_PASSIVE:          "${ORCH_TASK_MUTATION_PASSIVE:-true}"
+      ORCH_TASK_LEARNING_CYCLE_PASSIVE:    "${ORCH_TASK_LEARNING_CYCLE_PASSIVE:-true}"
     ports:
       - "8001:8001"
     healthcheck:
@@ -128,6 +139,17 @@ services:
       VIE_TIMEOUT_S: "60"
       ENABLE_LEGACY_ROUTERS: "${ENABLE_LEGACY_ROUTERS:-true}"
       ENABLE_FACTORY_RUNNER: "${ENABLE_FACTORY_RUNNER:-true}"
+      # ── Phase 2 orchestration activation ─────────────────────────
+      # Mirror the same passive-flag surface on the runner so both
+      # containers observe an identical activation state (the runner
+      # itself never dispatches, but any diagnostic tooling that
+      # imports engines.orchestrator inside the runner container
+      # sees the same flags the backend does).
+      ORCHESTRATOR_ENABLED: "${ORCHESTRATOR_ENABLED:-false}"
+      ORCH_TASK_STRATEGY_GENERATE_PASSIVE: "${ORCH_TASK_STRATEGY_GENERATE_PASSIVE:-true}"
+      ORCH_TASK_BACKTEST_PASSIVE:          "${ORCH_TASK_BACKTEST_PASSIVE:-true}"
+      ORCH_TASK_MUTATION_PASSIVE:          "${ORCH_TASK_MUTATION_PASSIVE:-true}"
+      ORCH_TASK_LEARNING_CYCLE_PASSIVE:    "${ORCH_TASK_LEARNING_CYCLE_PASSIVE:-true}"
     command: ["python", "-m", "app.runner"]
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/factory_runner.hb"]
