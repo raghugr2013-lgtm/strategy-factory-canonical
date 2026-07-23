@@ -466,3 +466,81 @@ Published operator activation package:
 
 ## Confirmation
 Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations, Capability Inventory, Phase 1 Activation, and Operational Readiness passes are documentation + a backward-compatible dispatcher + one restored template file — freeze fully preserved.
+
+## Sprint FE-B Slice 1 — Orchestrator Dashboard — 2026-07-23
+
+REFINEMENT + EXTEND sprint (frontend-additive only). Zero backend files
+touched. Backend Feature Freeze v1.1.0-stage4 fully preserved.
+Testing_agent iteration_3 verdict: **100 % pass on frontend**, no retest
+required, main agent may self-test polish.
+
+**Deliverables (this session):**
+
+- `frontend/src/os/adapters/orchestratorAdapter.js` — new React Query
+  hooks (`useOrchestratorStatus`, `useOrchestratorDecisions`,
+  `useOrchestratorHistory`, `useOrchestratorHealthInputs`) polling six
+  pre-existing endpoints every 15 s and on window focus, guarded by
+  `isLiveMode()`.
+- `frontend/src/os/surfaces/factory/OrchestratorDashboard.jsx` — new
+  surface at `/c/factory/orchestrator`. Composition: Operator Summary
+  Panel (8 cells — Factory State · Orchestrator Status · Active Tasks ·
+  Scheduler Health · AI Provider Health · Last Successful Cycle ·
+  Current Alerts · Mode) + 4-tile MetricBlock row (Ticks · Dispatched ·
+  In-Flight · Alerts) + Recent Decisions table (last 20 ticks) + Task
+  Registry table with per-task run/fail counters and fail-rate chips.
+  Reuses `MetricBlock`, `Chip`, `StateTemplate`, `SignalStateBadge`,
+  `FreezeCaption` — zero new UI primitives.
+- `frontend/src/os/routing/AppRouter.jsx` — wired
+  `<Route path='factory/orchestrator' element={<OrchestratorDashboard />} />`.
+- `frontend/src/os/routing/navigation.js` — new `NAV_GROUPS` group
+  `id: 'factory'` inserted between Mission Control and Engineering,
+  visible to all authenticated operators. Contains one entry
+  (`nav-orchestrator`).
+- `frontend/src/os/shell/StatusRail.jsx` — bug fix in `inferLLMChip`:
+  `/api/ai-workforce/health` returns `providers` as an object
+  (`{}`), not an array. The previous FE-A code called `.filter` on it
+  and threw `providers.filter is not a function` on every route.
+  Fix: normalise object-shaped providers to array before filtering.
+
+**Live proof in the local dev environment:**
+
+- Real backend sign-in reaches `/c/mission` (fixture block gone).
+- `[data-testid='nav-group-factory']` and `[data-testid='nav-orchestrator']`
+  visible in the rail post-auth.
+- `/c/factory/orchestrator` renders `orchestrator-dashboard`,
+  `orchestrator-summary-panel` (all 8 cells), the 4 metric tiles, the
+  decisions panel, and the registry panel — verified by
+  testing_agent_v3 iteration_3.
+- Zero `Uncaught runtime errors` overlay anywhere in the app after the
+  StatusRail fix. All 5 status chips + kill posture render post-auth
+  and `data-live='true'` remains set on the status rail wrapper.
+
+**Endpoints unlocked (all pre-existing, read-only):**
+
+- `GET /api/orchestrator/status`
+- `GET /api/orchestrator/decisions?limit=20`
+- `GET /api/orchestrator/history?limit=20`
+- `GET /api/ai-workforce/health`
+- `GET /api/factory-eval/config`
+- `GET /api/meta-learning/config`
+
+**Constraint compliance:** ✅ No new backend engines · ✅ No new
+backend endpoints · ✅ No database changes · ✅ No schema changes · ✅
+Backend Feature Freeze v1.1.0-stage4 preserved · ✅ OBSERVE mode
+preserved · ✅ Discover → Reuse → Refine → Extend → Build New order
+honoured · ✅ Zero fixture data introduced.
+
+## Next action items (post Slice 1)
+
+1. **FE-B Slice 2+** — remaining Factory-group dashboards per
+   `docs/FE_B_PROPOSAL.md`: Meta-Learning · Factory Eval · Data
+   Maintenance · Budget/Governance · Master Bot Deep Dive · Approvals
+   Bundle Composer. Same pattern: adapter + surface + one nav entry.
+2. **VPS Phase-1 activation** — operator applies the four env flags
+   from `docs/PHASE_1_ACTIVATION_PLAN.md` §6.3 and runs
+   `./infra/scripts/deploy.sh`. After activation, the Orchestrator
+   Dashboard becomes the primary live-monitoring surface.
+3. **Low-priority polish** — chip glyph spacing inside summary cells
+   (single-character `I`/`P`/`A` prefix sits tight against the label);
+   deferred, cosmetic only.
+
