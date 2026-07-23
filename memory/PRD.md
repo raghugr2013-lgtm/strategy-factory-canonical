@@ -147,5 +147,35 @@ frontend/src/os/workspace-state/authStore.js
 2. Once accepted, Phase M0 (dry-run mapper — frontend-only preview) is the first execution slice. Phases M1–M3 wait for the freeze to lift on schema additions + Timeline endpoint.
 3. Execution Workspace group (Broker Connections · Paper Trading · Live Deployments) remains **DEFERRED** until the migration specification is reviewed and approved.
 
+## Deployment Operations pass — 2026-07-23
+
+Documentation-only + one restored file. No application code, API,
+schema, engine, or OBSERVE-mode change. Backend Feature Freeze
+v1.1.0-stage4 fully preserved.
+
+- Delivered `docs/DEPLOYMENT_ARCHITECTURE_REVIEW.md` — as-is topology
+  review, canonical Compose recommendation, six enumerated
+  inconsistencies (HIGH → LOW).
+- Delivered `docs/DEPLOYMENT_OPERATIONS.md` — single operational
+  source of truth (architecture · Docker ops · Mongo backup/restore ·
+  Caddy · logging · monitoring · disaster recovery · release ·
+  security · eight runbooks · golden rules).
+- Delivered `docs/DEPLOYMENT_MIGRATION_PLAN.md` — records that no
+  structural migration is required; catalogues the four
+  non-destructive actions and the four deferred follow-ups.
+- Restored `.env.example` at the repo root (deleted in accidental
+  auto-commit `f676526`, 2026-07-20). Every deploy script references
+  it (`one_click_deploy.sh`, `factory-bootstrap.sh`,
+  `docs/DEPLOYMENT.md`) — fresh clones can now bootstrap.
+- Minor pointer update in `README.md` § Utility scripts to name the
+  new operations doc + the `compose.sh` wrapper.
+
+**Canonical production workflow (confirmed):**
+- Compose file: `infra/compose/docker-compose.prod.yml`.
+- Invocation: `./infra/scripts/deploy.sh` (full), `./infra/scripts/compose.sh <cmd>` (one-off), or the explicit `docker compose --env-file .env -f infra/compose/docker-compose.prod.yml` form from repo root.
+- Env: `/opt/strategy-factory/.env` (chmod 600).
+- Out-of-repo services: `factory-mongo` (`/opt/factory-mongo/`) and `caddy` (`/opt/caddy/`) — reference copies in `deploy-artifacts/`.
+- All six containers on external `vqb-network`.
+
 ## Confirmation
-Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow.
+Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations pass is documentation-only + one restored template file — freeze fully preserved.

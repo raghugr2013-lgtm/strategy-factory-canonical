@@ -99,11 +99,18 @@ frozen core needs its own v2.x release train.
 | `./scripts/deploy_verify.sh` | Runs the 31-step E2E acceptance workflow (exit 0 on green) |
 | `./scripts/restore_baseline.sh` | Restore `backup/strategy_factory_v1.1_baseline.archive` |
 | `./scripts/build_release_bundle.sh` | Package the repo as `dist/strategy-factory-v1.1.0-*.tar.gz` |
-| `./infra/scripts/deploy.sh` | Production deploy behind an existing Traefik |
+| `./infra/scripts/deploy.sh` | Production deploy behind the shared Caddy reverse proxy on `vqb-network` |
+| `./infra/scripts/compose.sh <subcommand>` | Canonical `docker compose` wrapper (always uses repo `.env` + prod compose file) |
 | `./infra/scripts/backup.sh` | Nightly mongodump |
 | `./infra/scripts/restore.sh <archive>` | Restore a mongodump archive |
 | `./infra/scripts/health.sh` | Multi-service health probes |
 | `./infra/scripts/rollback.sh` | Roll back to the previous release |
+
+**Deployment truth:** `docs/DEPLOYMENT_OPERATIONS.md` is the single
+operational source of truth for the production VPS
+(`/opt/strategy-factory` → `strategy.coinnike.com`). See also
+`docs/DEPLOYMENT_ARCHITECTURE_REVIEW.md` and
+`docs/DEPLOYMENT_MIGRATION_PLAN.md`.
 
 ---
 

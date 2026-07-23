@@ -17,7 +17,7 @@ import requests
 
 BASE_URL = os.environ.get(
     "REACT_APP_BACKEND_URL",
-    "https://sprint3-phase2.preview.emergentagent.com",
+    "https://factory-v2-canonical.preview.emergentagent.com",
 ).rstrip("/")
 
 SEED_RSI = "a649abeabefcc045cc9ef2dc2ec04e1f3f2b55da"

@@ -176,7 +176,7 @@ Excluded from tarball:
 ## 7 · Preview URL
 
 ```
-https://sprint3-phase2.preview.emergentagent.com
+https://factory-v2-canonical.preview.emergentagent.com
 ```
 
 Credentials for smoke:

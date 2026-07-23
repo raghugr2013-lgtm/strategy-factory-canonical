@@ -292,7 +292,7 @@ The full BI5-side test stack (50 tests across `test_tick_validator.py` + `test_m
 
 ### 5.1 Live screenshot (workstation posture)
 
-UI was loaded at `https://sprint3-phase2.preview.emergentagent.com/c/diag` with the admin account, then scrolled to the new section. **Both panels rendered cleanly, dark theme intact, Binance gold `#F0B90B` accent preserved.**
+UI was loaded at `https://factory-v2-canonical.preview.emergentagent.com/c/diag` with the admin account, then scrolled to the new section. **Both panels rendered cleanly, dark theme intact, Binance gold `#F0B90B` accent preserved.**
 
 ### 5.2 BI5 R2 · Strategy & Data Certification panel — captured rendering
 

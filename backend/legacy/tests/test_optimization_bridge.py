@@ -28,7 +28,7 @@ load_dotenv("/app/backend/.env")
 from engines import optimization_portfolio_bridge as bridge  # noqa: E402
 from engines.db import get_db  # noqa: E402
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://sprint3-phase2.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://factory-v2-canonical.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
 # ── helpers ──────────────────────────────────────────────────────────

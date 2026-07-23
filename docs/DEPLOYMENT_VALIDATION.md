@@ -10,7 +10,7 @@
 
 | Environment | Purpose | Access |
 |---|---|---|
-| Emergent preview (Kubernetes pod) | Runtime validation of the exact same code that ships in the tarball | https://sprint3-phase2.preview.emergentagent.com |
+| Emergent preview (Kubernetes pod) | Runtime validation of the exact same code that ships in the tarball | https://factory-v2-canonical.preview.emergentagent.com |
 | `/tmp/vps-sim/` (scratch dir) | Clean-checkout simulation of the operator workflow from tarball → configured → ready-to-deploy | offline |
 | Contabo VPS (yours) | Final live validation | performed by you |
 
@@ -76,7 +76,7 @@ Run against `/tmp/vps-sim/strategy-factory/` — a fresh extraction of `strategy
 
 ## 4. Runtime validation (the actual code inside the containers)
 
-Every service artefact that will be built into a Docker image is running right now in the preview at https://sprint3-phase2.preview.emergentagent.com — this is the **same source code** that goes into the tarball:
+Every service artefact that will be built into a Docker image is running right now in the preview at https://factory-v2-canonical.preview.emergentagent.com — this is the **same source code** that goes into the tarball:
 
 | Requirement (from your acceptance checklist) | Runtime result |
 |---|---|
