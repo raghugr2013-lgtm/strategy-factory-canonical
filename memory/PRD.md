@@ -142,10 +142,76 @@ frontend/src/os/workspace-state/authStore.js
 - Optimization launcher + Approvals bundle generation (`/api/optimize/*`).
 - Prop Firms + Deployments live surfaces.
 
+## Phase 1 Autonomous Factory Activation — 2026-07-23
+
+Backward-compatible activation of the recovered sibling
+factory-runner + Unified Autonomous Orchestration Engine, powered
+100% by capabilities already present in the canonical repo. Zero new
+engines. Zero new endpoints. Zero schema changes. Backend Feature
+Freeze v1.1.0-stage4 preserved. OBSERVE mode preserved for every
+mutating engine.
+
+**Files modified (all reversible, all additive/dispatcher-only):**
+
+- `backend/app/runner.py` — rewritten as a **backward-compatible
+  dispatcher**. When `FACTORY_RUNNER_OWNS_SCHEDULERS=false` (default)
+  it behaves byte-equivalently to the Phase-0 heartbeat stub. When
+  true, it delegates to `legacy.factory_runner._main()` and starts a
+  background thread that refreshes `/tmp/factory_runner.hb` every 30 s
+  so the docker healthcheck stays green during the sibling's slower
+  startup.
+- `backend/legacy/factory_runner.py` — additive-only: refreshes
+  `/tmp/factory_runner.hb` on start and on every audit-heartbeat tick.
+  No logic path removed.
+- `infra/compose/docker-compose.prod.yml` — propagates Phase-1
+  activation env vars into both `factory-backend` and `factory-runner`
+  `environment:` blocks. Every new flag defaults to `false`/`observe`,
+  so `docker compose up -d` without an updated `.env` is byte-identical
+  to prior behaviour.
+- `.env.example` — extended with a well-commented Phase-1 activation
+  block. All defaults OFF.
+
+**Deliverables published:**
+
+- `docs/PHASE_1_ACTIVATION_PLAN.md` — execution report (reused /
+  refined / extended breakdown), production deployment steps, and
+  three-tier rollback plan (env-only · code · ledger).
+- `docs/AUTONOMOUS_CYCLE_HEALTH_DASHBOARD.md` — full observability
+  matrix for the eleven autonomous cycle stages (market data,
+  knowledge, market intelligence, generation, validation, backtest,
+  ranking, passport, persistence, meta-learning, factory-eval),
+  including endpoints, ledgers, log-grep patterns, alert triggers,
+  and a weekly ledger-reconciliation snippet.
+
+**Production activation (operator work — VPS-side .env edits):**
+
+```env
+FACTORY_RUNNER_OWNS_SCHEDULERS=true
+ORCHESTRATOR_ENABLED=true
+BUDGET_PERSIST=true
+MI_ENABLED=true
+
+# Preserved OBSERVE defaults
+LEARNING_SCHEDULER_ENABLED=false
+LEARNING_CONTINUOUS_MODE=false
+META_LEARNING_MODE=observe
+FACTORY_EVAL_MODE=observe
+EXEC_ENABLED=false
+```
+
+Followed by `./infra/scripts/deploy.sh && ./infra/scripts/health.sh`.
+
+**What Phase 1 explicitly does NOT do:** no new engines, no
+duplicate schedulers, no duplicate orchestrators, no duplicate
+validators, no duplicate persistence, no API behaviour change, no
+live trading, no autonomous promotions, no KB DB writes, no freeze
+lift. All 100% Reuse plus two surgical Refine deltas.
+
 ## Next action items
-1. **Review `docs/KB_MIGRATION_SPEC.md` v0.1** and answer the 10 open questions in §11 so the spec can move to accepted status.
-2. Once accepted, Phase M0 (dry-run mapper — frontend-only preview) is the first execution slice. Phases M1–M3 wait for the freeze to lift on schema additions + Timeline endpoint.
-3. Execution Workspace group (Broker Connections · Paper Trading · Live Deployments) remains **DEFERRED** until the migration specification is reviewed and approved.
+1. **Operator applies the four env flags** to `/opt/strategy-factory/.env` and runs `./infra/scripts/deploy.sh`.
+2. Verify the eight sign-off gates in `docs/PHASE_1_ACTIVATION_PLAN.md` §8.
+3. Watch Tier-3 CI stay green for 7 consecutive nights before proceeding to Phase 2 items (embedding backend, UKIE domains, KB migration, Factory Supervisor activation, cTrader adapter).
+4. Historical Knowledge Base Migration Phase M0 (dry-run mapper) may proceed in parallel once `docs/KB_MIGRATION_SPEC.md v0.1` §11 questions are answered.
 
 ## Deployment Operations pass — 2026-07-23
 

@@ -155,6 +155,16 @@ async def _main() -> int:
 
     # Idle heartbeat (audit ping every 5 minutes so operators can
     # verify the runner is alive even with no schedulers running).
+    # Also refresh the filesystem heartbeat file consumed by the
+    # docker healthcheck (`test -f /tmp/factory_runner.hb`). The file
+    # write is best-effort — a failure here must never stop the loop.
+    _HB_FILE = "/tmp/factory_runner.hb"
+    try:
+        with open(_HB_FILE, "w") as _hb_fh:
+            _hb_fh.write(str(int(datetime.now(timezone.utc).timestamp())))
+    except Exception:                                             # pragma: no cover
+        logger.debug("initial heartbeat file write failed", exc_info=True)
+
     heartbeat_interval_sec = int(
         os.environ.get("FACTORY_RUNNER_HEARTBEAT_SEC") or 300
     )
@@ -168,6 +178,11 @@ async def _main() -> int:
                 await _audit("heartbeat", {"pid": os.getpid()})
             except Exception:
                 pass
+            try:
+                with open(_HB_FILE, "w") as _hb_fh:
+                    _hb_fh.write(str(int(datetime.now(timezone.utc).timestamp())))
+            except Exception:                                     # pragma: no cover
+                logger.debug("heartbeat file refresh failed", exc_info=True)
 
     await _audit("shutdown", {"pid": os.getpid()})
     logger.info("sibling runner stopped cleanly")

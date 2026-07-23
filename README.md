@@ -120,6 +120,12 @@ prioritised implementation roadmap live at
 `docs/IMPLEMENTATION_ROADMAP.md`. These five documents guide all
 remaining implementation work.
 
+**Phase 1 activation (2026-07-23):** the sibling factory-runner
+dispatcher + orchestrator activation surface is now landed
+backward-compatibly. Operator work + observability contract are in
+`docs/PHASE_1_ACTIVATION_PLAN.md` and
+`docs/AUTONOMOUS_CYCLE_HEALTH_DASHBOARD.md`.
+
 ---
 
 ## Freeze policy

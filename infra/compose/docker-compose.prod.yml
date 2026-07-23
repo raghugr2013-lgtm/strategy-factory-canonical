@@ -89,6 +89,27 @@ services:
       ENABLE_LEGACY_ROUTERS: ${ENABLE_LEGACY_ROUTERS:-true}
       ENABLE_FACTORY_RUNNER: ${ENABLE_FACTORY_RUNNER:-true}
       ENABLE_DYNAMIC_MARKET_UNIVERSE: ${ENABLE_DYNAMIC_MARKET_UNIVERSE:-false}
+      # ── Phase 1 autonomous-factory activation flags ──────────────
+      # Defaults preserve prior behaviour (all activation gates OFF).
+      # Flip on in the production .env to activate the recovered
+      # sibling factory-runner + Unified Autonomous Orchestrator.
+      # OBSERVE mode remains the shipping default for every mutating
+      # engine — activation surfaces read paths only.
+      # Docs: docs/PHASE_1_ACTIVATION_PLAN.md · docs/AUTONOMOUS_CYCLE_HEALTH_DASHBOARD.md
+      ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
+      LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
+      LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}
+      LEARNING_CONTINUOUS_PAIR: ${LEARNING_CONTINUOUS_PAIR:-EURUSD}
+      LEARNING_CONTINUOUS_TIMEFRAME: ${LEARNING_CONTINUOUS_TIMEFRAME:-H1}
+      LEARNING_CONTINUOUS_STYLE: ${LEARNING_CONTINUOUS_STYLE:-trend-following}
+      BUDGET_PERSIST: ${BUDGET_PERSIST:-false}
+      MI_ENABLED: ${MI_ENABLED:-false}
+      # Meta-learning + factory-eval STAY in OBSERVE by contract.
+      META_LEARNING_MODE: ${META_LEARNING_MODE:-observe}
+      FACTORY_EVAL_MODE: ${FACTORY_EVAL_MODE:-observe}
+      # Execution engine remains OFF — live trading is deliberately
+      # not enabled by Phase 1 activation.
+      EXEC_ENABLED: ${EXEC_ENABLED:-false}
     networks:
       vqb-network:
         aliases:
@@ -213,6 +234,24 @@ services:
       VIE_TIMEOUT_S: "60"
       ENABLE_LEGACY_ROUTERS: ${ENABLE_LEGACY_ROUTERS:-true}
       ENABLE_FACTORY_RUNNER: ${ENABLE_FACTORY_RUNNER:-true}
+      # ── Phase 1 autonomous-factory activation flags ──────────────
+      # Runner needs the same activation surface as the backend so
+      # subordinate schedulers restore correctly when
+      # FACTORY_RUNNER_OWNS_SCHEDULERS=true. Defaults preserve prior
+      # heartbeat-only behaviour. See docs/PHASE_1_ACTIVATION_PLAN.md.
+      FACTORY_RUNNER_OWNS_SCHEDULERS: ${FACTORY_RUNNER_OWNS_SCHEDULERS:-false}
+      ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
+      LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
+      LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}
+      LEARNING_CONTINUOUS_PAIR: ${LEARNING_CONTINUOUS_PAIR:-EURUSD}
+      LEARNING_CONTINUOUS_TIMEFRAME: ${LEARNING_CONTINUOUS_TIMEFRAME:-H1}
+      LEARNING_CONTINUOUS_STYLE: ${LEARNING_CONTINUOUS_STYLE:-trend-following}
+      BUDGET_PERSIST: ${BUDGET_PERSIST:-false}
+      MI_ENABLED: ${MI_ENABLED:-false}
+      META_LEARNING_MODE: ${META_LEARNING_MODE:-observe}
+      FACTORY_EVAL_MODE: ${FACTORY_EVAL_MODE:-observe}
+      EXEC_ENABLED: ${EXEC_ENABLED:-false}
+      FACTORY_RUNNER_HEARTBEAT_SEC: ${FACTORY_RUNNER_HEARTBEAT_SEC:-300}
     command: ["python", "-m", "app.runner"]
     networks:
       - vqb-network
