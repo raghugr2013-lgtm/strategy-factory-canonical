@@ -283,6 +283,94 @@ preserved. Deliverables published under `docs/`:
 **Verdict:** the long-term vision needs zero new engines. Everything
 is composition of what is already in the repo.
 
+## Frontend Capability Audit — 2026-07-23
+
+Repository-wide read-only audit of the operator UI. Zero code changes.
+Zero backend changes. Backend Feature Freeze v1.1.0-stage4 preserved.
+
+**Headline finding:** the local backend exposes **613 endpoints** in
+`/api/openapi.json`; the frontend reaches only **8 of them** via
+literal `/api/*` string references from adapters + surfaces. The
+chrome (rail · top strip · status rail · walkthrough · palette · 21
+routes · 12 wired surfaces) is production-grade, but the data layer
+underneath is 90 % fixtures. Every one of the currently-missing
+surfaces can be added by reusing the existing shell +
+`EngineeringSurface` template + adapter pattern — no new backend
+engines required.
+
+**Deliverables published:**
+
+- `docs/FRONTEND_CAPABILITY_AUDIT.md` (366 lines) — full route +
+  component + adapter + hook inventory · reusable-component census ·
+  22-surface capability matrix with per-column completion scores
+  (chrome / route / component / fixtures / live-read / live-write /
+  streaming / RBAC) · 21 live screenshots captured at
+  `http://127.0.0.1:3000/` after signing in with the fixture
+  credentials shown on the sign-in card
+  (`operator@coinnike.com · prototype123`).
+- `docs/FRONTEND_EXPOSURE_ROADMAP.md` (231 lines) — gap ledger
+  (CRITICAL / HIGH / MEDIUM / LOW) mapping every un-exposed
+  backend prefix to a host surface; six-sprint priority-ordered
+  exposure plan (FE-A activation ~4h → FE-F admin+governance) that
+  follows Discover → Reuse → Refine → Extend → Build New; 8-item
+  sign-off checklist per sprint; explicit guardrails
+  ("never build a second sign-in flow", "never duplicate the shell",
+  "never invent new backend endpoints").
+- `docs/screenshots/*.jpeg` (21 files, 760 KB total, JPEG q=25) —
+  visual record of the current UI. Chrome captured cleanly on
+  every route; the 30-second `FactoryWalkthrough` overlay is visible
+  on most captures because it's the first-session welcome tour.
+
+**Findings called out for immediate operator attention:**
+
+1. **Sign-in is fixture-only.** The card shows
+   `operator@coinnike.com · prototype123` in its own body and doesn't
+   call `POST /api/auth/login`. The backend seed + JWT refresh
+   rotation + admin approval pipeline are fully implemented and
+   entirely unreached.
+2. **The 8-pill Status Rail is fixture-only.** Every pill has a
+   backend equivalent (`/api/health/system`, `/api/orchestrator/status`,
+   `/api/data-maintenance/status`, `/api/ai-workforce/providers`,
+   `/api/governance/summary`, `/api/coe/state`,
+   `/api/factory-eval/kpis`). Wiring the rail is the single highest
+   ROI first step.
+3. **Endpoint path mismatches** exist between
+   `navigation.js` `phase2Sources` metadata and actual backend
+   prefixes (e.g. UI declares `/api/coverage/matrix`, backend serves
+   `/api/data/coverage`). No backend endpoint has to move; the
+   frontend metadata just needs reconciliation.
+4. **Zero orchestrator UI.** The Unified Autonomous Orchestration
+   Engine (Phase B.2) exposes 7 endpoints and has no operator
+   surface. This is the single most important missing dashboard
+   before Phase 1 VPS activation.
+5. **`EngineeringSurface` template is a superpower.** Five pages
+   (Deployments, PropFirms, Users, Integrations, Logs) already ship
+   as coherent empty-state briefings. Extending any one of them to
+   live data is a metadata + one adapter change, not a rewrite.
+
+**Recommendation summary (Discover → Reuse → Refine → Extend → Build New):**
+
+- Discover: 4 surfaces need path reconciliation only.
+- Reuse: entire shell + template + adapter + `LivenessBadge` layer.
+- Refine: 15 items (auth, RBAC, TopStrip, StatusRail, MissionControl,
+  all 7 wired Engineering surfaces, MasterBot, Strategies, Passport,
+  Settings, Timeline shim) → **~150 endpoints unlocked**.
+- Extend: 13 items (new Factory group of 7 + 5 empty-state-to-live
+  conversions + 1 Portfolio route) → **~250 endpoints unlocked**.
+- Build New: 0 backend, 0 frontend components. Only new
+  compositions of existing capabilities.
+
+**Total operator reach after full roadmap: ~400 of 613 endpoints
+(~65 %) with zero new backend engines.** The remaining ~200 endpoints
+are internal / bookkeeping / diagnostic routes that don't belong on
+the operator's daily path; they surface via `Timeline` filters and
+deep-power `EngineeringSurface` pages when needed.
+
+**User decision requested:** confirm whether we proceed with Sprint
+FE-A (the 4-hour high-ROI real-auth + role-aware rail + live status
+rail refinement) before ANY VPS activation, or a different sprint
+order.
+
 ## Operational Readiness pass — 2026-07-23
 
 Testing_agent regression on the runner dispatcher landed last session:

@@ -134,6 +134,18 @@ recovery) · `docs/PHASE_1_FACTORY_KPI_REPORT.md` (24 h cycle
 throughput + failure/skip decomposition + budget + provider
 health).
 
+**Frontend Capability Audit (2026-07-23):** repo-wide read-only audit
+of the operator UI. Deliverables at
+`docs/FRONTEND_CAPABILITY_AUDIT.md` (route + adapter inventory +
+completion matrix + 21 live screenshots at
+`docs/screenshots/00..21-*.jpeg`) and
+`docs/FRONTEND_EXPOSURE_ROADMAP.md` (six sprint plan following
+Discover → Reuse → Refine → Extend → Build New). Headline finding:
+613 backend endpoints exposed, only 8 reached from the UI today;
+~400 of them reachable through refinement + extension of the
+existing shell + `EngineeringSurface` template + adapter pattern,
+with zero new backend engines required.
+
 ---
 
 ## Freeze policy
