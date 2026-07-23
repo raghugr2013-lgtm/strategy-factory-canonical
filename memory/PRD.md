@@ -8,65 +8,93 @@ and expose existing backend capabilities through the frontend without
 introducing new backend API functionality (Backend API is under a strict
 **Feature Freeze**).
 
-## Current Focus (Phase 1b)
-Wire a production-ready `FactorySupervisor` (APScheduler AsyncIOScheduler)
-into `backend/app/runner.py` with **5 recurring placeholder jobs** and clean
-startup/shutdown, without touching any HTTP API, DB schema, engine, or the
-frontend.
+## Current State
+- Phase-1b Factory Supervisor deployed to production (VPS) and validated:
+  5 recurring jobs, orchestrator/mutation/factory_eval/meta_learning/governance.
+- Phase-2 orchestration milestone completed (docs + supervisor refactor,
+  NOT yet activated on the VPS).
 
-## Runtime Modes (backend/app/runner.py)
-Dispatch order, preserved for backward compatibility:
+## Milestone Log
 
-1. **Factory Supervisor** — `FACTORY_SUPERVISOR_ENABLED=true`
-   APScheduler-backed. 5 placeholder jobs, structured JSON logs,
-   SIGTERM/SIGINT → `stop_supervisor(wait=True)`, exit 0.
-2. **Legacy Scheduler** — `FACTORY_RUNNER_OWNS_SCHEDULERS=true`
-   Delegates to `legacy.factory_runner._main()` (Mongo-backed audit heartbeats).
-3. **Phase-0 Stub** — default when neither flag is set. Writes only the
-   filesystem heartbeat at `/tmp/factory_runner.hb`.
+### 2026-07-23 · Phase 2 — Orchestration audit + activation matrix (commit 64076c6)
+Repository audit found that the codebase already has a production-ready
+**Unified Orchestrator** at `legacy/engines/orchestrator/core.py` with 17
+registered task adapters, auto-booted by `factory-backend` when
+`ORCHESTRATOR_ENABLED=true`. The Factory Supervisor was refactored from
+placeholder cron jobs into 5 read-only observability + governance hooks
+so it complements the orchestrator instead of duplicating it.
 
-## Scheduled Placeholder Jobs
-| Job            | Trigger (default)        | Env override                     |
-| -------------- | ------------------------ | -------------------------------- |
-| orchestrator   | interval, every 1 min    | `SUPERVISOR_ORCHESTRATOR_CRON`   |
-| mutation       | interval, every 15 min   | `SUPERVISOR_MUTATION_CRON`       |
-| factory_eval   | interval, every 1 hour   | `SUPERVISOR_FACTORY_EVAL_CRON`   |
-| meta_learning  | interval, every 6 hours  | `SUPERVISOR_META_LEARNING_CRON`  |
-| governance     | cron, daily @ 04:00 UTC  | `SUPERVISOR_GOVERNANCE_CRON`     |
+Deliverables (all in `docs/`):
+- `PHASE2_ORCHESTRATION_AUDIT.md` — repository audit + engine inventory (425 files)
+- `PHASE2_ACTIVATION_MATRIX.md` — 17-task activation matrix, dependency + validation
+  report, scheduler flow diagram, production-readiness assessment, VPS env-only
+  activation procedure
 
-Every job body is a safe placeholder that emits a JSON log line:
-`{"job":"orchestrator","tick":N,"status":"ok","duration_ms":M,"ts":"..."}`.
+Explicit non-changes (Feature Freeze preserved):
+- No FastAPI routes / routers
+- No engine logic
+- No DB schema
+- No docker-compose files
+- `runner.py` dispatch order unchanged (Supervisor > Legacy > Phase-0 stub)
 
-## Completed
-- 2026-07-22: HKB migration + provenance metadata + UI exposure.
-- 2026-07-22: Operator Manual (`/app/docs/OPERATOR_MANUAL.md`).
-- 2026-07-23: **FactorySupervisor wiring into runner.py (Phase-1b)** — 5 jobs
-  register, orchestrator placeholder fires within ~60s, graceful shutdown via
-  SIGTERM/SIGINT verified (exit code 0).
+Activation profile designed but NOT applied on VPS:
+```
+ORCHESTRATOR_ENABLED=true
+ORCH_TASK_STRATEGY_GENERATE_PASSIVE=true
+ORCH_TASK_BACKTEST_PASSIVE=true
+ORCH_TASK_MUTATION_PASSIVE=true
+ORCH_TASK_LEARNING_CYCLE_PASSIVE=true
+```
+(All engine-mode master switches keep their observational defaults:
+`META_LEARNING_MODE=observe`, `FACTORY_EVAL_MODE=observe`, `MI_ENABLED=false`,
+`EXEC_ENABLED=false`.)
 
-## Backlog
-- **P1** — Replace placeholder job bodies with real engine invocations (once
-  the API Feature Freeze allows). Wiring points are documented in
-  `factory_supervisor.py` docstrings.
-- **P1** — VPS Phase-1 activation (operator-triggered).
-- **P2** — Phase-2 roadmap.
+### 2026-07-22 · Phase 1b — Factory Supervisor deployed (commit c27c3e6)
+APScheduler-based cross-process scheduler wired into `runner.py` as third
+dispatch mode (`FACTORY_SUPERVISOR_ENABLED=true`), preserving legacy sibling
+and Phase-0 stub. Production-deployed via commits 5078fef (compose env
+plumbing) + ca15f3f (requirements.txt cleanup).
+
+### 2026-07-22 · HKB migration + Operator Manual (pre-Phase-1b)
+HKB migration with provenance metadata, UI exposure fixes, Operator Manual
+(`docs/OPERATOR_MANUAL.md`).
+
+## Architecture — three schedulers, one dispatch authority
+
+| Layer | Container | Trigger | Role |
+| --- | --- | --- | --- |
+| **Unified Orchestrator** (17 tasks) | `factory-backend` | `ORCHESTRATOR_ENABLED=true` | ⭐ SINGLE dispatch authority for the 17-task registry |
+| **Factory Supervisor** (5 obs jobs) | `factory-runner` | `FACTORY_SUPERVISOR_ENABLED=true` ✅ *live* | Observability + governance + failsafe cross-process beacon |
+| Legacy sibling scheduler | `factory-runner` (mode 2) | `FACTORY_RUNNER_OWNS_SCHEDULERS=true` | Restores persisted APScheduler jobs (BI5 sweep etc.) |
+| Phase-0 stub | `factory-runner` (mode 3) | fallback default | Heartbeat only |
 
 ## Files of Reference
-- `/app/backend/app/runner.py`
-- `/app/backend/app/factory_supervisor.py`
-- `/app/backend/app/core/config.py`
-- `/app/backend/legacy/factory_runner.py` (legacy delegate)
-- `/app/docs/OPERATOR_MANUAL.md`
+- `backend/app/factory_supervisor.py` — refactored observability layer (this milestone)
+- `backend/app/runner.py` — three-mode dispatcher (Phase 1b, unchanged this milestone)
+- `backend/legacy/engines/orchestrator/core.py` — Unified Orchestrator (unchanged)
+- `backend/legacy/engines/orchestrator/tasks/` — 17 task adapters (unchanged)
+- `docs/PHASE2_ACTIVATION_MATRIX.md` — activation matrix + validation + flow diagram
+- `docs/PHASE2_ORCHESTRATION_AUDIT.md` — repo audit + engine inventory
+- `docs/OPERATOR_MANUAL.md` — operator guide (prior milestone)
 
-## Environment Variables (Runner)
-| Name                              | Default | Purpose                                |
-| --------------------------------- | ------- | -------------------------------------- |
-| `ENABLE_FACTORY_RUNNER`           | false   | Master runner enable flag              |
-| `FACTORY_SUPERVISOR_ENABLED`      | false   | Start APScheduler-backed supervisor    |
-| `FACTORY_RUNNER_OWNS_SCHEDULERS`  | false   | Delegate to legacy sibling             |
-| `SUPERVISOR_ORCHESTRATOR_CRON`    | —       | Optional crontab override (5-field)    |
-| `SUPERVISOR_MUTATION_CRON`        | —       | Optional crontab override              |
-| `SUPERVISOR_FACTORY_EVAL_CRON`    | —       | Optional crontab override              |
-| `SUPERVISOR_META_LEARNING_CRON`   | —       | Optional crontab override              |
-| `SUPERVISOR_GOVERNANCE_CRON`      | —       | Optional crontab override              |
-| `BUILD_VERSION`                   | 0.0.0   | Reported in startup log                |
+## Environment Variables (delta vs. Phase-1b)
+Nothing added at the compose level. The Phase-2 milestone documents an
+env activation profile that would be applied on the VPS via `.env` +
+`compose.sh up -d --no-deps --force-recreate factory-backend factory-runner`.
+See `docs/PHASE2_ACTIVATION_MATRIX.md` §"VPS activation procedure".
+
+## Backlog
+- **P1** — Operator applies Phase-2 activation profile on VPS (env-only,
+  no rebuild needed for backend since app/main.py already boots orchestrator
+  when `ORCHESTRATOR_ENABLED=true`; runner rebuild picks up the new
+  supervisor observability code).
+- **P1** — Post-activation: tail `factory-runner` logs and confirm the
+  supervisor's `liveness_snapshot` shows `orchestrator_running: true`
+  and `task_names` populated (visible after backend recreate).
+- **P2** — Replace the 4 currently-passive autonomous writers
+  (`strategy_generate`, `backtest`, `mutation`, `learning_cycle`) with
+  operator-approved semi-autonomous flows if/when the observational
+  phase concludes.
+- **P2** — Wider testing: run `pytest legacy/tests/ -k orchestrator`
+  on the VPS after activation.
+- **P2** — Phase-3 roadmap.
