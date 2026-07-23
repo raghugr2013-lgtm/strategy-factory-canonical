@@ -112,6 +112,14 @@ operational source of truth for the production VPS
 `docs/DEPLOYMENT_ARCHITECTURE_REVIEW.md` and
 `docs/DEPLOYMENT_MIGRATION_PLAN.md`.
 
+**Architectural blueprint (2026-07-23):** capability inventory,
+gap analysis, dependency map, autonomous factory readiness, and the
+prioritised implementation roadmap live at
+`docs/CAPABILITY_INVENTORY.md`, `docs/GAP_ANALYSIS.md`,
+`docs/DEPENDENCY_MAP.md`, `docs/AUTONOMOUS_FACTORY_READINESS.md`, and
+`docs/IMPLEMENTATION_ROADMAP.md`. These five documents guide all
+remaining implementation work.
+
 ---
 
 ## Freeze policy

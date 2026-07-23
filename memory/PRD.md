@@ -177,5 +177,45 @@ v1.1.0-stage4 fully preserved.
 - Out-of-repo services: `factory-mongo` (`/opt/factory-mongo/`) and `caddy` (`/opt/caddy/`) — reference copies in `deploy-artifacts/`.
 - All six containers on external `vqb-network`.
 
+## Capability Inventory & Autonomous Factory Readiness pass — 2026-07-23
+
+Analysis-only. Zero application code, API, schema, engine, or
+OBSERVE-mode change. Backend Feature Freeze v1.1.0-stage4 fully
+preserved. Deliverables published under `docs/`:
+
+- `docs/CAPABILITY_INVENTORY.md` — 15 sections (Phase-1 core · KB ·
+  Autonomous Orchestration · Strategy Generation · Backtest+Validation ·
+  Data+Universe · Portfolio+Master Bot+Prop Firms · Paper Trading+
+  Execution+Broker · Intelligence+Meta-Learning+Factory Eval+Brain ·
+  Factory Supervisor · Governance+Safety+Observability · Infra
+  Primitives · Frontend Surfaces · Tests · Roll-up). ~170 engines
+  catalogued, each classified (PR/MC/NR/NE/LR/MG) with one action
+  (Reuse/Refine/Extend/Replace/Build New).
+- `docs/GAP_ANALYSIS.md` — 8 modules × requirements → existing
+  support → delta → single recommendation. Consolidated ledger:
+  10 Extend · 1 Refine · 1 Build New (deferred). Zero Replace, zero
+  Missing critical subsystems.
+- `docs/DEPENDENCY_MAP.md` — top-view lattice, per-module bindings,
+  cross-module sharing, and dependency-safe bootstrap order. Six of
+  eight future modules composable entirely from existing capabilities.
+- `docs/AUTONOMOUS_FACTORY_READINESS.md` — Factory is ≈ 85 % ready
+  for 24×7. Nothing to build at the subsystem level. Only 1 Refine
+  (swap Phase-0 runner stub for recovered `legacy.factory_runner`) +
+  1 Extend (activate `factory_supervisor` J1..J6 via the wired
+  runner) + 3 small frontend extensions stand between the current
+  stack and full autonomy. 17-verb task registry already covers every
+  autonomous action.
+- `docs/IMPLEMENTATION_ROADMAP.md` — Phases 0..5. Prioritises Reuse
+  → Refine → Extend → Replace → Build New. Phase 1 (env-only
+  activations: runner swap · orchestrator on · MI on) is a single
+  afternoon; Phase 2 (embedding backend · UKIE domains · KB
+  migration · Factory Supervisor activation · cTrader adapter) two
+  to three focused sessions; Phase 3 (frontend extensions) is
+  freeze-safe; Phase 4 (Timeline endpoint + Approvals executor
+  wiring) is post-freeze-lift.
+
+**Verdict:** the long-term vision needs zero new engines. Everything
+is composition of what is already in the repo.
+
 ## Confirmation
-Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations pass is documentation-only + one restored template file — freeze fully preserved.
+Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations + Capability Inventory passes are documentation-only + one restored template file — freeze fully preserved.
