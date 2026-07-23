@@ -775,6 +775,65 @@ Once the operator authorises the migration, execute per
 2. `governance_universe.audit_log` → **ARCHIVE** as
    `governance_universe_legacy` (approved).
 
+## HKB UI Exposure Bug (2026-07-23) — FIXED
+
+**Reported by operator:** After the HKB migration succeeded, the UI still
+showed `KB 0 / 0 Families`, `Historical KB Size = 0`, and
+`Champion Families = 0`. Bug testing agent iteration_7 verdict: **fixed,
+100 % frontend pass, zero blockers**.
+
+**Root cause:** The `/api/knowledge/*` endpoints read from a different
+database + collection namespace (`strategy_knowledge_base.strategy_kb_view`
++ `strategy_knowledge_base.strategy_kb_champions`) than the migration
+landed in (`strategy_factory_v1.strategy_library` +
+`curated_strategy_library`). The API was healthy but had no data to
+serve.
+
+**Fix (freeze-safe, zero backend change):**
+
+1. `hkb/scripts/build_kb_views.py` — pure ETL rebuilding the derived KB
+   views from the imported HKB corpus. Populates
+   `strategy_kb_view` (140 rows, tagged `learning_only:true` +
+   `eligible_for_deploy:false`) and `strategy_kb_champions` (6
+   categories) idempotently. Every row carries the migration
+   provenance stamp.
+2. Follow-up frontend fixes surfaced by bug-testing iteration_6 (all
+   applied and re-verified in iteration_7):
+   - `Strategies.jsx` — added `strategies-hkb-banner` linking to
+     `/c/factory/curated`, plus refreshed empty-state copy that
+     mentions the 140 legacy specimens.
+   - `StrategyPipeline.jsx` — swapped the "Champion families" tile
+     primary value to `canonical_families=132` (was flattened
+     `championRows.length=34`); footnote retains the champion-row
+     count for context.
+   - `CuratedLibraryDashboard.jsx` — added a fixed `CATEGORY_ORDER`
+     so all six champion panels always render (empty ones show a
+     StateTemplate empty-state; the A-Elite panel carries the
+     educational message explaining why the legacy HKB has zero
+     A-Elite candidates).
+3. New surface at `/c/factory/curated` (added when we authored the
+   Curated Library dashboard) with adapter
+   `curatedLibraryAdapter.js` consuming
+   `/api/knowledge/{health,statistics,champions}`.
+
+**Confirmed counts (bug-testing iteration_7):**
+
+- `/api/knowledge/statistics` → `total_strategies=140`, `canonical_families=132`.
+- `/api/knowledge/champions` → 6 categories populated.
+- Strategy Lab (`/c/engineering/strategy-lab`) → `KB 140 / 132`.
+- Strategy Pipeline (`/c/engineering/strategy-pipeline`) → Historical
+  KB Size = 140, Champion Families = 132.
+- Strategy Explorer (`/c/strategies`) → HKB banner shows
+  `140 legacy` + `132 families` chips, links to `/c/factory/curated`.
+- Curated Library (`/c/factory/curated`) → 140 corpus / 132 families /
+  19 candidates; all six champion panels render (A-Elite empty state
+  educational message present).
+
+
+1. `market_data` → **IMPORT** (approved).
+2. `governance_universe.audit_log` → **ARCHIVE** as
+   `governance_universe_legacy` (approved).
+
 **Deliverables:**
 
 - `docs/HKB_MIGRATION_REPORT.md` — full final migration report with
@@ -834,12 +893,52 @@ backend scoring engines / portfolio-builder / master-bot-engine)
 remain queued for post-freeze operator command — none of them are
 blocking VPS Phase-1 activation.
 
-## Next action items (post HKB migration)
+## Operator Manual — 2026-07-23
 
-1. **VPS Phase-1 activation** — apply the four env flags on the VPS
-   per `docs/PRODUCTION_READINESS_REPORT.md` §9. HKB migration is now
-   complete; both tracks (HKB import + Phase-1 activation) are
-   ready.
+Comprehensive Deployment & Operations Manual authored ahead of VPS
+Phase-1 activation, per operator request.
+
+**Deliverable:** `docs/OPERATOR_MANUAL.md` — 18 sections covering:
+
+1. System architecture and module relationships (diagrammed)
+2. Frontend modules & workflows (per surface, per group)
+3. Daily operator workflow (morning · mid-day · end-of-day · weekly)
+4. VPS Phase-1 activation procedure (env flags + expected Cockpit
+   transitions per tile)
+5. Environment variables & configuration
+6. OBSERVE · Recommendation · Autonomous mode behaviour
+7. Meta-Learning lifecycle (with HKB warm-up path)
+8. Factory Evaluation lifecycle
+9. Orchestrator lifecycle (60 s tick cadence)
+10. Strategy lifecycle from ingested → deployed
+11. HKB & Curated Library usage (permanent memory model)
+12. Approval workflow (freeze-limited, executor null, timeline shim)
+13. Validation workflow (five gates)
+14. Monitoring & health checks (real-time signals + probes + logs +
+    alerts)
+15. Recovery & rollback procedures (three-tier + kill switch +
+    backup schedule)
+16. Expected behaviour first 24-72 hours after activation (hour-by-hour
+    playbook + warning signs)
+17. Known limitations under Feature Freeze (nine documented)
+18. Phase-2 roadmap (freeze lift · WRITE wiring · POST_IMPORT_PIPELINE
+    completion · new dashboards · post-freeze backend · operational
+    hardening · marketplace)
+
+The Manual is written from the operator's perspective and refers
+back to the existing production-readiness and HKB migration reports
+as appendices. Sign-off table at the end records every prior
+milestone (FE-A + FE-B/1-5 + HKB migration + iteration 1-7 test
+passes).
+
+**No backend changes. No code changes. Documentation-only deliverable
+per operator request.**
+
+## Next action items
+
+1. Operator reviews `docs/OPERATOR_MANUAL.md`.
+2. On approval, proceed to VPS Phase-1 activation per §4 of the
+   Manual (or the equivalent §9 of the Production Readiness Report).
 2. **Optional post-Phase-1 FE-B extension** — a dedicated
    `/c/factory/curated` surface exposing the 19 curated candidates
    with drill-down to the full HKB lineage. ~1 FE-B slice of work,
