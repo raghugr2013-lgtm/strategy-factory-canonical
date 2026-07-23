@@ -16,7 +16,7 @@
 import {
   Activity, ShieldCheck, Users as UsersIcon, LineChart, Settings as SettingsIcon,
   Compass, Bot, Database, Radio, Waves, FlaskConical, SlidersHorizontal, ClipboardCheck,
-  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch,
+  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch, Cpu,
 } from 'lucide-react';
 
 /**
@@ -39,6 +39,14 @@ export const NAV_GROUPS = [
       { path: '/c/timeline',   label: 'Timeline',   icon: Activity,    testId: 'nav-timeline',   surface: 'timeline' },
       { path: '/c/approvals',  label: 'Approvals',  icon: ShieldCheck, testId: 'nav-approvals',  surface: 'approvals' },
       { path: '/c/workforce',  label: 'Workforce',  icon: UsersIcon,   testId: 'nav-workforce',  surface: 'workforce' },
+    ],
+  },
+  {
+    id: 'factory',
+    label: 'Factory',
+    testId: 'nav-group-factory',
+    items: [
+      { path: '/c/factory/orchestrator', label: 'Orchestrator', icon: Cpu, testId: 'nav-orchestrator', surface: 'orchestrator' },
     ],
   },
   {

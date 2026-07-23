@@ -28,6 +28,7 @@ import { Deployments } from '../surfaces/engineering/Deployments';
 import { Users } from '../surfaces/admin/Users';
 import { Integrations } from '../surfaces/admin/Integrations';
 import { Logs } from '../surfaces/admin/Logs';
+import { OrchestratorDashboard } from '../surfaces/factory/OrchestratorDashboard';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -54,6 +55,9 @@ export const AppRouter = () => (
         {/* Strategies (deep-linked from Engineering rail as "Strategy Passports") */}
         <Route path="strategies" element={<Strategies />} />
         <Route path="strategies/:id" element={<StrategyPassport />} />
+
+        {/* Factory — FE-B Slice 1 Autonomous Research Factory dashboards */}
+        <Route path="factory/orchestrator" element={<OrchestratorDashboard />} />
 
         {/* Engineering — Phase 1 empty states */}
         <Route path="engineering/market-data"   element={<MarketData />} />

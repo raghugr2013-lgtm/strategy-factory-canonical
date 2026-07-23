@@ -90,7 +90,12 @@ const inferIngestionChip = (raw) => {
 
 const inferLLMChip = (raw) => {
   if (!raw) return DEFAULT_CHIPS.llm;
-  const providers = Array.isArray(raw) ? raw : (raw.providers || raw.items || []);
+  let providers;
+  if (Array.isArray(raw)) providers = raw;
+  else if (Array.isArray(raw.providers)) providers = raw.providers;
+  else if (raw.providers && typeof raw.providers === 'object') providers = Object.entries(raw.providers).map(([name, v]) => ({ name, ...(v || {}) }));
+  else if (Array.isArray(raw.items)) providers = raw.items;
+  else providers = [];
   const configured = providers.filter((p) => p.configured || p.enabled || p.available);
   const openCircuit = configured.find((p) => (p.circuit === 'open' || p.state === 'open'));
   const active = configured.find((p) => p.active) || configured[0];
