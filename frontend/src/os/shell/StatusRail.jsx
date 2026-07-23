@@ -127,9 +127,9 @@ const useStatusRailLive = ({ enabled }) => {
     const refresh = async () => {
       const [orch, ingest, providers, gov] = await Promise.all([
         safeFetch('/api/orchestrator/status'),
-        safeFetch('/api/data-maintenance/status'),
-        safeFetch('/api/ai-workforce/providers'),
-        safeFetch('/api/governance/summary'),
+        safeFetch('/api/data/coverage'),                    // ingestion signal — /api/data-maintenance/status is not exposed under freeze
+        safeFetch('/api/ai-workforce/health'),               // /api/ai-workforce/providers is not exposed; /health carries provider snapshot
+        safeFetch('/api/governance/ecosystem-maturity'),     // /api/governance/summary is not exposed; ecosystem-maturity carries the same posture signal
       ]);
       if (cancelled) return;
       setChips({

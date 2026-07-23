@@ -283,6 +283,59 @@ preserved. Deliverables published under `docs/`:
 **Verdict:** the long-term vision needs zero new engines. Everything
 is composition of what is already in the repo.
 
+## Sprint FE-A — Autonomous Factory Sign-In + Live Status Rail — 2026-07-23
+
+REFINEMENT-ONLY sprint. **3 files touched, 0 files created** in the
+FE-A scope. Testing_agent iteration_2 verdict: **100 % pass on backend
++ frontend**, zero regressions, all acceptance criteria met.
+
+**Deliverables:**
+
+- `frontend/src/os/auth/LoginScreen.jsx` — removed the visible
+  fixture-credentials block from the sign-in card.
+- `frontend/src/os/shell/StatusRail.jsx` — `useStatusRailLive()` hook
+  polls `/api/orchestrator/status`, `/api/data/coverage`,
+  `/api/ai-workforce/health`, `/api/governance/ecosystem-maturity`
+  every 15 s + on focus (only when authenticated). Preserves the
+  exact visual contract (5 chips + kill posture, same `data-testid`s,
+  same tone glyphs). Adds `data-live` attribute for automation.
+- `frontend/src/os/routing/navigation.js` — reconciled 6 phase2Sources
+  path mismatches against the real backend prefixes.
+- `docs/FE_A_EXECUTION_REPORT.md` — execution report + coverage
+  metrics + endpoint list.
+- `docs/FE_B_PROPOSAL.md` — next sprint proposal (7 Autonomous
+  Factory dashboards, extend-only, ~120 endpoints unlocked).
+- `memory/test_credentials.md` — real backend admin
+  (`admin@strategy-factory.local` / `admin123`) + fixture fallback
+  documentation.
+- Screenshots: `docs/screenshots/fe-a-00-signin.jpeg`,
+  `fe-a-01-mission-live.jpeg`, `fe-a-02-statusrail-live.jpeg`.
+
+**Live proof in the local dev environment:**
+
+- Sign-in card fixture credentials block: **REMOVED** (verified via
+  `[data-testid='login-fixture-credentials']` count = 0).
+- Real backend sign-in: `admin@strategy-factory.local / admin123` →
+  redirected to `/c/mission`.
+- RBAC: `[data-testid='nav-group-admin']` present because
+  `/api/auth/me` returned `role='admin'`. Badge `ADMIN · LIVE ·
+  /API/AUTH/ME`.
+- Status rail: `data-live='true'` attribute set post-auth.
+  `status-chip-orchestrator` correctly renders `I · ORCHESTRATOR ·
+  HALTED` from real backend query (proves live path reached).
+- Path reconciliation: `grep` for 6 old paths in `navigation.js`
+  returns zero matches.
+
+**Coverage delta:** distinct `/api/*` endpoints reachable from the
+UI rose from **8 → ~17** (+9). Frontend-vs-backend coverage rose from
+~1.3 % → ~2.8 %.
+
+**Constraint compliance:** ✅ No new backend engines · ✅ No new
+backend endpoints · ✅ No database changes · ✅ No schema changes · ✅
+Backend Feature Freeze v1.1.0-stage4 preserved · ✅ OBSERVE mode
+preserved · ✅ Discover → Reuse → Refine → Extend → Build New order
+honoured.
+
 ## Frontend Capability Audit — 2026-07-23
 
 Repository-wide read-only audit of the operator UI. Zero code changes.
