@@ -647,4 +647,55 @@ Factory-group surface (all GETs, guaranteed by adapter shape).
 3. **Low-priority polish** (from iteration_4 note) — Chip glyph
    spacing inside summary cells; cosmetic only.
 
+## Operator Acceptance Testing (OAT) — 2026-07-23
+
+Validation-only pass ahead of VPS Phase-1 activation. Zero backend
+files modified. Zero frontend files modified. Backend Feature Freeze
+v1.1.0-stage4 fully preserved.
+
+**Verdict: SIGN-OFF — READY FOR VPS PHASE-1 ACTIVATION.**
+
+Testing_agent iteration_5 result: **100 % pass, zero blockers, zero
+attention items, zero polish items** across four OAT dimensions:
+
+1. Full operator journey (login → RBAC → Cockpit → each of 5 Factory
+   dashboards → cross-navigation → sign-out).
+2. Cockpit widget-by-widget verification against live backend payloads
+   (13 widgets across 4 panels, 42+ testids).
+3. Backend coverage audit — 646 total endpoints, 46 distinct paths
+   exposed, ~53 % of operator-critical READ endpoints wired, 0 %
+   WRITE endpoints wired (freeze compliance).
+4. Freeze-proof — fetch-level instrumentation confirmed zero POST /
+   PUT / PATCH / DELETE calls from any Factory-group surface.
+
+**Deliverables published:**
+
+- `docs/BACKEND_COVERAGE_REPORT.md` — full endpoint inventory, bucket
+  coverage (critical / internal-engine / diagnostic), per-tag
+  breakdown, frontend → backend adapter map.
+- `docs/PRODUCTION_READINESS_REPORT.md` — 10-section sign-off with
+  workflow validation matrix, cockpit widget matrix, blocker ledger
+  (empty), risk register (four residual low-impact), operator readiness
+  matrix, VPS Phase-1 activation runbook with expected Cockpit deltas,
+  and the sign-off table.
+- `docs/oat/openapi.json` + `docs/oat/endpoint_coverage.json` — raw
+  inventory captured during the OAT run for reproducibility.
+- `test_reports/iteration_5.json` — OAT test agent verdict.
+
+**Deployment confidence score: 9 / 10.** Single reserved point is the
+observed-vs-expected delta once the four VPS Phase-1 flags flip on.
+Everything else has been validated end-to-end.
+
+## Next action items (post OAT)
+
+1. **VPS Phase-1 activation on operator command** — follow the runbook
+   in `docs/PRODUCTION_READINESS_REPORT.md` §9 (or the more detailed
+   `docs/PHASE_1_ACTIVATION_PLAN.md`).
+2. **Post-activation validation** — run `phase1_validate.sh`, populate
+   `PHASE_1_FACTORY_VALIDATION_REPORT.md`, monitor the Cockpit for
+   ATTENTION → HEALTHY transition on all 7 subsystems.
+3. **Optional post-Phase-1 FE-B extension slices** (all still
+   freeze-safe): Master Bot deep-dive, Portfolio surface, AI Provider
+   deep-dive, Budget / Risk-Budget dashboard, Approvals inbox.
+
 

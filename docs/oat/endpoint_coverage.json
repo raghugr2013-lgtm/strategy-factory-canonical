@@ -1,0 +1,355 @@
+{
+  "buckets": {
+    "critical": {
+      "total": 215,
+      "exposed": 48,
+      "coverage_pct": 22,
+      "tags": [
+        {
+          "tag": "master-bot",
+          "exposed": 2,
+          "total": 58
+        },
+        {
+          "tag": "knowledge",
+          "exposed": 4,
+          "total": 34
+        },
+        {
+          "tag": "factory-eval-engine",
+          "exposed": 9,
+          "total": 27
+        },
+        {
+          "tag": "meta-learning-engine",
+          "exposed": 7,
+          "total": 14
+        },
+        {
+          "tag": "health",
+          "exposed": 2,
+          "total": 12
+        },
+        {
+          "tag": "portfolio",
+          "exposed": 0,
+          "total": 11
+        },
+        {
+          "tag": "coe",
+          "exposed": 3,
+          "total": 10
+        },
+        {
+          "tag": "governance",
+          "exposed": 7,
+          "total": 10
+        },
+        {
+          "tag": "data-maintenance",
+          "exposed": 4,
+          "total": 9
+        },
+        {
+          "tag": "ai-workforce",
+          "exposed": 1,
+          "total": 8
+        },
+        {
+          "tag": "orchestrator",
+          "exposed": 2,
+          "total": 7
+        },
+        {
+          "tag": "auth",
+          "exposed": 2,
+          "total": 5
+        },
+        {
+          "tag": "strategies",
+          "exposed": 3,
+          "total": 5
+        },
+        {
+          "tag": "data-health",
+          "exposed": 1,
+          "total": 3
+        },
+        {
+          "tag": "coverage",
+          "exposed": 1,
+          "total": 2
+        }
+      ]
+    },
+    "internal-engine": {
+      "total": 245,
+      "exposed": 1,
+      "coverage_pct": 0,
+      "tags": [
+        {
+          "tag": "factory-supervisor",
+          "exposed": 0,
+          "total": 56
+        },
+        {
+          "tag": "execution-engine",
+          "exposed": 0,
+          "total": 19
+        },
+        {
+          "tag": "learning",
+          "exposed": 0,
+          "total": 18
+        },
+        {
+          "tag": "execution",
+          "exposed": 0,
+          "total": 14
+        },
+        {
+          "tag": "auto-mutation-runner",
+          "exposed": 0,
+          "total": 11
+        },
+        {
+          "tag": "mutation",
+          "exposed": 0,
+          "total": 10
+        },
+        {
+          "tag": "scaling",
+          "exposed": 0,
+          "total": 10
+        },
+        {
+          "tag": "tuning",
+          "exposed": 0,
+          "total": 9
+        },
+        {
+          "tag": "admin",
+          "exposed": 1,
+          "total": 8
+        },
+        {
+          "tag": "prop-firms",
+          "exposed": 0,
+          "total": 8
+        },
+        {
+          "tag": "market-intelligence-engine",
+          "exposed": 0,
+          "total": 7
+        },
+        {
+          "tag": "brain",
+          "exposed": 0,
+          "total": 6
+        },
+        {
+          "tag": "optimization",
+          "exposed": 0,
+          "total": 6
+        },
+        {
+          "tag": "prop-firm-rules-review",
+          "exposed": 0,
+          "total": 6
+        },
+        {
+          "tag": "trade-runner",
+          "exposed": 0,
+          "total": 6
+        },
+        {
+          "tag": "market-intelligence",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "prop-firm-analysis",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "challenge-matching",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "intelligence",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "lifecycle",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "llm",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "auto-multi-cycle",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "prop-firms-intelligence",
+          "exposed": 0,
+          "total": 5
+        },
+        {
+          "tag": "portfolio-builder",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "portfolio-intelligence",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "auto-selection",
+          "exposed": 0,
+          "total": 3
+        }
+      ]
+    },
+    "diagnostic": {
+      "total": 55,
+      "exposed": 1,
+      "coverage_pct": 1,
+      "tags": [
+        {
+          "tag": "admin-bi5-cert",
+          "exposed": 0,
+          "total": 8
+        },
+        {
+          "tag": "strategy-memory",
+          "exposed": 0,
+          "total": 7
+        },
+        {
+          "tag": "asf-migration",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "bi5-realism",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "data-backup",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "runner",
+          "exposed": 0,
+          "total": 4
+        },
+        {
+          "tag": "cbot-parity",
+          "exposed": 0,
+          "total": 3
+        },
+        {
+          "tag": "gem-factory",
+          "exposed": 0,
+          "total": 3
+        },
+        {
+          "tag": "regime",
+          "exposed": 0,
+          "total": 3
+        },
+        {
+          "tag": "research",
+          "exposed": 1,
+          "total": 2
+        },
+        {
+          "tag": "admin-bi5",
+          "exposed": 0,
+          "total": 2
+        },
+        {
+          "tag": "pipeline_logs",
+          "exposed": 0,
+          "total": 2
+        },
+        {
+          "tag": "dashboard",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "bi5-bid-diff",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "cpu-pool",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "deployment",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "diag-bi5",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "incremental-run-alias",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "llm-health",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "phase4-matching",
+          "exposed": 0,
+          "total": 1
+        },
+        {
+          "tag": "admin-readiness",
+          "exposed": 0,
+          "total": 1
+        }
+      ]
+    },
+    "untagged": {
+      "total": 131,
+      "exposed": 0,
+      "coverage_pct": 0,
+      "tags": [
+        {
+          "tag": "untagged",
+          "exposed": 0,
+          "total": 131
+        }
+      ]
+    },
+    "other": {
+      "total": 0,
+      "exposed": 0,
+      "coverage_pct": 0,
+      "tags": []
+    }
+  },
+  "grand_total": 646,
+  "grand_exposed_distinct_paths": 46
+}
