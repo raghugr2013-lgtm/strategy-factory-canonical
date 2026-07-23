@@ -1,0 +1,319 @@
+{
+  "total_records": 1053512,
+  "symbols": [
+    "BTCUSD",
+    "ETHUSD",
+    "EURUSD",
+    "GBPUSD",
+    "US100",
+    "USDJPY",
+    "XAUUSD"
+  ],
+  "sources": [
+    "bid_1m"
+  ],
+  "timeframes": [
+    "15m",
+    "1d",
+    "1h",
+    "30m",
+    "4h"
+  ],
+  "per_cell": [
+    {
+      "symbol": "BTCUSD",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 104931,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "BTCUSD",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 1098,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "BTCUSD",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 26242,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "BTCUSD",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 52475,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "BTCUSD",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 6566,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "ETHUSD",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 104952,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "ETHUSD",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 1096,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-13T00:00:00+00:00"
+    },
+    {
+      "symbol": "ETHUSD",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 26248,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "ETHUSD",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 52489,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "ETHUSD",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 6567,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-16T00:00:00+00:00"
+    },
+    {
+      "symbol": "EURUSD",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 77134,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:45:00+00:00"
+    },
+    {
+      "symbol": "EURUSD",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 945,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "EURUSD",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 18816,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "EURUSD",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 37636,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:30:00+00:00"
+    },
+    {
+      "symbol": "EURUSD",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 4865,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "GBPUSD",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 75253,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:45:00+00:00"
+    },
+    {
+      "symbol": "GBPUSD",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 944,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "GBPUSD",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 18814,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "GBPUSD",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 37631,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:30:00+00:00"
+    },
+    {
+      "symbol": "GBPUSD",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 4864,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "US100",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 68849,
+      "min_ts": "2023-05-09T00:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "US100",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 937,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "US100",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 17695,
+      "min_ts": "2023-05-14T22:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "US100",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 34632,
+      "min_ts": "2023-05-14T22:00:00+00:00",
+      "max_ts": "2026-05-15T19:30:00+00:00"
+    },
+    {
+      "symbol": "US100",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 4802,
+      "min_ts": "2023-05-14T20:00:00+00:00",
+      "max_ts": "2026-05-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "USDJPY",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 74890,
+      "min_ts": "2023-05-14T21:00:00+00:00",
+      "max_ts": "2026-05-15T20:45:00+00:00"
+    },
+    {
+      "symbol": "USDJPY",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 941,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "USDJPY",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 18722,
+      "min_ts": "2023-05-14T21:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "USDJPY",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 37447,
+      "min_ts": "2023-05-14T21:00:00+00:00",
+      "max_ts": "2026-05-15T20:30:00+00:00"
+    },
+    {
+      "symbol": "USDJPY",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 4841,
+      "min_ts": "2023-05-14T20:00:00+00:00",
+      "max_ts": "2026-05-15T16:00:00+00:00"
+    },
+    {
+      "symbol": "XAUUSD",
+      "source": "bid_1m",
+      "timeframe": "15m",
+      "count": 71102,
+      "min_ts": "2023-05-14T22:00:00+00:00",
+      "max_ts": "2026-05-15T20:45:00+00:00"
+    },
+    {
+      "symbol": "XAUUSD",
+      "source": "bid_1m",
+      "timeframe": "1d",
+      "count": 937,
+      "min_ts": "2023-05-14T00:00:00+00:00",
+      "max_ts": "2026-05-15T00:00:00+00:00"
+    },
+    {
+      "symbol": "XAUUSD",
+      "source": "bid_1m",
+      "timeframe": "1h",
+      "count": 17786,
+      "min_ts": "2023-05-14T22:00:00+00:00",
+      "max_ts": "2026-05-15T20:00:00+00:00"
+    },
+    {
+      "symbol": "XAUUSD",
+      "source": "bid_1m",
+      "timeframe": "30m",
+      "count": 35555,
+      "min_ts": "2023-05-14T22:00:00+00:00",
+      "max_ts": "2026-05-15T20:30:00+00:00"
+    },
+    {
+      "symbol": "XAUUSD",
+      "source": "bid_1m",
+      "timeframe": "4h",
+      "count": 4810,
+      "min_ts": "2023-05-14T20:00:00+00:00",
+      "max_ts": "2026-05-15T16:00:00+00:00"
+    }
+  ],
+  "earliest": "2023-05-09T00:00:00+00:00",
+  "latest": "2026-05-16T00:00:00+00:00",
+  "fields": [
+    "_id",
+    "close",
+    "high",
+    "low",
+    "open",
+    "source",
+    "symbol",
+    "timeframe",
+    "timestamp",
+    "volume"
+  ],
+  "has_bid_ask": false
+}
