@@ -245,6 +245,19 @@ services:
       # FACTORY_RUNNER_OWNS_SCHEDULERS=true. Defaults preserve prior
       # heartbeat-only behaviour. See docs/PHASE_1_ACTIVATION_PLAN.md.
       FACTORY_RUNNER_OWNS_SCHEDULERS: ${FACTORY_RUNNER_OWNS_SCHEDULERS:-false}
+      # ── Phase 1b Factory Supervisor (APScheduler) ────────────────
+      # New third dispatch mode in app/runner.py. Defaults to false so
+      # current heartbeat / legacy behaviour is preserved. Flip to
+      # "true" to activate the 5 recurring placeholder jobs
+      # (orchestrator / mutation / factory_eval / meta_learning /
+      # governance). Optional 5-field crontab overrides let ops tune
+      # cadence without a code change. See app/factory_supervisor.py.
+      FACTORY_SUPERVISOR_ENABLED: ${FACTORY_SUPERVISOR_ENABLED:-false}
+      SUPERVISOR_ORCHESTRATOR_CRON: ${SUPERVISOR_ORCHESTRATOR_CRON:-}
+      SUPERVISOR_MUTATION_CRON: ${SUPERVISOR_MUTATION_CRON:-}
+      SUPERVISOR_FACTORY_EVAL_CRON: ${SUPERVISOR_FACTORY_EVAL_CRON:-}
+      SUPERVISOR_META_LEARNING_CRON: ${SUPERVISOR_META_LEARNING_CRON:-}
+      SUPERVISOR_GOVERNANCE_CRON: ${SUPERVISOR_GOVERNANCE_CRON:-}
       ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
       LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
       LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}
