@@ -1,5 +1,5 @@
 → Strategy Factory v1.1 deployment verification
-  BASE=https://strategy-unified.preview.emergentagent.com  EMAIL=admin@strategyfactory.dev
+  BASE=https://factory-v2-canonical.preview.emergentagent.com  EMAIL=admin@strategyfactory.dev
 
   ✓ Login (JWT obtained)
   ✓ Fetch current user                       GET /api/auth/me
