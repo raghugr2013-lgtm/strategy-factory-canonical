@@ -1,0 +1,1117 @@
+{
+  "total_endpoints": 646,
+  "total_tags": 63,
+  "frontend_literal_references": 58,
+  "matched_backend_paths": [
+    "/api/admin/providers",
+    "/api/ai-workforce/health",
+    "/api/auth/login",
+    "/api/auth/me",
+    "/api/coe/dead-letter/depth",
+    "/api/coe/metrics",
+    "/api/coe/state",
+    "/api/data/coverage",
+    "/api/data/health",
+    "/api/data/maintenance/config",
+    "/api/data/maintenance/recent-runs",
+    "/api/data/maintenance/status",
+    "/api/factory-eval/config",
+    "/api/factory-eval/coverage-gaps",
+    "/api/factory-eval/health",
+    "/api/factory-eval/insights",
+    "/api/factory-eval/kpis",
+    "/api/factory-eval/pending",
+    "/api/factory-eval/recommendations",
+    "/api/factory-eval/reports",
+    "/api/factory-eval/reports/latest",
+    "/api/factory-eval/status",
+    "/api/governance/bi5-maturity",
+    "/api/governance/ecosystem-maturity",
+    "/api/governance/promotion-ledger",
+    "/api/governance/replacement-candidates",
+    "/api/governance/survivor-registry",
+    "/api/governance/universe",
+    "/api/knowledge/champions",
+    "/api/knowledge/health",
+    "/api/knowledge/nearest",
+    "/api/knowledge/statistics",
+    "/api/master-bot",
+    "/api/meta-learning/applications",
+    "/api/meta-learning/config",
+    "/api/meta-learning/evaluations",
+    "/api/meta-learning/health",
+    "/api/meta-learning/overrides",
+    "/api/meta-learning/pending",
+    "/api/meta-learning/recommendations",
+    "/api/meta-learning/status",
+    "/api/orchestrator/decisions",
+    "/api/orchestrator/status",
+    "/api/research/history",
+    "/api/strategies",
+    "/api/strategies/generate"
+  ],
+  "unmatched_frontend_refs": [
+    "/api/coe/",
+    "/api/data/maintenance",
+    "/api/data/maintenance/",
+    "/api/factory-eval/",
+    "/api/llm-calls",
+    "/api/meta-learning/",
+    "/api/orchestrator/history"
+  ],
+  "buckets": {
+    "critical": {
+      "total": 228,
+      "exposed": 48
+    },
+    "diagnostic": {
+      "total": 0,
+      "exposed": 0
+    },
+    "other": {
+      "total": 418,
+      "exposed": 2
+    }
+  },
+  "per_tag": {
+    "health": {
+      "total": 12,
+      "exposed": 2,
+      "bucket": "critical"
+    },
+    "auth": {
+      "total": 5,
+      "exposed": 2,
+      "bucket": "critical"
+    },
+    "admin": {
+      "total": 8,
+      "exposed": 1,
+      "bucket": "other"
+    },
+    "research": {
+      "total": 2,
+      "exposed": 1,
+      "bucket": "other"
+    },
+    "dashboard": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "knowledge": {
+      "total": 34,
+      "exposed": 4,
+      "bucket": "critical"
+    },
+    "coe": {
+      "total": 10,
+      "exposed": 3,
+      "bucket": "critical"
+    },
+    "coverage": {
+      "total": 2,
+      "exposed": 1,
+      "bucket": "critical"
+    },
+    "bi5-bid-diff": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "portfolio": {
+      "total": 11,
+      "exposed": 0,
+      "bucket": "critical"
+    },
+    "strategy-memory": {
+      "total": 7,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "market-intelligence": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "prop-firm-analysis": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "challenge-matching": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "untagged": {
+      "total": 131,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "asf-migration": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "auto-mutation-runner": {
+      "total": 11,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "auto-selection": {
+      "total": 3,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "admin-bi5-cert": {
+      "total": 8,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "admin-bi5": {
+      "total": 2,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "bi5-realism": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "cbot-parity": {
+      "total": 3,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "cpu-pool": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "data-health": {
+      "total": 3,
+      "exposed": 1,
+      "bucket": "critical"
+    },
+    "data-maintenance": {
+      "total": 9,
+      "exposed": 4,
+      "bucket": "critical"
+    },
+    "data-backup": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "critical"
+    },
+    "deployment": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "diag-bi5": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "execution": {
+      "total": 14,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "factory-supervisor": {
+      "total": 56,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "gem-factory": {
+      "total": 3,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "governance": {
+      "total": 10,
+      "exposed": 7,
+      "bucket": "critical"
+    },
+    "incremental-run-alias": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "learning": {
+      "total": 18,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "orchestrator": {
+      "total": 7,
+      "exposed": 2,
+      "bucket": "critical"
+    },
+    "intelligence": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "brain": {
+      "total": 6,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "market-intelligence-engine": {
+      "total": 7,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "execution-engine": {
+      "total": 19,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "meta-learning-engine": {
+      "total": 14,
+      "exposed": 7,
+      "bucket": "critical"
+    },
+    "factory-eval-engine": {
+      "total": 27,
+      "exposed": 9,
+      "bucket": "critical"
+    },
+    "ai-workforce": {
+      "total": 8,
+      "exposed": 1,
+      "bucket": "critical"
+    },
+    "lifecycle": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "llm": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "llm-health": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "critical"
+    },
+    "master-bot": {
+      "total": 58,
+      "exposed": 2,
+      "bucket": "critical"
+    },
+    "auto-multi-cycle": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "mutation": {
+      "total": 10,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "optimization": {
+      "total": 6,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "tuning": {
+      "total": 9,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "phase4-matching": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "pipeline_logs": {
+      "total": 2,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "portfolio-builder": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "critical"
+    },
+    "portfolio-intelligence": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "critical"
+    },
+    "prop-firms-intelligence": {
+      "total": 5,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "prop-firm-rules-review": {
+      "total": 6,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "prop-firms": {
+      "total": 8,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "admin-readiness": {
+      "total": 1,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "regime": {
+      "total": 3,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "runner": {
+      "total": 4,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "scaling": {
+      "total": 10,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "trade-runner": {
+      "total": 6,
+      "exposed": 0,
+      "bucket": "other"
+    },
+    "strategies": {
+      "total": 5,
+      "exposed": 3,
+      "bucket": "critical"
+    }
+  },
+  "notexposed_by_tag": {
+    "health": [
+      "GET /api/health",
+      "GET /api/health/config",
+      "GET /api/readiness",
+      "GET /api/version",
+      "GET /api/health/system",
+      "GET /api/health/subsystems",
+      "GET /api/health/{subsystem}",
+      "GET /api/mi/health",
+      "GET /api/execution/health",
+      "GET /api/portfolio/health"
+    ],
+    "auth": [
+      "POST /api/auth/signup",
+      "POST /api/auth/refresh",
+      "POST /api/auth/logout"
+    ],
+    "admin": [
+      "GET /api/admin/users",
+      "POST /api/admin/users",
+      "PATCH /api/admin/users/{user_id}",
+      "DELETE /api/admin/users/{user_id}",
+      "POST /api/admin/providers/probe",
+      "POST /api/admin/approve/{user_id}",
+      "POST /api/admin/reject/{user_id}"
+    ],
+    "research": [
+      "POST /api/research/query"
+    ],
+    "dashboard": [
+      "GET /api/dashboard/summary"
+    ],
+    "knowledge": [
+      "GET /api/knowledge/families/{canonical_hash_key}",
+      "GET /api/knowledge/strategy/{strategy_id}",
+      "GET /api/knowledge/connectors/health",
+      "GET /api/knowledge/connectors/{name}/health",
+      "GET /api/knowledge/domains",
+      "GET /api/knowledge/domains/{domain}",
+      "GET /api/knowledge/connectors",
+      "GET /api/knowledge/connectors/{name}",
+      "GET /api/knowledge/domains/{domain}/connectors",
+      "GET /api/knowledge/pipeline/status",
+      "GET /api/knowledge/pipeline/last-run",
+      "POST /api/knowledge/dry-run",
+      "POST /api/knowledge/promote/{item_id}",
+      "POST /api/knowledge/promote/{item_id}/rollback",
+      "POST /api/knowledge/retro-score",
+      "POST /api/knowledge/retro-score/rollback/{run_id}",
+      "POST /api/knowledge/query",
+      "POST /api/knowledge/lifecycle-sweep",
+      "POST /api/knowledge/endorsement",
+      "POST /api/knowledge/contradiction",
+      "POST /api/knowledge/governance/evaluate/{kb_id}",
+      "GET /api/knowledge/ukie/health",
+      "GET /api/knowledge/metrics",
+      "GET /api/knowledge/promote-events",
+      "GET /api/knowledge/retro-score-runs",
+      "GET /api/knowledge/connector-events",
+      "GET /api/knowledge/status",
+      "POST /api/knowledge/rebuild",
+      "GET /api/knowledge/lookup",
+      "POST /api/knowledge/preview-prompt"
+    ],
+    "coverage": [
+      "GET /api/data/coverage/{symbol}"
+    ],
+    "bi5-bid-diff": [
+      "POST /api/data/bi5-bid-diff"
+    ],
+    "coe": [
+      "GET /api/coe/dead-letter",
+      "GET /api/coe/dead-letter/{row_id}",
+      "POST /api/coe/dead-letter/{row_id}/requeue",
+      "POST /api/coe/dead-letter/{row_id}/discard",
+      "POST /api/coe/circuit-breaker/{provider}/reset",
+      "POST /api/coe/queue/pause",
+      "POST /api/coe/queue/resume"
+    ],
+    "portfolio": [
+      "POST /api/portfolio/health",
+      "GET /api/portfolio/health/{master_bot_id}",
+      "POST /api/portfolio/allocate",
+      "POST /api/portfolio/capital",
+      "POST /api/portfolio/promotion-candidates",
+      "POST /api/portfolio/retirement-candidates",
+      "POST /api/portfolio/rebuild/{master_bot_id}",
+      "GET /api/portfolio/state/{master_bot_id}",
+      "POST /api/portfolio/closed-learning/record",
+      "POST /api/portfolio/build",
+      "GET /api/portfolio/status"
+    ],
+    "strategy-memory": [
+      "GET /api/strategies/explorer",
+      "GET /api/strategies/{strategy_hash}/history",
+      "GET /api/strategies/library/{strategy_id}/details",
+      "POST /api/strategies/{strategy_hash}/re-run",
+      "GET /api/strategies/{strategy_hash}/export",
+      "GET /api/strategies/{strategy_hash}/export/cbot",
+      "POST /api/strategies/{strategy_hash}/favorite"
+    ],
+    "market-intelligence": [
+      "POST /api/strategies/{strategy_hash}/market-scan",
+      "GET /api/strategies/{strategy_hash}/market-profile",
+      "POST /api/market-intelligence/scan-eligible",
+      "GET /api/market-intelligence/rankings",
+      "GET /api/market-intelligence/config"
+    ],
+    "prop-firm-analysis": [
+      "POST /api/strategies/{strategy_hash}/prop-analysis",
+      "GET /api/strategies/{strategy_hash}/prop-analysis",
+      "GET /api/prop-firm-analysis/rules",
+      "GET /api/prop-firm-analysis/rules/{firm_slug}",
+      "POST /api/prop-firm-analysis/batch-analyze"
+    ],
+    "challenge-matching": [
+      "POST /api/strategies/{strategy_hash}/match-challenges",
+      "GET /api/strategies/{strategy_hash}/challenge-match",
+      "GET /api/challenge-matching/challenge-types",
+      "GET /api/challenge-matching/challenge-types/by-firm",
+      "POST /api/challenge-matching/run-eligible"
+    ],
+    "untagged": [
+      "POST /api/admin/execution-realism-defaults",
+      "DELETE /api/admin/execution-realism-defaults",
+      "GET /api/admin/flag",
+      "POST /api/admin/flag",
+      "DELETE /api/admin/flag/{flag_name}",
+      "GET /api/admin/flag/history",
+      "POST /api/admin/widening-proposals",
+      "GET /api/admin/widening-proposals",
+      "POST /api/admin/widening-proposals/{proposal_id}/approve",
+      "POST /api/admin/widening-proposals/{proposal_id}/reject",
+      "POST /api/admin/market-universe",
+      "DELETE /api/admin/market-universe",
+      "POST /api/admin/market-universe/{symbol}/tier",
+      "POST /api/admin/market-universe/{symbol}/enable",
+      "GET /api/admin/market-universe/{symbol}",
+      "POST /api/admin/market-universe/{symbol}/eligibility",
+      "POST /api/admin/market-universe/{symbol}/calendar",
+      "POST /api/admin/market-universe/bulk-import",
+      "GET /api/admin/market-universe/audit/{symbol}",
+      "GET /api/admin/market-universe/diff/{symbol}/{ts}",
+      "POST /api/generate-cbot",
+      "POST /api/dashboard/generate",
+      "POST /api/dashboard/generate-portfolio",
+      "GET /api/dashboard/datasets",
+      "POST /api/dashboard/quality-profile",
+      "POST /api/live/start",
+      "POST /api/live/stop",
+      "POST /api/live/update/{strategy_id}",
+      "POST /api/live/update-all",
+      "GET /api/live/strategies",
+      "POST /api/live/refresh-data",
+      "DELETE /api/live/{strategy_id}",
+      "POST /api/live/config",
+      "POST /api/run-pipeline",
+      "POST /api/auto-factory",
+      "POST /api/run-auto-factory",
+      "GET /api/auto-factory-results",
+      "GET /api/research-runs",
+      "GET /api/research-runs/by-strategy/{strategy_hash}",
+      "GET /api/research-runs/by-library/{library_id}",
+      "GET /api/research-runs/{rrid}",
+      "GET /api/diagnostics/soak-snapshot",
+      "POST /api/generate-strategy",
+      "POST /api/run-backtest",
+      "POST /api/save-strategy",
+      "POST /api/strategies/compare",
+      "POST /api/rank-strategies",
+      "POST /api/analyze-strategy",
+      "POST /api/extract-params",
+      "POST /api/optimize-strategy",
+      "POST /api/optimize-random",
+      "POST /api/validate-strategy",
+      "POST /api/safety-check",
+      "POST /api/monte-carlo",
+      "POST /api/portfolio-analyze",
+      "POST /api/portfolio-auto-build",
+      "POST /api/portfolio-live-allocation",
+      "GET /api/allocation-history",
+      "GET /api/rebalance/config",
+      "POST /api/rebalance/config",
+      "POST /api/rebalance/run",
+      "GET /api/rebalance/status",
+      "POST /api/evaluate-decision",
+      "POST /api/mutate-strategy",
+      "POST /api/estimate-probability",
+      "POST /api/match-strategy",
+      "POST /api/profile-strategy",
+      "POST /api/simulate-challenge",
+      "GET /api/challenge-firms",
+      "GET /api/challenge-rules",
+      "POST /api/challenge-rules",
+      "GET /api/challenge-rules/{firm_slug}",
+      "PUT /api/challenge-rules/{firm_slug}",
+      "DELETE /api/challenge-rules/{firm_slug}",
+      "POST /api/challenge-rules/{firm_slug}/validate",
+      "POST /api/challenge-rules/{firm_slug}/override",
+      "GET /api/challenge-rules/{firm_slug}/changelog",
+      "POST /api/pipeline/dashboard",
+      "POST /api/dashboard/portfolios/save",
+      "GET /api/dashboard/portfolios/list",
+      "GET /api/dashboard/portfolios/{portfolio_id}",
+      "DELETE /api/dashboard/portfolios/{portfolio_id}",
+      "POST /api/library/save",
+      "POST /api/library/auto-save",
+      "GET /api/library/list",
+      "DELETE /api/library/{strategy_id}",
+      "POST /api/cbot/build-reliable",
+      "POST /api/strategy/describe",
+      "GET /api/strategy/description/{fingerprint}",
+      "POST /api/match-firms-phase4",
+      "GET /api/legacy/strategies",
+      "GET /api/legacy/strategies/{strategy_id}",
+      "DELETE /api/legacy/strategies/{strategy_id}",
+      "GET /api/latent/activation-governance",
+      "GET /api/latent/activation-timeline",
+      "GET /api/latent/activation-timeline/summary",
+      "GET /api/latent/soak-stability",
+      "GET /api/latent/rotational-proposal",
+      "GET /api/latent/agent-advisor",
+      "GET /api/latent/flag-overrides",
+      "POST /api/latent/calibration/predictions",
+      "POST /api/latent/calibration/outcomes",
+      "POST /api/latent/calibration/build-table",
+      "GET /api/latent/calibration/status",
+      "POST /api/latent/cbot-log-diagnostic",
+      "GET /api/latent/cbot-trade-parity",
+      "GET /api/latent/compute-probe",
+      "GET /api/latent/deployment-extras",
+      "GET /api/latent/deployment-readiness",
+      "GET /api/latent/execution-realism-defaults",
+      "GET /api/latent/factory-runner-heartbeat",
+      "GET /api/latent/feature-flags",
+      "POST /api/latent/htf-parity",
+      "GET /api/latent/ingestion-aggregate",
+      "GET /api/latent/ingestion-health",
+      "GET /api/latent/lifecycle_decay/distribution",
+      "POST /api/latent/lifecycle_decay/recompute",
+      "POST /api/latent/lifecycle_decay/seed-evidence-fields",
+      "GET /api/latent/lifecycle_decay/status",
+      "GET /api/latent/market-universe",
+      "GET /api/latent/market-universe/{symbol}",
+      "GET /api/latent/orchestration-health",
+      "GET /api/latent/replay-allocation",
+      "GET /api/latent/mutation-saturation",
+      "GET /api/latent/ecosystem-allocation",
+      "GET /api/latent/activation-journal",
+      "GET /api/latent/parity-certification",
+      "POST /api/latent/risk_of_ruin/evaluate",
+      "GET /api/latent/risk_of_ruin/evaluations",
+      "GET /api/latent/safe-to-widen",
+      "GET /api/latent/widening-history"
+    ],
+    "asf-migration": [
+      "POST /api/asf/import/migration",
+      "GET /api/asf/import/{import_id}",
+      "POST /api/asf/import/{import_id}/commit",
+      "POST /api/asf/import/{import_id}/abort"
+    ],
+    "auto-mutation-runner": [
+      "POST /api/auto/mutation-runner",
+      "GET /api/auto/mutation-runner/status",
+      "POST /api/auto/mutation-runner/stop",
+      "GET /api/auto/mutation-runner/cycles",
+      "POST /api/auto/run-cycle",
+      "GET /api/auto/run-cycle/history",
+      "POST /api/auto/run-once",
+      "POST /api/auto/scheduler/start",
+      "POST /api/auto/scheduler/stop",
+      "GET /api/auto/scheduler/status",
+      "GET /api/auto/evolution/weights"
+    ],
+    "auto-selection": [
+      "POST /api/auto-select/run",
+      "GET /api/auto-select/recent",
+      "GET /api/auto-select/config"
+    ],
+    "admin-bi5-cert": [
+      "POST /api/admin/bi5/certify-strategy",
+      "GET /api/admin/bi5/certifications",
+      "GET /api/admin/bi5/certifications/stats",
+      "GET /api/admin/bi5/certifications/{strategy_id}/latest",
+      "GET /api/admin/bi5/certifications/{strategy_id}",
+      "GET /api/admin/bi5/certified/{strategy_id}",
+      "GET /api/admin/bi5/data-certifications",
+      "GET /api/admin/bi5/data-certifications/latest"
+    ],
+    "admin-bi5": [
+      "GET /api/admin/bi5/symbols",
+      "POST /api/admin/bi5/run"
+    ],
+    "bi5-realism": [
+      "GET /api/bi5-realism/cohort/stale-count",
+      "POST /api/bi5-realism/sweep",
+      "POST /api/bi5-realism/evaluate/{strategy_hash}",
+      "GET /api/bi5-realism/{strategy_hash}"
+    ],
+    "cbot-parity": [
+      "GET /api/cbot-parity/{strategy_hash}",
+      "POST /api/cbot-parity/{strategy_hash}/sign-off",
+      "GET /api/cbot-parity"
+    ],
+    "cpu-pool": [
+      "GET /api/cpu-pool/state"
+    ],
+    "data-health": [
+      "GET /api/data/health/symbols",
+      "POST /api/data/ingest-csv"
+    ],
+    "data-maintenance": [
+      "POST /api/data/maintenance/toggle",
+      "POST /api/data/maintenance/run",
+      "GET /api/data/maintenance/coverage",
+      "POST /api/data/maintenance/backfill",
+      "POST /api/data/maintenance/import-backup"
+    ],
+    "data-backup": [
+      "GET /api/data/backup/export",
+      "POST /api/data/backup/export-bulk",
+      "GET /api/data/backup/export-all",
+      "POST /api/data/backup/import"
+    ],
+    "deployment": [
+      "GET /api/deployment/registry"
+    ],
+    "diag-bi5": [
+      "GET /api/diag/bi5/health"
+    ],
+    "execution": [
+      "POST /api/execution/start",
+      "POST /api/execution/stop",
+      "POST /api/execution/emergency-stop",
+      "GET /api/execution/status",
+      "GET /api/execution/cbot/{session_id}/{strategy_id}",
+      "POST /api/execution/paper/start",
+      "POST /api/execution/paper/stop",
+      "GET /api/execution/paper/status",
+      "GET /api/execution/paper/trades",
+      "GET /api/execution/paper/equity",
+      "GET /api/execution/paper/runs",
+      "GET /api/execution/paper/deviation/{strategy_hash}",
+      "GET /api/execution/paper/deviation-alerts",
+      "GET /api/execution/paper/config"
+    ],
+    "factory-supervisor": [
+      "GET /api/factory-supervisor/status",
+      "GET /api/factory-supervisor/fleet",
+      "GET /api/factory-supervisor/lock",
+      "GET /api/factory-supervisor/heartbeat-status",
+      "GET /api/factory-supervisor/heartbeats",
+      "GET /api/factory-supervisor/events",
+      "GET /api/factory-supervisor/events/stats",
+      "POST /api/factory-supervisor/lock/release",
+      "POST /api/factory-supervisor/submit",
+      "GET /api/factory-supervisor/submissions",
+      "GET /api/factory-supervisor/submissions/stats",
+      "GET /api/factory-supervisor/routing-policy",
+      "GET /api/factory-supervisor/defer-queue",
+      "GET /api/factory-supervisor/defer-queue/stats",
+      "GET /api/factory-supervisor/defer-queue/{row_id}",
+      "POST /api/factory-supervisor/defer-queue/cancel",
+      "POST /api/factory-supervisor/defer-queue/expire-overdue",
+      "GET /api/factory-supervisor/workers",
+      "POST /api/factory-supervisor/workers/tick",
+      "GET /api/factory-supervisor/remote-transport",
+      "GET /api/factory-supervisor/system-state-view",
+      "GET /api/factory-supervisor/architect/dashboard",
+      "GET /api/factory-supervisor/architect/recommended-action",
+      "GET /api/factory-supervisor/notifications",
+      "GET /api/factory-supervisor/notifications/unread-count",
+      "GET /api/factory-supervisor/notifications/stats",
+      "POST /api/factory-supervisor/notifications/acknowledge",
+      "POST /api/factory-supervisor/notifications/archive",
+      "GET /api/factory-supervisor/notifications/{notification_id}",
+      "GET /api/factory-supervisor/scheduler/status",
+      "POST /api/factory-supervisor/scheduler/start",
+      "POST /api/factory-supervisor/scheduler/stop",
+      "GET /api/factory-supervisor/recommendations",
+      "GET /api/factory-supervisor/recommendations/top",
+      "GET /api/factory-supervisor/eligibility",
+      "GET /api/factory-supervisor/eligibility/{feature_name}",
+      "GET /api/factory-supervisor/fag/proposals",
+      "GET /api/factory-supervisor/fag/proposals/stats",
+      "GET /api/factory-supervisor/fag/proposals/{proposal_id}",
+      "POST /api/factory-supervisor/fag/observe",
+      "POST /api/factory-supervisor/fag/recommend",
+      "POST /api/factory-supervisor/fag/approve",
+      "POST /api/factory-supervisor/fag/reject",
+      "POST /api/factory-supervisor/fag/activate",
+      "POST /api/factory-supervisor/fag/expire-overdue",
+      "GET /api/factory-supervisor/copilot/context",
+      "GET /api/factory-supervisor/copilot/answers",
+      "POST /api/factory-supervisor/copilot/answer",
+      "GET /api/factory-supervisor/copilot/advanced/manifest",
+      "GET /api/factory-supervisor/copilot/advanced/providers",
+      "POST /api/factory-supervisor/copilot/advanced/invoke",
+      "GET /api/factory-supervisor/auto-learning/status",
+      "GET /api/factory-supervisor/auto-learning/aggregate",
+      "GET /api/factory-supervisor/auto-learning/insights",
+      "GET /api/factory-supervisor/auto-learning/eligibility",
+      "POST /api/factory-supervisor/auto-learning/notify"
+    ],
+    "gem-factory": [
+      "POST /api/gem-factory/run",
+      "GET /api/gem-factory/status",
+      "POST /api/gem-factory/sweep-degradation"
+    ],
+    "governance": [
+      "POST /api/governance/replacement/execute",
+      "GET /api/governance/strategy-truth/{strategy_hash}",
+      "GET /api/governance/universe/preview"
+    ],
+    "incremental-run-alias": [
+      "POST /api/incremental/run"
+    ],
+    "learning": [
+      "POST /api/learning/runs",
+      "GET /api/learning/runs",
+      "POST /api/learning/events",
+      "GET /api/learning/events",
+      "POST /api/learning/operator-decision",
+      "GET /api/learning/lineage/{strategy_hash}",
+      "GET /api/learning/cycles",
+      "POST /api/learning/cycles",
+      "GET /api/learning/cycles/{run_id}",
+      "GET /api/learning/metrics",
+      "GET /api/learning/config",
+      "POST /api/learning/scheduler/start",
+      "POST /api/learning/scheduler/stop",
+      "GET /api/learning/scheduler/status",
+      "POST /api/learning/continuous/start",
+      "POST /api/learning/continuous/stop",
+      "GET /api/learning/continuous/status",
+      "GET /api/learning/lineage/detail/{strategy_hash}"
+    ],
+    "orchestrator": [
+      "POST /api/orchestrator/start",
+      "POST /api/orchestrator/stop",
+      "GET /api/orchestrator/tasks",
+      "POST /api/orchestrator/tasks/{name}/dispatch",
+      "GET /api/orchestrator/budget"
+    ],
+    "intelligence": [
+      "POST /api/intelligence/classify",
+      "POST /api/intelligence/portfolio-score",
+      "POST /api/intelligence/bundles/build",
+      "GET /api/intelligence/regime",
+      "POST /api/intelligence/activate"
+    ],
+    "brain": [
+      "POST /api/brain/tick",
+      "GET /api/brain/signals",
+      "GET /api/brain/regime-transition",
+      "GET /api/brain/policy/weights",
+      "POST /api/brain/execution-quality",
+      "GET /api/brain/risk-budget"
+    ],
+    "market-intelligence-engine": [
+      "GET /api/market-intelligence/state",
+      "GET /api/market-intelligence/state/history",
+      "GET /api/market-intelligence/changes",
+      "GET /api/market-intelligence/intelligence",
+      "POST /api/market-intelligence/refresh",
+      "GET /api/market-intelligence/observers/config",
+      "GET /api/market-intelligence/explain/{intelligence_id}"
+    ],
+    "execution-engine": [
+      "GET /api/execution/broker/health",
+      "GET /api/execution/broker/history",
+      "POST /api/execution/broker/kill-switch",
+      "POST /api/execution/broker/kill-switch/clear",
+      "GET /api/execution/orders",
+      "POST /api/execution/orders",
+      "GET /api/execution/orders/{request_id}",
+      "DELETE /api/execution/orders/{request_id}",
+      "GET /api/execution/fills",
+      "GET /api/execution/positions",
+      "GET /api/execution/positions/history",
+      "GET /api/execution/quality",
+      "POST /api/execution/quality/refresh",
+      "GET /api/execution/attribution",
+      "GET /api/execution/attribution/{decision_id}",
+      "GET /api/execution/risk/status",
+      "GET /api/execution/config",
+      "POST /api/execution/replay",
+      "GET /api/execution/journal"
+    ],
+    "meta-learning-engine": [
+      "GET /api/meta-learning/evaluations/{evaluation_id}",
+      "GET /api/meta-learning/recommendations/{recommendation_id}",
+      "GET /api/meta-learning/mode-history",
+      "POST /api/meta-learning/refresh",
+      "POST /api/meta-learning/recommendations/{recommendation_id}/approve",
+      "POST /api/meta-learning/recommendations/{recommendation_id}/reject",
+      "POST /api/meta-learning/overrides/{target}/revert"
+    ],
+    "factory-eval-engine": [
+      "GET /api/factory-eval/reports/{report_id}",
+      "GET /api/factory-eval/insights/{insight_id}",
+      "GET /api/factory-eval/recommendations/{recommendation_id}",
+      "GET /api/factory-eval/applications",
+      "GET /api/factory-eval/overrides",
+      "GET /api/factory-eval/mode-history",
+      "GET /api/factory-eval/providers/leaderboard",
+      "GET /api/factory-eval/strategies/top-contributors",
+      "GET /api/factory-eval/strategies/pruning-candidates",
+      "GET /api/factory-eval/portfolios/health-trends",
+      "GET /api/factory-eval/execution/path-rankings",
+      "GET /api/factory-eval/regimes/effectiveness",
+      "GET /api/factory-eval/bottlenecks",
+      "POST /api/factory-eval/refresh",
+      "POST /api/factory-eval/daily-report",
+      "POST /api/factory-eval/recommendations/{recommendation_id}/approve",
+      "POST /api/factory-eval/recommendations/{recommendation_id}/reject",
+      "POST /api/factory-eval/overrides/{target}/revert"
+    ],
+    "ai-workforce": [
+      "GET /api/ai-workforce/recent",
+      "GET /api/ai-workforce/scores",
+      "POST /api/ai-workforce/circuit/{provider}/reset",
+      "GET /api/ai-workforce/router-config",
+      "GET /api/ai-workforce/metrics",
+      "GET /api/ai-workforce/quality",
+      "POST /api/ai-workforce/route-test"
+    ],
+    "lifecycle": [
+      "GET /api/lifecycle/cohort/stage-counts",
+      "GET /api/lifecycle/transitions/recent",
+      "POST /api/lifecycle/evaluate",
+      "GET /api/lifecycle/{strategy_hash}",
+      "GET /api/lifecycle/{strategy_hash}/history"
+    ],
+    "llm": [
+      "GET /api/llm/diagnostics",
+      "GET /api/llm/call-log/recent",
+      "GET /api/llm/runner-state",
+      "GET /api/llm/index-summary",
+      "GET /api/llm/cpu-pool"
+    ],
+    "llm-health": [
+      "GET /api/llm/health-by-provider"
+    ],
+    "master-bot": [
+      "GET /api/master-bot/candidates",
+      "POST /api/master-bot/candidates/refresh",
+      "GET /api/master-bot/ranker/config",
+      "POST /api/master-bot/ranker/config",
+      "GET /api/master-bot/runners",
+      "POST /api/master-bot/runners",
+      "GET /api/master-bot/runners/route-preview",
+      "GET /api/master-bot/runners/fleet",
+      "POST /api/master-bot/runners/accounts/migrate-legacy",
+      "GET /api/master-bot/runners/accounts/migration-status",
+      "GET /api/master-bot/runners/{runner_id}",
+      "POST /api/master-bot/runners/{runner_id}/disable",
+      "POST /api/master-bot/runners/{runner_id}/rotate-token",
+      "GET /api/master-bot/runners/{runner_id}/rotate-token",
+      "POST /api/master-bot/runners/{runner_id}/rotate-token/expire-old",
+      "GET /api/master-bot/runners/{runner_id}/accounts",
+      "POST /api/master-bot/runners/{runner_id}/accounts",
+      "DELETE /api/master-bot/runners/{runner_id}/accounts/{account_id}",
+      "POST /api/master-bot/deployments/{deployment_id}/stage",
+      "POST /api/master-bot/deployments/{deployment_id}/promote",
+      "GET /api/master-bot/deployments/parity-drift",
+      "GET /api/master-bot/deployments/parity-drift/{deployment_id}",
+      "POST /api/master-bot/deployments/parity-drift/scan-and-alert",
+      "GET /api/master-bot/deployments/{deployment_id}",
+      "GET /api/master-bot/{master_bot_id}",
+      "PUT /api/master-bot/{master_bot_id}",
+      "DELETE /api/master-bot/{master_bot_id}",
+      "POST /api/master-bot/{master_bot_id}/members",
+      "DELETE /api/master-bot/{master_bot_id}/members/{strategy_hash}",
+      "POST /api/master-bot/{master_bot_id}/members/{strategy_hash}/enable",
+      "POST /api/master-bot/{master_bot_id}/members/{strategy_hash}/disable",
+      "POST /api/master-bot/{master_bot_id}/members/{strategy_hash}/promote",
+      "POST /api/master-bot/{master_bot_id}/members/{strategy_hash}/demote",
+      "POST /api/master-bot/{master_bot_id}/members/{strategy_hash}/move-to",
+      "POST /api/master-bot/{master_bot_id}/tiers/{tier}/reorder",
+      "POST /api/master-bot/{master_bot_id}/tiers/{tier}",
+      "POST /api/master-bot/{master_bot_id}/auto-fill",
+      "POST /api/master-bot/{master_bot_id}/compile",
+      "GET /api/master-bot/{master_bot_id}/definitions",
+      "GET /api/master-bot/{master_bot_id}/definitions/latest",
+      "GET /api/master-bot/{master_bot_id}/definitions/{rev}",
+      "POST /api/master-bot/{master_bot_id}/export",
+      "GET /api/master-bot/{master_bot_id}/exports",
+      "GET /api/master-bot/exports/{export_id}/download/{kind}",
+      "POST /api/master-bot/{master_bot_id}/pack",
+      "GET /api/master-bot/{master_bot_id}/packs",
+      "GET /api/master-bot/packs/{pack_id}/download",
+      "GET /api/master-bot/{master_bot_id}/diff",
+      "GET /api/master-bot/ir/coverage",
+      "POST /api/master-bot/ir/backfill",
+      "GET /api/master-bot/{master_bot_id}/parity/preview",
+      "GET /api/master-bot/parity/gate-status",
+      "POST /api/master-bot/{master_bot_id}/deploy/register",
+      "POST /api/master-bot/{master_bot_id}/deploy/rollback",
+      "GET /api/master-bot/{master_bot_id}/deployments",
+      "GET /api/master-bot/{master_bot_id}/deploy/status"
+    ],
+    "auto-multi-cycle": [
+      "POST /api/auto/multi-cycle/start",
+      "POST /api/auto/multi-cycle/stop",
+      "GET /api/auto/multi-cycle/status",
+      "GET /api/auto/multi-cycle/history",
+      "GET /api/auto/multi-cycle/runs/{run_id}/best"
+    ],
+    "mutation": [
+      "POST /api/mutation/mutate",
+      "POST /api/mutation/preview",
+      "GET /api/mutation/events",
+      "GET /api/mutation/stats",
+      "GET /api/mutation/catalogue",
+      "GET /api/mutation/ir-telemetry",
+      "GET /api/mutation/stability/logs",
+      "GET /api/mutation/stability/stats",
+      "GET /api/mutation/evolution/stats",
+      "GET /api/mutation/regime/classify"
+    ],
+    "optimization": [
+      "POST /api/optimization/run",
+      "GET /api/optimization/history",
+      "GET /api/optimization/best",
+      "GET /api/optimization/strategy/{strategy_id}",
+      "GET /api/optimization/config",
+      "GET /api/optimization/portfolio-actions"
+    ],
+    "tuning": [
+      "GET /api/tuning/settings",
+      "POST /api/tuning/settings",
+      "POST /api/tuning/settings/reset",
+      "GET /api/tuning/slot-stats",
+      "GET /api/tuning/slot-stats/recommend",
+      "GET /api/tuning/performance",
+      "POST /api/tuning/performance/snapshot",
+      "GET /api/tuning/events",
+      "GET /api/tuning/overview"
+    ],
+    "phase4-matching": [
+      "POST /api/phase4/match-firms"
+    ],
+    "pipeline_logs": [
+      "GET /api/logs",
+      "GET /api/logs/stages"
+    ],
+    "portfolio-builder": [
+      "POST /api/portfolio-builder/build",
+      "POST /api/portfolio-builder/save",
+      "GET /api/portfolio-builder/recent",
+      "GET /api/portfolio-builder/config"
+    ],
+    "portfolio-intelligence": [
+      "POST /api/portfolio-intelligence/build",
+      "GET /api/portfolio-intelligence/current",
+      "GET /api/portfolio-intelligence/history",
+      "GET /api/portfolio-intelligence/config"
+    ],
+    "prop-firms-intelligence": [
+      "POST /api/prop-firms/discover-challenges",
+      "POST /api/prop-firms/save-challenges",
+      "GET /api/prop-firms/intelligence/list",
+      "GET /api/prop-firms/intelligence/{firm_slug}",
+      "DELETE /api/prop-firms/intelligence/{firm_slug}"
+    ],
+    "prop-firm-rules-review": [
+      "GET /api/prop-firm-rules",
+      "GET /api/prop-firm-rules/{firm_slug}",
+      "POST /api/prop-firm-rules/ingest-parsed",
+      "POST /api/prop-firm-rules/{firm_slug}/approve",
+      "POST /api/prop-firm-rules/{firm_slug}/reject",
+      "POST /api/prop-firm-rules/{firm_slug}/reset"
+    ],
+    "prop-firms": [
+      "POST /api/prop-firms/extract",
+      "POST /api/prop-firms/extract-async",
+      "GET /api/prop-firms/extract-jobs/{job_id}",
+      "GET /api/prop-firms/extract-jobs",
+      "POST /api/prop-firms/save",
+      "GET /api/prop-firms/list",
+      "GET /api/prop-firms/{firm_slug}",
+      "DELETE /api/prop-firms/{firm_slug}"
+    ],
+    "admin-readiness": [
+      "GET /api/admin/readiness"
+    ],
+    "regime": [
+      "GET /api/regime/strategy/{strategy_hash}",
+      "GET /api/regime/cohort-distribution",
+      "GET /api/lifecycle/regime-evidence/{strategy_hash}"
+    ],
+    "runner": [
+      "POST /api/runner/heartbeat",
+      "GET /api/runner/poll",
+      "POST /api/runner/ack",
+      "GET /api/runner/artifact/{pack_id}"
+    ],
+    "scaling": [
+      "POST /api/scaling/heartbeat",
+      "GET /api/scaling/nodes",
+      "GET /api/scaling/route",
+      "GET /api/scaling/concurrency",
+      "GET /api/scaling/admission",
+      "GET /api/scaling/pressure",
+      "GET /api/scaling/events",
+      "GET /api/scaling/events/stats",
+      "GET /api/scaling/admission/journal-stats",
+      "GET /api/scaling/architect/snapshot"
+    ],
+    "trade-runner": [
+      "POST /api/trade-runner/start",
+      "POST /api/trade-runner/step/{run_id}",
+      "POST /api/trade-runner/stop/{run_id}",
+      "GET /api/trade-runner/status/{run_id}",
+      "GET /api/trade-runner/runs",
+      "GET /api/trade-runner/config"
+    ],
+    "strategies": [
+      "GET /api/strategies/{strategy_id}",
+      "DELETE /api/strategies/{strategy_id}"
+    ]
+  }
+}
