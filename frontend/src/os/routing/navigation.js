@@ -16,7 +16,7 @@
 import {
   Activity, ShieldCheck, Users as UsersIcon, LineChart, Settings as SettingsIcon,
   Compass, Bot, Database, Radio, Waves, FlaskConical, SlidersHorizontal, ClipboardCheck,
-  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch, Cpu,
+  PieChart, Building2, Rocket, FileText, Plug, ScrollText, GitBranch, Cpu, Brain, Gauge, Layers,
 } from 'lucide-react';
 
 /**
@@ -46,7 +46,11 @@ export const NAV_GROUPS = [
     label: 'Factory',
     testId: 'nav-group-factory',
     items: [
-      { path: '/c/factory/orchestrator', label: 'Orchestrator', icon: Cpu, testId: 'nav-orchestrator', surface: 'orchestrator' },
+      { path: '/c/factory',                  label: 'Cockpit',           icon: Layers,  testId: 'nav-factory-cockpit',   surface: 'factory-cockpit' },
+      { path: '/c/factory/orchestrator',     label: 'Orchestrator',      icon: Cpu,     testId: 'nav-orchestrator',      surface: 'orchestrator' },
+      { path: '/c/factory/meta-learning',    label: 'Meta-Learning',     icon: Brain,   testId: 'nav-meta-learning',     surface: 'meta-learning' },
+      { path: '/c/factory/evaluation',       label: 'Evaluation',        icon: Gauge,   testId: 'nav-factory-eval',      surface: 'factory-eval' },
+      { path: '/c/factory/data-governance',  label: 'Data & Governance', icon: ShieldCheck, testId: 'nav-data-governance', surface: 'data-governance' },
     ],
   },
   {

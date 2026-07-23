@@ -29,6 +29,10 @@ import { Users } from '../surfaces/admin/Users';
 import { Integrations } from '../surfaces/admin/Integrations';
 import { Logs } from '../surfaces/admin/Logs';
 import { OrchestratorDashboard } from '../surfaces/factory/OrchestratorDashboard';
+import { MetaLearningDashboard } from '../surfaces/factory/MetaLearningDashboard';
+import { FactoryEvalDashboard } from '../surfaces/factory/FactoryEvalDashboard';
+import { DataGovernanceDashboard } from '../surfaces/factory/DataGovernanceDashboard';
+import { FactoryCockpit } from '../surfaces/factory/FactoryCockpit';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -56,8 +60,12 @@ export const AppRouter = () => (
         <Route path="strategies" element={<Strategies />} />
         <Route path="strategies/:id" element={<StrategyPassport />} />
 
-        {/* Factory — FE-B Slice 1 Autonomous Research Factory dashboards */}
+        {/* Factory — FE-B Slice 1..5 Autonomous Research Factory dashboards */}
+        <Route path="factory" element={<FactoryCockpit />} />
         <Route path="factory/orchestrator" element={<OrchestratorDashboard />} />
+        <Route path="factory/meta-learning" element={<MetaLearningDashboard />} />
+        <Route path="factory/evaluation" element={<FactoryEvalDashboard />} />
+        <Route path="factory/data-governance" element={<DataGovernanceDashboard />} />
 
         {/* Engineering — Phase 1 empty states */}
         <Route path="engineering/market-data"   element={<MarketData />} />
