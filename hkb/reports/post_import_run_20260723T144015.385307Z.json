@@ -1,0 +1,35 @@
+{
+  "pipeline_version": "post_import_1.0",
+  "target_db": "strategy_factory_v1",
+  "run_ts": "2026-07-23T14:40:15.385307Z",
+  "stage1_identity": {
+    "library_rows": 140,
+    "fingerprint_collisions": 0,
+    "lifecycle_orphans": 0
+  },
+  "stage3_5_scoring": {
+    "risk_profile_rows": 140,
+    "pass_analysis_rows": 420
+  },
+  "curated_library": {
+    "unique_strategies": 19,
+    "production_candidates": 19,
+    "curated_tiers": {
+      "B-Candidate": 3,
+      "C-Experimental": 16
+    }
+  },
+  "verify": {
+    "strategy_library": 140,
+    "strategy_lifecycle": 878,
+    "strategy_lifecycle_history": 878,
+    "strategy_performance_history": 1047,
+    "market_data": 1053512,
+    "market_data_symbols": 7,
+    "market_data_timeframes": 5,
+    "strategy_pass_analysis": 420,
+    "strategy_risk_profile": 140,
+    "curated_strategy_library": 19,
+    "provenance_ok": true
+  }
+}

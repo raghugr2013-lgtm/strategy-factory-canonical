@@ -768,18 +768,88 @@ prop-firm PDFs), `llm_routing.env`, and `EXPORT_MANIFEST.md`.
 Once the operator authorises the migration, execute per
 `docs/HKB_RECOVERY_REPORT.md` §6.4.
 
-## Next action items (post HKB audit)
+## HKB Migration Executed — 2026-07-23
 
-1. **Operator decision on §6.3** of the HKB Recovery Report
-   (`market_data` + `governance_universe` legacy policy).
-2. **Operator authorisation** for production migration.
-3. **Backup prod DB** (one-line `mongodump --gzip --out`) before any
-   migration.
-4. **Execute migration** via `backend/scripts/migrate_strategy_recovery.py`
-   with the recommended `--include` list.
-5. **Verify** via `--verify-only`.
-6. **VPS Phase-1 activation** remains gated on the operator's
-   independent go-ahead (HKB migration and Phase-1 activation are
-   independent — either can proceed without the other).
+**Operator decisions received & applied:**
+1. `market_data` → **IMPORT** (approved).
+2. `governance_universe.audit_log` → **ARCHIVE** as
+   `governance_universe_legacy` (approved).
+
+**Deliverables:**
+
+- `docs/HKB_MIGRATION_REPORT.md` — full final migration report with
+  10 sections (executive summary, provenance metadata, migration
+  details, post-import pipeline, referential integrity, count
+  reconciliation, HKB conceptual model, freeze-preserved deferrals,
+  rollback options, sign-off).
+- `hkb/scripts/migrate_hkb.py` — idempotent migration driver, stamps
+  the four operator-required provenance fields (`__migration_source`,
+  `__migration_timestamp`, `__migration_version`, `__legacy=true`).
+- `hkb/scripts/post_import_pipeline.py` — deterministic post-import
+  pipeline covering Stage 0/1/3.5 + Curated Library seeding. No
+  backend engine invocation (freeze preserved).
+- `hkb/reports/migration_run_*.json` + `post_import_run_*.json` —
+  machine-readable per-run reports.
+- `hkb/backups/prod_pre_hkb_20260723_143620.archive` — pre-migration
+  production backup (rollback point).
+
+**Results:**
+
+- Total documents imported: **1,073,286** across 23 collections in
+  ~85 seconds.
+- Total provenance-stamped documents in prod (imported + derived):
+  **1,073,865**.
+- Zero write errors, zero count mismatches, zero missing provenance
+  stamps, zero orphans (except the 1 pre-migration mutation_events
+  orphan documented in the source-of-truth history).
+- 3 derived collections produced by the post-import pipeline:
+  - `strategy_risk_profile` (140 docs — one per specimen).
+  - `strategy_pass_analysis` (420 docs — 140 × 3 firms).
+  - `curated_strategy_library` (19 unique clusters ranked by composite
+    score; 3 B-Candidate + 16 C-Experimental; deduped from 140 with
+    lineage preserved).
+- `governance_universe_legacy` collection archived with legacy
+  audit-log trail intact.
+
+**HKB conceptual model realised:**
+
+- **Historical Knowledge Base** (permanent memory) — 1,073,286 docs,
+  every one carrying `__legacy=true`.
+- **Curated Strategy Library** — 19 highest-quality unique candidates,
+  initial portfolio for Demo Trading / Portfolio evaluation / Operator
+  review.
+- **Strategy Explorer** — existing surfaces (`/c/engineering/strategy-passports`,
+  `/c/engineering/strategy-pipeline`, `/c/engineering/strategy-lab`)
+  already return the imported data; `__legacy=true` enables clean
+  filtering between HKB and post-Phase-1 rows.
+- **Meta-Learning** — will consume the HKB as prior evidence
+  (10,430 mutation-event outcomes, 1,042 stability decisions,
+  878 lifecycle transitions).
+
+**Freeze compliance:** Zero backend files modified. Zero API surface
+changed. All post-import scoring performed by external Python drivers
+against MongoDB directly. The 8-stage POST_IMPORT_PIPELINE completed
+Stages 0/1/3.5 + Curated Library; Stages 2, 3.1-3.4, 4-8 (which invoke
+backend scoring engines / portfolio-builder / master-bot-engine)
+remain queued for post-freeze operator command — none of them are
+blocking VPS Phase-1 activation.
+
+## Next action items (post HKB migration)
+
+1. **VPS Phase-1 activation** — apply the four env flags on the VPS
+   per `docs/PRODUCTION_READINESS_REPORT.md` §9. HKB migration is now
+   complete; both tracks (HKB import + Phase-1 activation) are
+   ready.
+2. **Optional post-Phase-1 FE-B extension** — a dedicated
+   `/c/factory/curated` surface exposing the 19 curated candidates
+   with drill-down to the full HKB lineage. ~1 FE-B slice of work,
+   freeze-safe.
+3. **Post-freeze re-scoring** — once the backend engines are unfrozen,
+   run POST_IMPORT_PIPELINE Stages 2 + 3.1-3.4 + 4-8 (Quality v2 /
+   Evidence / Market / Trust / Rank / Match / Portfolio /
+   Marketplace).
+4. **Meta-Learning warm-up** — feed HKB priors into the Meta-Learning
+   engine on first run after Phase-1 activation to bootstrap the
+   evaluator with 10,430 pre-computed variant outcomes.
 
 

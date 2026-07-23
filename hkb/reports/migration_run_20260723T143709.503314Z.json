@@ -1,0 +1,269 @@
+{
+  "migration_source": "hkb-1vcpu-20260611",
+  "migration_timestamp": "2026-07-23T14:37:09.503314Z",
+  "migration_version": "1.0",
+  "source_db": "hkb_staging_20260723",
+  "target_db": "strategy_factory_v1",
+  "governance_legacy_id": "config_legacy_hkb-1vcpu-20260611",
+  "per_collection": [
+    {
+      "cname": "auto_factory_alert_log",
+      "src": 13,
+      "written": 13,
+      "tgt": 13
+    },
+    {
+      "cname": "auto_mutation_cycles",
+      "src": 143,
+      "written": 143,
+      "tgt": 143
+    },
+    {
+      "cname": "auto_mutation_runs",
+      "src": 7,
+      "written": 7,
+      "tgt": 7
+    },
+    {
+      "cname": "auto_run_cycles",
+      "src": 86,
+      "written": 86,
+      "tgt": 86
+    },
+    {
+      "cname": "challenge_rules",
+      "src": 3,
+      "written": 3,
+      "tgt": 3
+    },
+    {
+      "cname": "ingested_strategies",
+      "src": 55,
+      "written": 55,
+      "tgt": 55
+    },
+    {
+      "cname": "ingestion_runs",
+      "src": 11,
+      "written": 11,
+      "tgt": 11
+    },
+    {
+      "cname": "llm_call_log",
+      "src": 5,
+      "written": 5,
+      "tgt": 5
+    },
+    {
+      "cname": "market_environment_stats",
+      "src": 9,
+      "written": 9,
+      "tgt": 9
+    },
+    {
+      "cname": "multi_cycle_runs",
+      "src": 6,
+      "written": 6,
+      "tgt": 6
+    },
+    {
+      "cname": "mutation_events",
+      "src": 10430,
+      "written": 10430,
+      "tgt": 10430
+    },
+    {
+      "cname": "mutation_runs",
+      "src": 1042,
+      "written": 1042,
+      "tgt": 1042
+    },
+    {
+      "cname": "mutation_stability_log",
+      "src": 1042,
+      "written": 1042,
+      "tgt": 1042
+    },
+    {
+      "cname": "orchestrator_env_priority",
+      "src": 2,
+      "written": 2,
+      "tgt": 2
+    },
+    {
+      "cname": "pipeline_logs",
+      "src": 3165,
+      "written": 3165,
+      "tgt": 3165
+    },
+    {
+      "cname": "prop_firm_rules",
+      "src": 3,
+      "written": 3,
+      "tgt": 3
+    },
+    {
+      "cname": "research_runs",
+      "src": 16,
+      "written": 16,
+      "tgt": 16
+    },
+    {
+      "cname": "strategy_library",
+      "src": 140,
+      "written": 140,
+      "tgt": 140
+    },
+    {
+      "cname": "strategy_lifecycle",
+      "src": 878,
+      "written": 878,
+      "tgt": 878
+    },
+    {
+      "cname": "strategy_lifecycle_history",
+      "src": 878,
+      "written": 878,
+      "tgt": 878
+    },
+    {
+      "cname": "strategy_market_profile",
+      "src": 792,
+      "written": 792,
+      "tgt": 792
+    },
+    {
+      "cname": "strategy_performance_history",
+      "src": 1047,
+      "written": 1047,
+      "tgt": 1047
+    },
+    {
+      "cname": "market_data",
+      "src": 1053512,
+      "written": 1053512,
+      "tgt": 1053512
+    }
+  ],
+  "verify_report": {
+    "collections": {
+      "auto_factory_alert_log": {
+        "src": 13,
+        "tgt": 13,
+        "provenance_stamped": 13
+      },
+      "auto_mutation_cycles": {
+        "src": 143,
+        "tgt": 143,
+        "provenance_stamped": 143
+      },
+      "auto_mutation_runs": {
+        "src": 7,
+        "tgt": 7,
+        "provenance_stamped": 7
+      },
+      "auto_run_cycles": {
+        "src": 86,
+        "tgt": 86,
+        "provenance_stamped": 86
+      },
+      "challenge_rules": {
+        "src": 3,
+        "tgt": 3,
+        "provenance_stamped": 3
+      },
+      "ingested_strategies": {
+        "src": 55,
+        "tgt": 55,
+        "provenance_stamped": 55
+      },
+      "ingestion_runs": {
+        "src": 11,
+        "tgt": 11,
+        "provenance_stamped": 11
+      },
+      "llm_call_log": {
+        "src": 5,
+        "tgt": 5,
+        "provenance_stamped": 5
+      },
+      "market_environment_stats": {
+        "src": 9,
+        "tgt": 9,
+        "provenance_stamped": 9
+      },
+      "multi_cycle_runs": {
+        "src": 6,
+        "tgt": 6,
+        "provenance_stamped": 6
+      },
+      "mutation_events": {
+        "src": 10430,
+        "tgt": 10430,
+        "provenance_stamped": 10430
+      },
+      "mutation_runs": {
+        "src": 1042,
+        "tgt": 1042,
+        "provenance_stamped": 1042
+      },
+      "mutation_stability_log": {
+        "src": 1042,
+        "tgt": 1042,
+        "provenance_stamped": 1042
+      },
+      "orchestrator_env_priority": {
+        "src": 2,
+        "tgt": 2,
+        "provenance_stamped": 2
+      },
+      "pipeline_logs": {
+        "src": 3165,
+        "tgt": 3165,
+        "provenance_stamped": 3165
+      },
+      "prop_firm_rules": {
+        "src": 3,
+        "tgt": 3,
+        "provenance_stamped": 3
+      },
+      "research_runs": {
+        "src": 16,
+        "tgt": 16,
+        "provenance_stamped": 16
+      },
+      "strategy_library": {
+        "src": 140,
+        "tgt": 140,
+        "provenance_stamped": 140
+      },
+      "strategy_lifecycle": {
+        "src": 878,
+        "tgt": 878,
+        "provenance_stamped": 878
+      },
+      "strategy_lifecycle_history": {
+        "src": 878,
+        "tgt": 878,
+        "provenance_stamped": 878
+      },
+      "strategy_market_profile": {
+        "src": 792,
+        "tgt": 792,
+        "provenance_stamped": 792
+      },
+      "strategy_performance_history": {
+        "src": 1047,
+        "tgt": 1047,
+        "provenance_stamped": 1047
+      },
+      "market_data": {
+        "src": 1053512,
+        "tgt": 1053512,
+        "provenance_stamped": 1053512
+      }
+    },
+    "provenance": {},
+    "all_ok": true
+  }
+}
