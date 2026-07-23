@@ -1,0 +1,52 @@
+{
+  "strategy_library_total": 140,
+  "quality_buckets": {
+    "D-Underperforming": 26,
+    "E-Failed": 108,
+    "C-Experimental": 6
+  },
+  "verdicts": {
+    "RISKY": 140
+  },
+  "prop_statuses": {
+    "RISKY": 140
+  },
+  "duplicate_fingerprint_sets": 0,
+  "redundant_duplicate_docs": 0,
+  "lifecycle_stages": {
+    "exploratory": 878
+  },
+  "user_conflict": {
+    "staging_email": "admin@local.test",
+    "staging_role": "admin",
+    "prod_email": "admin@strategy-factory.local",
+    "prod_role": "admin",
+    "action": "KEEP prod user; skip legacy user import (already has real backend admin)"
+  },
+  "governance_conflict": {
+    "staging_pairs": [
+      "EURUSD",
+      "XAUUSD"
+    ],
+    "staging_timeframes": [
+      "H1",
+      "H4"
+    ],
+    "staging_phase": "30.2",
+    "prod_pairs": [
+      "EURUSD",
+      "XAUUSD"
+    ],
+    "prod_timeframes": [
+      "H1",
+      "H4"
+    ],
+    "prod_phase": "30.2",
+    "action": "PROD wins by default (v1.1.0-stage4). Legacy universe archived to governance_universe_legacy for reference."
+  },
+  "referential_integrity": {
+    "lifecycle_orphans": 878,
+    "mutation_events_matched": 1042,
+    "mutation_events_orphaned_runs": 1
+  }
+}

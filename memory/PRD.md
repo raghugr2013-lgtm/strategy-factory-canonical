@@ -698,4 +698,88 @@ Everything else has been validated end-to-end.
    freeze-safe): Master Bot deep-dive, Portfolio surface, AI Provider
    deep-dive, Budget / Risk-Budget dashboard, Approvals inbox.
 
+## Historical Knowledge Base (HKB) Recovery — 2026-07-23
+
+Analysis-only pass. Zero data imported into production. Backend Feature
+Freeze v1.1.0-stage4 preserved. `strategy_factory_v1` production DB
+untouched throughout.
+
+**Bundle received:** `migration_bundle.tar.gz` (32 MB), sourced from the
+1-vCPU AI Strategy Factory v10 pod on 2026-06-11. Contained
+`mongo_full.gz` (33 MB mongodump), `files.tar.gz` (memory docs + 22
+prop-firm PDFs), `llm_routing.env`, and `EXPORT_MANIFEST.md`.
+
+**Actions performed (all safe, all reversible):**
+
+1. SHA-256 integrity verified — 3/3 archives OK.
+2. Bundle restored to isolated staging DB `hkb_staging_20260723`
+   (production `strategy_factory_v1` untouched).
+3. Full 6-phase audit executed — inventory, compatibility, quality,
+   plan, dry-run, recommendation.
+4. Dry-run through pre-existing `backend/scripts/migrate_strategy_recovery.py`
+   confirmed 19,773 documents across 22 of 25 collections would upsert
+   cleanly, zero conflicts, zero write errors.
+
+**Headline findings:**
+
+- 1,073,287 total documents restored to staging across 25 collections.
+- 1,053,512 of those are `market_data` ticks (bulk deferred by default).
+- Research corpus (non-market-data): **19,775 documents across 24
+  collections** — mutation lineage (10,430 events), lifecycle history
+  (878 rows), performance history (1,047 rows), library specimens
+  (140), market profiles (792), ingestion trail (55 raw + 11 runs).
+- All 140 library specimens carry `verdict=RISKY` — no funded/strong
+  strategies yet, but the corpus is institutional research value: what
+  was tried, what failed, and why. Meta-Learning will consume it as
+  prior negative evidence.
+- 2 conflict-managed collections (`users`, `governance_universe`) —
+  operator policy decisions captured in the report.
+- Migration Readiness Score: **8 / 10** — recommendation to PROCEED
+  pending two explicit operator decisions.
+
+**Deliverables published:**
+
+- `docs/HKB_RECOVERY_REPORT.md` — full 6-phase report (executive
+  summary, inventory, compatibility matrix, quality assessment,
+  migration plan, dry-run report, final recommendation with two
+  operator decisions).
+- `hkb/reports/phase1_inventory.json` — machine-readable inventory.
+- `hkb/reports/phase3_quality.json` — machine-readable quality classification.
+- `hkb/bundle_files/` — extracted memory docs (25 files) + 22 prop-firm
+  PDFs for reference only; no application-code change.
+- Isolated staging DB `hkb_staging_20260723` remains in place for
+  operator verification. Drop with `db.dropDatabase()` when done.
+
+**What was NOT done (per user instruction):**
+
+- No documents imported into production `strategy_factory_v1`.
+- No `market_data` bulk import (deferred by default per §6.3.1).
+- No legacy `users` row imported.
+- No modification to prod `governance_universe`.
+- No backend engines added / modified.
+- No API contract change.
+
+**Two operator decisions required before production migration:**
+
+1. `market_data` — import 1,053,512 rows (200 MB) or defer / drop?
+2. Legacy `governance_universe.audit_log` — archive to
+   `governance_universe_legacy` for provenance, or discard?
+
+Once the operator authorises the migration, execute per
+`docs/HKB_RECOVERY_REPORT.md` §6.4.
+
+## Next action items (post HKB audit)
+
+1. **Operator decision on §6.3** of the HKB Recovery Report
+   (`market_data` + `governance_universe` legacy policy).
+2. **Operator authorisation** for production migration.
+3. **Backup prod DB** (one-line `mongodump --gzip --out`) before any
+   migration.
+4. **Execute migration** via `backend/scripts/migrate_strategy_recovery.py`
+   with the recommended `--include` list.
+5. **Verify** via `--verify-only`.
+6. **VPS Phase-1 activation** remains gated on the operator's
+   independent go-ahead (HKB migration and Phase-1 activation are
+   independent — either can proceed without the other).
+
 
