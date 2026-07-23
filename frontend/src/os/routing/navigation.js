@@ -55,7 +55,7 @@ export const NAV_GROUPS = [
       { path: '/c/engineering/validation',    label: 'Validation',        icon: ClipboardCheck,    testId: 'nav-validation',    surface: 'validation' },
       { path: '/c/mission?focus=portfolio',   label: 'Portfolio',         icon: PieChart,          testId: 'nav-portfolio',     surface: 'mission',       deepLink: true },
       { path: '/c/engineering/prop-firms',    label: 'Prop Firms',        icon: Building2,         testId: 'nav-prop-firms',    surface: 'prop-firms',    emptyState: true, phase2: 'GET /api/prop-firms · GET /api/prop-firms/{id}/challenges' },
-      { path: '/c/engineering/deployments',   label: 'Deployments',       icon: Rocket,            testId: 'nav-deployments',   surface: 'deployments',   emptyState: true, phase2: 'GET /api/deployments · POST /api/deployments/{id}/rollback' },
+      { path: '/c/engineering/deployments',   label: 'Deployments',       icon: Rocket,            testId: 'nav-deployments',   surface: 'deployments',   emptyState: true, phase2: 'GET /api/live-tracking · POST /api/live-tracking/{id}/rollback' },
       { path: '/c/strategies',                label: 'Strategy Passports', icon: LineChart,        testId: 'nav-strategy-passports', surface: 'strategies', deepLink: true },
     ],
   },
@@ -91,7 +91,7 @@ export const ENGINEERING_SURFACES = {
       'Symbol search + facet filter by asset class and market phase',
       'Cross-venue arbitrage indicator with configurable threshold',
     ],
-    phase2Sources: ['GET /api/market-data/subscriptions', 'WSS /stream/ticks', 'POST /api/market-data/subscribe'],
+    phase2Sources: ['GET /api/data/coverage', 'GET /api/market-universe', 'GET /api/data-maintenance/status'],
     related: [
       { label: 'Ingestion status', path: '/c/timeline?actor=INGESTION' },
       { label: 'Provider probe (admin)', path: '/c/admin/integrations' },
@@ -109,7 +109,7 @@ export const ENGINEERING_SURFACES = {
       'Gap remediation panel with one-click re-hydrate proposals',
       'Coverage SLA violations flagged to Approvals',
     ],
-    phase2Sources: ['GET /api/coverage/matrix', 'GET /api/coverage/gaps', 'POST /api/coverage/rehydrate'],
+    phase2Sources: ['GET /api/data/coverage', 'GET /api/data/coverage/gaps', 'POST /api/data/coverage/rehydrate'],
     related: [
       { label: 'Datasets', path: '/c/engineering/datasets' },
       { label: 'Timeline · INGESTION', path: '/c/timeline?actor=INGESTION' },
@@ -127,7 +127,7 @@ export const ENGINEERING_SURFACES = {
       'Reproducibility manifest per dataset (sha256, provider, generator)',
       'Retention policy visualiser and archival controls',
     ],
-    phase2Sources: ['GET /api/datasets', 'GET /api/datasets/{id}/manifest', 'POST /api/datasets/download'],
+    phase2Sources: ['GET /api/data/datasets', 'GET /api/data/datasets/{id}/manifest', 'POST /api/data/datasets/download'],
     related: [
       { label: 'Coverage', path: '/c/engineering/coverage' },
       { label: 'Validation', path: '/c/engineering/validation' },
@@ -163,7 +163,7 @@ export const ENGINEERING_SURFACES = {
       'Walk-forward + regime-partitioned view of the parameter surface',
       'Winning parameter set → Approval bundle with lineage',
     ],
-    phase2Sources: ['POST /api/optimize', 'GET /api/optimize/{cycleId}', 'WSS /stream/optimize'],
+    phase2Sources: ['POST /api/optimization/run', 'GET /api/optimization/{cycleId}', 'POST /api/tuning/dispatch'],
     related: [
       { label: 'Strategy Lab', path: '/c/engineering/strategy-lab' },
       { label: 'Approvals', path: '/c/approvals' },
@@ -217,7 +217,7 @@ export const ENGINEERING_SURFACES = {
       'Green/blue swap view for live vs paper',
       'Deployment history with per-strategy timeline',
     ],
-    phase2Sources: ['GET /api/deployments', 'POST /api/deployments/{id}/rollback', 'GET /api/deployments/{id}/history'],
+    phase2Sources: ['GET /api/live-tracking', 'POST /api/live-tracking/{id}/rollback', 'GET /api/execution/journal'],
     related: [
       { label: 'Approvals · promote-to-live', path: '/c/approvals?risk=high' },
       { label: 'Timeline', path: '/c/timeline' },
@@ -271,7 +271,7 @@ export const ENGINEERING_SURFACES = {
       'Saved query bookmarks and export to CSV / NDJSON',
       'Retention window selector and archive proposals',
     ],
-    phase2Sources: ['GET /api/admin/logs?stream=…', 'WSS /stream/logs'],
+    phase2Sources: ['GET /api/audit/logs?stream=…', 'GET /api/admin/audit', 'GET /api/orchestrator/decisions'],
     related: [
       { label: 'Timeline', path: '/c/timeline' },
       { label: 'Users', path: '/c/admin/users' },

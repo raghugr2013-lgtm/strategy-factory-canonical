@@ -125,11 +125,15 @@ export const LoginScreen = () => {
             {stance === 'authenticating' ? 'Signing in…' : 'Sign in'}
           </button>
 
-          <div data-testid="login-fixture-credentials"
-               style={{ marginTop: 'var(--space-4)', padding: 'var(--space-3)', background: 'var(--surface-2)', border: '1px dashed var(--stroke-2)', borderRadius: 'var(--radius-2)', fontSize: 'var(--font-caption)', color: 'var(--content-lo)', lineHeight: 1.6 }}>
-            <div style={{ color: 'var(--content-md)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 'var(--space-1)' }}>Fixture credentials (Sprint 1 M1)</div>
-            operator@coinnike.com · prototype123
-          </div>
+          {/*
+            FE-A · fixture-credential hint removed from the sign-in card.
+            Sprint-1 shipped a visible operator@coinnike.com / prototype123
+            block here; that was a fixture-mode affordance. With real
+            /api/auth/login wired via authStore + apiClient, the card now
+            trusts the operator to bring their own credentials. The
+            fixture path in authStore.login() still exists as a
+            no-backend fallback for the dev workspace.
+          */}
         </form>
       </main>
 
