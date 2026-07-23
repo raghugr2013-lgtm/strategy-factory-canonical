@@ -127,7 +127,11 @@ export const FactoryCockpit = () => {
 
   /* Derived signals */
   const orchRunning = orch?.running === true;
-  const orchTone = orch?.meta?.last_error ? 'crit' : !orchRunning ? 'dormant' : bandToTone(orch?.meta?.last_tick?.band);
+  const orchTone = orch?.meta?.last_error
+    ? 'crit'
+    : !orchRunning
+      ? 'warn'                                    // halted orchestrator = operator attention
+      : bandToTone(orch?.meta?.last_tick?.band);
   const orchLabel = orch?.meta?.last_error ? 'ERROR' : orchRunning ? `RUNNING · ${(orch?.meta?.last_tick?.band || 'nominal').toUpperCase()}` : 'HALTED';
 
   const inFlight = (orch?.in_flight || []);

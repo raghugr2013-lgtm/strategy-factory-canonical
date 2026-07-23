@@ -544,3 +544,107 @@ honoured · ✅ Zero fixture data introduced.
    (single-character `I`/`P`/`A` prefix sits tight against the label);
    deferred, cosmetic only.
 
+## Sprint FE-B Slices 2–5 — Meta-Learning · Factory Eval · Data & Governance · Cockpit — 2026-07-23
+
+REFINEMENT + EXTEND sprint (frontend-additive only). Zero backend files
+touched. Backend Feature Freeze v1.1.0-stage4 fully preserved.
+Testing_agent iteration_4 verdict: **100 % pass on frontend**, no
+retest required, one optional semantic tweak applied.
+
+**Deliverables (this session):**
+
+- `frontend/src/os/adapters/metaLearningAdapter.js` — 8 read-only
+  hooks over `/api/meta-learning/*` (status, config, health,
+  evaluations, recommendations, pending, applications, overrides).
+- `frontend/src/os/adapters/factoryEvalAdapter.js` — 10 read-only
+  hooks over `/api/factory-eval/*` (status, config, health, kpis,
+  reports/latest, reports, insights, recommendations, pending,
+  coverage-gaps).
+- `frontend/src/os/adapters/dataGovernanceAdapter.js` — 12 read-only
+  hooks over `/api/data/maintenance/*`, `/api/data/health`,
+  `/api/data/coverage`, `/api/governance/*`, and `/api/coe/*`
+  (state · metrics · dead-letter/depth).
+- `frontend/src/os/surfaces/factory/factoryPrimitives.jsx` —
+  dashboard-local composition helpers (SummaryPanel · SectionHeader ·
+  asArray · modeToTone · **deriveHealth**). Zero new design primitives;
+  everything reuses tokens + existing `Chip` / `SignalStateBadge`.
+  `deriveHealth()` normalises the backend's four "not healthy"
+  response shapes: `{detail:'... is off'}` → DORMANT/DISABLED,
+  `{status:'empty'}` → DORMANT, `{error}` / `{status:'error'}` →
+  CRITICAL, positive signals → HEALTHY. Fixes the false-CRITICAL that
+  would otherwise land when Meta-Learning / Factory-Eval / COE
+  health-provider flags are off in the preview env.
+- `frontend/src/os/surfaces/factory/MetaLearningDashboard.jsx` —
+  new surface at `/c/factory/meta-learning`. 8-cell operator summary
+  panel · 4-tile metric row · Recommendations table · Evaluations
+  table. Reuses `MetricBlock`, `Chip`, `StateTemplate`,
+  `SignalStateBadge`, `FreezeCaption`.
+- `frontend/src/os/surfaces/factory/FactoryEvalDashboard.jsx` —
+  new surface at `/c/factory/evaluation`. 8-cell operator summary
+  panel · 4-tile metric row · KPI grid · Insights table.
+- `frontend/src/os/surfaces/factory/DataGovernanceDashboard.jsx` —
+  new surface at `/c/factory/data-governance`. 8-cell operator
+  summary panel · 4-tile metric row · Data-Maintenance recent-runs
+  table · Governance promotion-ledger table.
+- `frontend/src/os/surfaces/factory/FactoryCockpit.jsx` — unified
+  operator landing page at `/c/factory`. Sections: **Overall Factory
+  Health** (worst-signal-wins across 7 subsystems) · 7-tile subsystem
+  grid (each tile a working `<Link>` to its own dashboard) ·
+  **Current Alerts** (aggregated across all subsystems) · **Running
+  Tasks** table (from orchestrator in-flight) · **Recent Decisions**
+  table (from orchestrator decisions ledger). Post-iteration_4 tweak:
+  halted orchestrator maps to `warn` so the aggregate chip surfaces
+  ATTENTION instead of HEALTHY.
+- `frontend/src/os/routing/AppRouter.jsx` — 4 new routes wired.
+- `frontend/src/os/routing/navigation.js` — Factory group expanded
+  to 5 entries with **Cockpit as first entry**.
+
+**Endpoints unlocked (all pre-existing, read-only):**
+
+- `/api/meta-learning/*` — 8 endpoints
+- `/api/factory-eval/*` — 10 endpoints
+- `/api/data/maintenance/*` — 3 endpoints
+- `/api/data/health` · `/api/data/coverage`
+- `/api/governance/*` — 6 endpoints
+- `/api/coe/*` — 3 endpoints
+
+**Constraint compliance:** ✅ No new backend engines · ✅ No new
+backend endpoints · ✅ No database changes · ✅ No schema changes · ✅
+Backend Feature Freeze v1.1.0-stage4 preserved · ✅ OBSERVE mode
+preserved · ✅ Discover → Reuse → Refine → Extend → Build New order
+honoured · ✅ Zero fixture data introduced · ✅ Zero writes from any
+Factory-group surface (all GETs, guaranteed by adapter shape).
+
+**Live proof (testing_agent iteration_4):**
+
+- All 5 Factory nav entries present (`nav-factory-cockpit`,
+  `nav-orchestrator`, `nav-meta-learning`, `nav-factory-eval`,
+  `nav-data-governance`).
+- `/c/factory` renders 14/14 required testids.
+- Each of the 3 dashboards renders 16/16 required testids.
+- All 6 cockpit tiles navigate to correct dashboards.
+- deriveHealth() correctly classifies disabled backends: no false
+  CRITICAL from Meta-Learning / Factory-Eval / COE feature-off
+  responses.
+- StatusRail regression green (no `providers.filter` crash).
+- Zero uncaught runtime errors across every route.
+
+## Next action items (post Slice 2–5)
+
+1. **VPS Phase-1 activation** remains deferred per user direction —
+   operator wants the Cockpit fully operational as the primary
+   monitoring surface first.
+2. **Optional FE-B slices** (from FE_B_PROPOSAL.md, all still
+   frozen-safe):
+   - Master Bot deep-dive dashboard.
+   - Approvals Bundle Composer (client-side, uses the existing
+     Timeline shim).
+   - AI Provider deep dive (extend Cockpit tile → dedicated
+     surface using `/api/ai-workforce/metrics · quality · scores ·
+     recent`).
+   - Budget / Risk Budget dashboard (`/api/orchestrator/budget` +
+     `/api/brain/risk-budget`).
+3. **Low-priority polish** (from iteration_4 note) — Chip glyph
+   spacing inside summary cells; cosmetic only.
+
+
