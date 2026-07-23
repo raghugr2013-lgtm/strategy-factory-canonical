@@ -180,9 +180,9 @@ export const StrategyPipeline = () => {
                     footnote={`GET /api/strategies · ${strategyState.liveness}`} />
         <MetricTile testId="strategy-pipeline-metric-champions"
                     label="Champion families"
-                    value={nf(championRows.length)}
-                    tone={championRows.length > 0 ? 'ok' : 'dormant'}
-                    footnote={`KB categories · ${nf(Object.keys(championState.categories || {}).length)}`} />
+                    value={nf(statsState.stats?.canonical_families)}
+                    tone={(statsState.stats?.canonical_families || 0) > 0 ? 'ok' : 'dormant'}
+                    footnote={`${nf(championRows.length)} champion rows · ${nf(Object.keys(championState.categories || {}).length)} KB categories`} />
         <MetricTile testId="strategy-pipeline-metric-corpus"
                     label="Historical KB size"
                     value={nf(statsState.stats?.total_strategies)}

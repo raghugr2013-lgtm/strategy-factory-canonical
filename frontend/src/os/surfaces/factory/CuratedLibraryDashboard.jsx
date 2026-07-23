@@ -31,44 +31,52 @@ const tierTone = (tier) => {
 };
 
 const ChampionCategoryTable = ({ category, rows }) => {
-  if (!rows || rows.length === 0) return null;
+  const list = rows || [];
   return (
-    <div style={{ marginBottom: 'var(--space-4)' }}>
+    <div style={{ marginBottom: 'var(--space-4)' }} data-testid={`champ-cat-${category}`}>
       <SectionHeader icon={Trophy} title={category.replace(/_/g, ' ').toUpperCase()} testId={`champ-header-${category}`}
-                     right={<Chip tone="info" label={`${rows.length}`} />} />
+                     right={<Chip tone={list.length > 0 ? 'info' : 'dormant'} label={`${list.length}`} />} />
       <div style={sectionPanel} data-testid={`champ-panel-${category}`}>
-        <div style={{ overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-body-sm)' }} data-testid={`champ-table-${category}`}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--content-lo)', textTransform: 'uppercase', fontSize: 'var(--font-caption)', letterSpacing: '0.08em' }}>
-                <th style={cellHead}>#</th>
-                <th style={cellHead}>Pair</th>
-                <th style={cellHead}>TF</th>
-                <th style={cellHead}>Composite</th>
-                <th style={cellHead}>PF</th>
-                <th style={cellHead}>DD %</th>
-                <th style={cellHead}>Trades</th>
-                <th style={cellHead}>Tier</th>
-                <th style={cellHead}>Strategy ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.strategy_id || i} data-testid={`champ-row-${category}-${i}`} style={{ borderTop: '1px solid var(--stroke-1)' }}>
-                  <td style={cell}><span className="mono-num">{r.unique_rank || i + 1}</span></td>
-                  <td style={cell}><span className="mono-num">{r.pair || '—'}</span></td>
-                  <td style={cell}><span className="mono-num">{r.timeframe || '—'}</span></td>
-                  <td style={cell}><span className="mono-num" style={{ color: 'var(--content-hi)' }}>{(r.composite_score ?? 0).toFixed(3)}</span></td>
-                  <td style={cell}><span className="mono-num">{(r.profit_factor ?? 0).toFixed(2)}</span></td>
-                  <td style={cell}><span className="mono-num">{(r.max_drawdown_pct ?? 0).toFixed(1)}</span></td>
-                  <td style={cell}><span className="mono-num">{r.total_trades ?? 0}</span></td>
-                  <td style={cell}><Chip tone={tierTone(r.tier)} label={String(r.tier || 'unknown').toUpperCase()} /></td>
-                  <td style={cell}><span className="mono-num" style={{ color: 'var(--content-lo)' }}>{String(r.strategy_id || '').slice(0, 12)}</span></td>
+        {list.length === 0 ? (
+          <StateTemplate variant="empty" code={`champ-empty-${category}`} icon={Trophy} tone="dormant"
+                         headline="No candidates in this tier yet."
+                         purpose={category === 'a_elite'
+                           ? "A-Elite requires composite score ≥ 0.70; the historical HKB carries no such specimens (every entry was labelled verdict=RISKY by the legacy factory). New strategies produced post-VPS-activation will populate this tier."
+                           : `${category.replace(/_/g, ' ')} is currently empty in the curated library snapshot.`} />
+        ) : (
+          <div style={{ overflow: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-body-sm)' }} data-testid={`champ-table-${category}`}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: 'var(--content-lo)', textTransform: 'uppercase', fontSize: 'var(--font-caption)', letterSpacing: '0.08em' }}>
+                  <th style={cellHead}>#</th>
+                  <th style={cellHead}>Pair</th>
+                  <th style={cellHead}>TF</th>
+                  <th style={cellHead}>Composite</th>
+                  <th style={cellHead}>PF</th>
+                  <th style={cellHead}>DD %</th>
+                  <th style={cellHead}>Trades</th>
+                  <th style={cellHead}>Tier</th>
+                  <th style={cellHead}>Strategy ID</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {list.map((r, i) => (
+                  <tr key={r.strategy_id || i} data-testid={`champ-row-${category}-${i}`} style={{ borderTop: '1px solid var(--stroke-1)' }}>
+                    <td style={cell}><span className="mono-num">{r.unique_rank || i + 1}</span></td>
+                    <td style={cell}><span className="mono-num">{r.pair || '—'}</span></td>
+                    <td style={cell}><span className="mono-num">{r.timeframe || '—'}</span></td>
+                    <td style={cell}><span className="mono-num" style={{ color: 'var(--content-hi)' }}>{(r.composite_score ?? 0).toFixed(3)}</span></td>
+                    <td style={cell}><span className="mono-num">{(r.profit_factor ?? 0).toFixed(2)}</span></td>
+                    <td style={cell}><span className="mono-num">{(r.max_drawdown_pct ?? 0).toFixed(1)}</span></td>
+                    <td style={cell}><span className="mono-num">{r.total_trades ?? 0}</span></td>
+                    <td style={cell}><Chip tone={tierTone(r.tier)} label={String(r.tier || 'unknown').toUpperCase()} /></td>
+                    <td style={cell}><span className="mono-num" style={{ color: 'var(--content-lo)' }}>{String(r.strategy_id || '').slice(0, 12)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -88,8 +96,9 @@ export const CuratedLibraryDashboard = () => {
   const multi = stats?.multi_member_families ?? 0;
   const positive = stats?.positive_return_pf_gt_1 ?? 0;
 
+  const CATEGORY_ORDER = ['top_by_composite', 'top_by_pair', 'top_by_timeframe', 'a_elite', 'b_candidate', 'c_experimental'];
   const categories = champs?.categories || {};
-  const catNames = Object.keys(categories);
+  const catNames = CATEGORY_ORDER;
   const totalChamps = catNames.reduce((n, k) => n + (categories[k]?.length || 0), 0);
   const eliteCount = (categories.a_elite || []).length;
   const bCount     = (categories.b_candidate || []).length;
