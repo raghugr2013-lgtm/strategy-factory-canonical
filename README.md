@@ -126,6 +126,14 @@ backward-compatibly. Operator work + observability contract are in
 `docs/PHASE_1_ACTIVATION_PLAN.md` and
 `docs/AUTONOMOUS_CYCLE_HEALTH_DASHBOARD.md`.
 
+**Operational validation harness (2026-07-23):**
+`infra/scripts/phase1_validate.sh` — one-shot read-only VPS probe
+that gathers every sign-off signal. Reports:
+`docs/PHASE_1_FACTORY_VALIDATION_REPORT.md` (operational + restart
+recovery) · `docs/PHASE_1_FACTORY_KPI_REPORT.md` (24 h cycle
+throughput + failure/skip decomposition + budget + provider
+health).
+
 ---
 
 ## Freeze policy

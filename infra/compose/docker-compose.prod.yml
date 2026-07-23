@@ -96,6 +96,11 @@ services:
       # OBSERVE mode remains the shipping default for every mutating
       # engine — activation surfaces read paths only.
       # Docs: docs/PHASE_1_ACTIVATION_PLAN.md · docs/AUTONOMOUS_CYCLE_HEALTH_DASHBOARD.md
+      # FACTORY_RUNNER_OWNS_SCHEDULERS is enumerated here (in addition
+      # to the factory-runner service) so both services see the same
+      # activation surface — backend workers short-circuit their
+      # scheduler-restore paths on this flag.
+      FACTORY_RUNNER_OWNS_SCHEDULERS: ${FACTORY_RUNNER_OWNS_SCHEDULERS:-false}
       ORCHESTRATOR_ENABLED: ${ORCHESTRATOR_ENABLED:-false}
       LEARNING_SCHEDULER_ENABLED: ${LEARNING_SCHEDULER_ENABLED:-false}
       LEARNING_CONTINUOUS_MODE: ${LEARNING_CONTINUOUS_MODE:-false}

@@ -283,5 +283,45 @@ preserved. Deliverables published under `docs/`:
 **Verdict:** the long-term vision needs zero new engines. Everything
 is composition of what is already in the repo.
 
+## Operational Readiness pass — 2026-07-23
+
+Testing_agent regression on the runner dispatcher landed last session:
+100 % backend success, all four core endpoint contracts unchanged,
+dispatcher default-off preservation verified, every Phase-1 flag
+present in both service env blocks with correct defaults,
+interpolation guards intact. Applied one small symmetry improvement
+flagged by the tester (added `FACTORY_RUNNER_OWNS_SCHEDULERS` to the
+factory-backend env block too).
+
+Published operator activation package:
+
+- `infra/scripts/phase1_validate.sh` — read-only, idempotent
+  one-shot probe that gathers every sign-off signal (repo state,
+  env flags, compose parse + interpolation-guard fail-fast check,
+  container inventory, docker healthchecks, vqb-network
+  membership, backend health + readiness, all auth-scoped
+  orchestrator / meta-learning / factory-eval endpoints, 24-h
+  ledger reconciliation across 12 collections, log fingerprints,
+  heartbeat freshness).
+- `docs/PHASE_1_FACTORY_VALIDATION_REPORT.md` — template with
+  placeholder blocks keyed to the script's section headers, plus a
+  step-by-step restart-recovery drill.
+- `docs/PHASE_1_FACTORY_KPI_REPORT.md` — 24-h KPI template
+  covering cycle throughput across 12 ledger collections, top-15
+  skip reasons, average cycle duration per task, budget burn,
+  provider health, data-pipeline coverage, meta-learning +
+  factory-eval OBSERVE signal, and free-form bottleneck section.
+
+**Operator handoff:**
+
+1. On the VPS: apply the four env flags from
+   `PHASE_1_ACTIVATION_PLAN.md` §6.3, then
+   `./infra/scripts/deploy.sh`.
+2. Run `sudo -u <docker-user> /opt/strategy-factory/infra/scripts/phase1_validate.sh > /tmp/phase1.txt`.
+3. Fill `docs/PHASE_1_FACTORY_VALIDATION_REPORT.md` from that output.
+4. Execute the restart-recovery drill in §I of the report.
+5. Fill `docs/PHASE_1_FACTORY_KPI_REPORT.md` at end of day 1 and again at end of week 1.
+6. Report back so we can identify runtime-driven refinements before Phase 2 feature work begins.
+
 ## Confirmation
-Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations + Capability Inventory passes are documentation-only + one restored template file — freeze fully preserved.
+Backend Feature Freeze **v1.1.0-stage4** remains fully intact through Slice γ — every touched file lives under `frontend/src/os/` (`shell/AppShell.jsx`, `shell/ApprovalsModal.jsx`, `adapters/timelineShim.js`, `surfaces/StrategyPassport.jsx`). Zero backend source files modified across Slices α · β · γ. End-to-end preview verification confirmed zero backend mutations during the Approvals flow. The 2026-07-23 Deployment Operations, Capability Inventory, Phase 1 Activation, and Operational Readiness passes are documentation + a backward-compatible dispatcher + one restored template file — freeze fully preserved.
