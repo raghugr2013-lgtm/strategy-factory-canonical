@@ -11,6 +11,7 @@ import { MissionControl } from '../surfaces/MissionControl';
 import { MasterBot } from '../surfaces/MasterBot';
 import { Timeline } from '../surfaces/Timeline';
 import { Approvals } from '../surfaces/Approvals';
+import { ApprovalCenter } from '../surfaces/ApprovalCenter';
 import { Workforce } from '../surfaces/Workforce';
 import { Strategies } from '../surfaces/Strategies';
 import { StrategyPassport } from '../surfaces/StrategyPassport';
@@ -55,6 +56,7 @@ export const AppRouter = () => (
         <Route path="masterbot"  element={<MasterBot />} />
         <Route path="timeline"   element={<Timeline />} />
         <Route path="approvals"  element={<Approvals />} />
+        <Route path="approvals/center" element={<ApprovalCenter />} />
         <Route path="workforce"  element={<Workforce />} />
 
         {/* Strategies (deep-linked from Engineering rail as "Strategy Passports") */}

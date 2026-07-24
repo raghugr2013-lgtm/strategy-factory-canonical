@@ -3,6 +3,7 @@
  * refs DESIGN_FREEZE_v1.0.md §1.4 · D3 · Bible §7.5
  */
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { FacetBar } from '../features/FacetBar';
 import { ApprovalCard } from '../primitives/ApprovalCard';
@@ -119,6 +120,16 @@ export const Approvals = () => {
           the queue updates optimistically. In Sprint 1 the backend is in OBSERVE mode; verdicts are
           acknowledged locally and queued for commit when the freeze lifts.
         </p>
+        <Link
+          data-testid="approvals-try-approval-center"
+          to="/c/approvals/center"
+          style={{ display: 'inline-block', marginTop: 'var(--space-3)',
+                   fontSize: 'var(--font-caption)', color: 'var(--sig-info)',
+                   textDecoration: 'none', letterSpacing: '0.06em',
+                   textTransform: 'uppercase', fontFamily: 'ui-monospace, monospace' }}
+        >
+          Try the new Approval Center →
+        </Link>
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
