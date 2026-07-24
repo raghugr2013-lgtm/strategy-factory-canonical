@@ -74,6 +74,16 @@ export const Strategies = () => {
           Sort by any column. Facet by status — the plane you build here is remembered when you
           return from a passport.
         </p>
+        <Link
+          data-testid="strategies-try-explorer"
+          to="/c/strategies/explorer"
+          style={{ display: 'inline-block', marginTop: 'var(--space-3)',
+                   fontSize: 'var(--font-caption)', color: 'var(--sig-info)',
+                   textDecoration: 'none', letterSpacing: '0.06em',
+                   textTransform: 'uppercase', fontFamily: 'ui-monospace, monospace' }}
+        >
+          Try the new Strategy Explorer →
+        </Link>
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>

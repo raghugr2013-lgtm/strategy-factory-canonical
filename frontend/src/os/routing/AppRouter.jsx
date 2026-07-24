@@ -14,6 +14,7 @@ import { Approvals } from '../surfaces/Approvals';
 import { ApprovalCenter } from '../surfaces/ApprovalCenter';
 import { Workforce } from '../surfaces/Workforce';
 import { Strategies } from '../surfaces/Strategies';
+import { StrategyExplorer } from '../surfaces/StrategyExplorer';
 import { StrategyPassport } from '../surfaces/StrategyPassport';
 import { Settings } from '../surfaces/Settings';
 import { PrimitiveGallery } from '../gallery/PrimitiveGallery';
@@ -61,6 +62,13 @@ export const AppRouter = () => (
 
         {/* Strategies (deep-linked from Engineering rail as "Strategy Passports") */}
         <Route path="strategies" element={<Strategies />} />
+        {/* IMPORTANT: `strategies/explorer` MUST stay declared before
+            `strategies/:id`. React Router v6 does match by specificity
+            rather than order, but leaving this order explicit prevents
+            future refactors from accidentally swallowing the exact
+            /explorer path via the :id catch-all. Verified by testing-
+            agent iteration_8 (Phase C). */}
+        <Route path="strategies/explorer" element={<StrategyExplorer />} />
         <Route path="strategies/:id" element={<StrategyPassport />} />
 
         {/* Factory — FE-B Slice 1..5 Autonomous Research Factory dashboards */}
