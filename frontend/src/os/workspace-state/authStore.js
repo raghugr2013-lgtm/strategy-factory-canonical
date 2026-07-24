@@ -24,6 +24,45 @@ const emailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const storeToken = (t) => { try { sessionStorage.setItem(TOKEN_KEY, t); } catch { /* noop */ } };
 const clearToken = ()   => { try { sessionStorage.removeItem(TOKEN_KEY); } catch { /* noop */ } };
 
+/**
+ * Best-effort JWT payload decode. Returns null on any error so callers can
+ * fall back to a synthesised session profile. Never throws.
+ */
+const decodeJwtPayload = (token) => {
+  try {
+    const [, payload] = String(token).split('.');
+    if (!payload) return null;
+    const padded = payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(
+      payload.length + (4 - (payload.length % 4)) % 4, '=',
+    );
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Build a session profile that Phase-A UserMenu can render.
+ *   - signedInAt : ISO 8601 timestamp of the successful login response
+ *   - expiresAt  : ISO 8601 (from JWT `exp` when available; else +30 min)
+ *   - sessionId  : JWT `jti` when the backend supplies one; else a random tag
+ * Every field is best-effort. None affects auth correctness — a valid JWT
+ * without `exp`/`jti` still yields a working session with a synthesised expiry.
+ */
+const buildSessionProfile = (token) => {
+  const now = new Date();
+  const claims = token ? decodeJwtPayload(token) : null;
+  const expIso = claims?.exp
+    ? new Date(claims.exp * 1000).toISOString()
+    : new Date(now.getTime() + 30 * 60_000).toISOString();
+  const jti = claims?.jti || Math.random().toString(36).slice(2, 10);
+  return {
+    signedInAt: now.toISOString(),
+    expiresAt: expIso,
+    sessionId: `sf-${jti}`,
+  };
+};
+
 const attemptLiveLogin = async (email, password) => {
   if (!isLiveMode()) throw new Error('fixture-mode');
   const data = await apiFetch('/api/auth/login', {
@@ -60,6 +99,9 @@ export const useAuthStore = create(
       status: null,
       error: null,
       authMode: 'fixture', // 'fixture' or 'live'
+      signedInAt: null,
+      expiresAt: null,
+      sessionId: null,
 
       login: async (email, password) => {
         set({ stance: 'authenticating', error: null });
@@ -70,6 +112,7 @@ export const useAuthStore = create(
           try {
             const res = await attemptLiveLogin(email, password);
             storeToken(res.token);
+            const profile = buildSessionProfile(res.token);
             set({
               stance: 'authenticated',
               email: res.email,
@@ -77,6 +120,7 @@ export const useAuthStore = create(
               status: res.status,
               error: null,
               authMode: 'live',
+              ...profile,
             });
             // Hydrate `/api/auth/me` in the background — the login response
             // already carries role/status but `/me` is the source of truth
@@ -109,6 +153,7 @@ export const useAuthStore = create(
           return false;
         }
         clearToken();
+        const fixProfile = buildSessionProfile(null);
         // Fixture credentials mirror the Sprint 1 operator seed — role
         // defaults to `operator` so admin surfaces stay hidden.
         set({
@@ -118,15 +163,16 @@ export const useAuthStore = create(
           status: 'active',
           error: null,
           authMode: 'fixture',
+          ...fixProfile,
         });
         return true;
       },
 
-      logout: () => { clearToken(); set({ stance: 'anonymous', email: null, role: null, status: null, error: null }); },
+      logout: () => { clearToken(); set({ stance: 'anonymous', email: null, role: null, status: null, error: null, signedInAt: null, expiresAt: null, sessionId: null }); },
 
       expireSession: () => {
         clearToken();
-        set({ stance: 'expired', role: null, status: null, error: 'Your session expired. Please sign in again.' });
+        set({ stance: 'expired', role: null, status: null, signedInAt: null, expiresAt: null, sessionId: null, error: 'Your session expired. Please sign in again.' });
       },
 
       /**
@@ -149,7 +195,16 @@ export const useAuthStore = create(
     {
       name: 'sf-auth-v1',
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (s) => ({ stance: s.stance, email: s.email, role: s.role, status: s.status, authMode: s.authMode }),
+      partialize: (s) => ({
+        stance: s.stance,
+        email: s.email,
+        role: s.role,
+        status: s.status,
+        authMode: s.authMode,
+        signedInAt: s.signedInAt,
+        expiresAt: s.expiresAt,
+        sessionId: s.sessionId,
+      }),
     }
   )
 );

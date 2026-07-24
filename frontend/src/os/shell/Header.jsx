@@ -8,11 +8,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useWorkspaceStore, MODES, DENSITIES } from '../workspace-state/store';
-import { useAuthStore } from '../workspace-state/authStore';
 import { ROUTES } from '../routing/routes';
-import { ChevronDown, LogOut, Compass, Info } from 'lucide-react';
-import { openWalkthrough } from '../onboarding/FactoryWalkthrough';
+import { ChevronDown } from 'lucide-react';
 import { WorkspaceContextChip } from './WorkspaceContextChip';
+import { UserMenu } from '../auth/UserMenu';
 
 const useUtcClock = () => {
   const [t, setT] = useState('');
@@ -152,82 +151,6 @@ const DensitySwitcher = () => {
               {d.toUpperCase()}
             </button>
           ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const UserMenu = () => {
-  const email = useAuthStore((s) => s.email);
-  const role = useAuthStore((s) => s.role);
-  const authMode = useAuthStore((s) => s.authMode);
-  const logout = useAuthStore((s) => s.logout);
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('pointerdown', close);
-    return () => document.removeEventListener('pointerdown', close);
-  }, []);
-
-  const shortLabel = email ? email.split('@')[0].toUpperCase() : 'GUEST';
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button data-testid="user-menu-button"
-              onClick={() => setOpen((o) => !o)}
-              style={btnStyle}>
-        {shortLabel} <ChevronDown size={12} strokeWidth={1.5} />
-      </button>
-      {open && (
-        <div data-testid="user-menu"
-             style={{ ...menuStyle, right: 0, left: 'auto', minWidth: 240 }}>
-          <div style={{ padding: 'var(--space-3)', borderBottom: '1px solid var(--stroke-1)' }}>
-            <div data-testid="user-menu-email" style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)' }}>
-              {email || 'anonymous'}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-              <span data-testid="user-menu-role"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px',
-                      borderRadius: 999,
-                      background: role === 'admin'
-                        ? 'color-mix(in oklab, var(--accent-gold) 12%, transparent)'
-                        : 'color-mix(in oklab, var(--sig-info) 12%, transparent)',
-                      border: `1px solid color-mix(in oklab, ${role === 'admin' ? 'var(--accent-gold)' : 'var(--sig-info)'} 40%, transparent)`,
-                      color: role === 'admin' ? 'var(--accent-gold)' : 'var(--sig-info)',
-                      fontSize: 'var(--font-caption)',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      fontWeight: 500,
-                    }}>
-                <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor' }} />
-                {role || 'operator'}
-              </span>
-              <span data-testid="user-menu-auth-mode"
-                    style={{ fontSize: 'var(--font-caption)', color: 'var(--content-lo)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                {authMode === 'live' ? 'live · /api/auth/me' : 'fixture'}
-              </span>
-            </div>
-          </div>
-          <button data-testid="user-menu-walkthrough"
-                  onClick={() => { openWalkthrough(); setOpen(false); }}
-                  style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <Compass size={12} strokeWidth={1.5} /> Factory Walkthrough
-          </button>
-          <button data-testid="user-menu-help"
-                  onClick={() => { window.open('https://strategy.coinnike.com/docs', '_blank', 'noopener'); setOpen(false); }}
-                  style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)', borderBottom: '1px solid var(--stroke-1)' }}>
-            <Info size={12} strokeWidth={1.5} /> Help &amp; About
-          </button>
-          <button data-testid="user-menu-logout"
-                  onClick={() => { logout(); setOpen(false); }}
-                  style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <LogOut size={12} strokeWidth={1.5} /> Sign out
-          </button>
         </div>
       )}
     </div>
