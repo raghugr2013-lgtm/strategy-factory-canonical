@@ -60,8 +60,7 @@ else
   else
     bad "${BACKEND} is NOT attached to ${NET} — Traefik cannot resolve it"
     echo "    fix:  docker network connect ${NET} ${BACKEND}"
-    echo "          (or rebuild:  cd $ROOT && docker compose --env-file .env \\"
-    echo "                        -f infra/compose/docker-compose.prod.yml up -d factory-backend)"
+    echo "          (or rebuild:  cd $ROOT && ./infra/scripts/compose.sh up -d factory-backend)"
   fi
   # Reverse-proxy attached? (Caddy production; Traefik accepted as legacy.)
   if [[ -z "$PROXY" ]]; then

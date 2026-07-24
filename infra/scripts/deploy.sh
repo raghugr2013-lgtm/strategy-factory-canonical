@@ -39,10 +39,10 @@ BUILD_DATE="$(date -u +%FT%TZ)"
 BUILD_VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo 0.0.0)"
 export BUILD_COMMIT BUILD_DATE BUILD_VERSION
 
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE" build
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE" --project-name strategy-factory build
 
 echo "[deploy] starting stack"
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE" up -d
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE" --project-name strategy-factory up -d
 
 # ── Belt-and-suspenders: guarantee factory-backend + factory-runner are
 # on vqb-network even if a previous manual `docker compose up` (using
