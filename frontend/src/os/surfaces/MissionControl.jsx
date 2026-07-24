@@ -3,7 +3,7 @@
  * refs DESIGN_FREEZE_v1.0.md §1.4 · D1 · Bible §7.11
  */
 import React, { useEffect, useState } from 'react';
-import { Bot, Landmark, Cpu, Activity, Sparkles, GitBranch, ClipboardList } from 'lucide-react';
+import { Bot, Landmark, Cpu, Activity, Sparkles, GitBranch, ClipboardList, ClipboardCheck } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useWorkspaceStore } from '../workspace-state/store';
 import { MetricBlock } from '../primitives/MetricBlock';
@@ -182,6 +182,31 @@ export const MissionControl = () => {
           )}
         </div>
       </div>
+
+      {/* Evaluation Harness discovery affordance · Phase D1.
+          Subtle link — mirrors the Phase B/C pattern. Read-only preview. */}
+      <a
+        href="/c/evaluation"
+        data-testid="mc-open-evaluation"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+          padding: 'var(--space-3) var(--space-4)',
+          background: 'var(--surface-1)', border: '1px solid var(--stroke-1)',
+          borderRadius: 'var(--radius-2)', textDecoration: 'none', color: 'inherit',
+        }}
+      >
+        <ClipboardCheck size={14} color="var(--content-md)" aria-hidden />
+        <span style={{ fontSize: 'var(--font-caption)', letterSpacing: '0.08em',
+                        textTransform: 'uppercase', color: 'var(--content-md)' }}>
+          Interactive Prototype Gate
+        </span>
+        <Chip tone="info" label="D1 preview" showGlyph={false}
+              testId="mc-open-evaluation-badge" />
+        <span style={{ marginLeft: 'auto', fontSize: 'var(--font-caption)',
+                        color: 'var(--content-lo)' }}>
+          Open Evaluation Harness →
+        </span>
+      </a>
 
       {/* Partial-failure notice · Sprint 2 N4 · Promise.allSettled slots */}
       {bundle?.partial?.length > 0 && (

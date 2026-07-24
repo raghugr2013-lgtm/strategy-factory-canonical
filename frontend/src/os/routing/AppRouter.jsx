@@ -36,6 +36,7 @@ import { FactoryEvalDashboard } from '../surfaces/factory/FactoryEvalDashboard';
 import { DataGovernanceDashboard } from '../surfaces/factory/DataGovernanceDashboard';
 import { FactoryCockpit } from '../surfaces/factory/FactoryCockpit';
 import { CuratedLibraryDashboard } from '../surfaces/factory/CuratedLibraryDashboard';
+import { EvaluationHarness } from '../surfaces/EvaluationHarness';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -97,6 +98,11 @@ export const AppRouter = () => (
         <Route path="admin/logs"         element={<Logs />} />
 
         <Route path="gallery"    element={<PrimitiveGallery />} />
+
+        {/* Evaluation Harness — Phase D1 (read-only) · net-new additive.
+            D2 unlocks verdict controls; layout is stable across D1→D2. */}
+        <Route path="evaluation" element={<EvaluationHarness />} />
+
         <Route index element={<Navigate to="mission" replace />} />
         <Route path="*" element={<Navigate to="/c/mission" replace />} />
       </Route>
