@@ -1,6 +1,6 @@
 # Strategy Factory Canonical — PRD
 
-_Last updated: 2026-07-23_
+_Last updated: 2026-07-24_
 
 ## Original Problem Statement
 Manage the deployment architecture of the "Strategy Factory Canonical" project
@@ -15,6 +15,24 @@ introducing new backend API functionality (Backend API is under a strict
   NOT yet activated on the VPS).
 
 ## Milestone Log
+
+### 2026-07-24 · Frontend Phase D1 — Evaluation Harness (read-only)
+Ported the 24-criterion Interactive Prototype Gate (`prototype/src/surfaces/EvaluationHarness.tsx`)
+into a **net-new additive route** `/c/evaluation`. Verdict buttons, session-label
+input, notes textarea, and reset / mark-all controls are rendered in their final
+positions but **disabled/read-only** so layout is pixel-stable across D1 → D2.
+
+Deliverables:
+- `frontend/src/os/surfaces/EvaluationHarness.jsx` — read-only surface (~500 lines)
+- `frontend/src/os/surfaces/EvaluationHarness.stories.jsx` — 4 Storybook variants (Unstarted / InProgress / Blocked / Ready)
+- `frontend/tests/e2e/evaluation-harness.spec.cjs` — 5-test Playwright spec
+- `frontend/src/os/routing/AppRouter.jsx` — new `/c/evaluation` route
+- `frontend/src/os/surfaces/MissionControl.jsx` — new discovery link `mc-open-evaluation`
+- `docs/PHASE_D1_ARCHITECTURE.md` — component graph + state model diagram
+
+Verified: `iteration_9.json` → 100% pass (10/10 checks). NO new `/api` endpoints
+touched (backend freeze preserved). Bundle size after gzip: **237.18 kB** main.js
+(within guardrail). Phase A/B/C regression clean.
 
 ### 2026-07-23 · Phase 2 — Orchestration audit + activation matrix (commit 64076c6)
 Repository audit found that the codebase already has a production-ready
@@ -84,6 +102,14 @@ env activation profile that would be applied on the VPS via `.env` +
 See `docs/PHASE2_ACTIVATION_MATRIX.md` §"VPS activation procedure".
 
 ## Backlog
+- **P0** — Phase D2 · Evaluation Harness interactions: unlock `setVerdict`
+  handlers on the 96 verdict buttons, `setSession` on the session-label input,
+  `setNotes` on the textarea, and enable `reset verdicts` + `mark all pass`.
+  Layout is already stable so this is a pure "unlock" change.
+- **P1** — Phase E · next scheduled surface migration from prototype.
+- **P1** — Phase F · final surfaces migration.
+- **P2** — Deprecate legacy `Approvals.jsx` and `Strategies.jsx` once operators
+  validate the new `ApprovalCenter` / `StrategyExplorer` surfaces.
 - **P1** — Operator applies Phase-2 activation profile on VPS (env-only,
   no rebuild needed for backend since app/main.py already boots orchestrator
   when `ORCHESTRATOR_ENABLED=true`; runner rebuild picks up the new
