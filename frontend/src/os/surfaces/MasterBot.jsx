@@ -12,6 +12,7 @@
  * lands on the Backend Activation Roadmap.
  */
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Bot, GitBranch, ShieldCheck, Clock, Sparkles, Activity } from 'lucide-react';
 import { useWorkspaceStore } from '../workspace-state/store';
 import { MetricBlock } from '../primitives/MetricBlock';
@@ -94,6 +95,16 @@ export const MasterBot = () => {
           recent decisions live here. Everything else the Factory does is
           answerable to what this bot chose to run.
         </p>
+        <Link
+          to="/c/workforce/explorer"
+          data-testid="masterbot-try-workforce-explorer"
+          style={{ display: 'inline-block', marginTop: 'var(--space-3)',
+                   fontSize: 'var(--font-caption)', color: 'var(--sig-info)',
+                   textDecoration: 'none', textTransform: 'uppercase',
+                   letterSpacing: '0.08em', fontFamily: 'ui-monospace, monospace' }}
+        >
+          Try Workforce Explorer →
+        </Link>
       </div>
 
       {/* §1 Identity strip */}

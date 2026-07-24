@@ -38,6 +38,7 @@ import { FactoryCockpit } from '../surfaces/factory/FactoryCockpit';
 import { CuratedLibraryDashboard } from '../surfaces/factory/CuratedLibraryDashboard';
 import { EvaluationHarness } from '../surfaces/EvaluationHarness';
 import { TimelineExplorer } from '../surfaces/TimelineExplorer';
+import { WorkforceExplorer } from '../surfaces/WorkforceExplorer';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -64,6 +65,8 @@ export const AppRouter = () => (
         <Route path="approvals"  element={<Approvals />} />
         <Route path="approvals/center" element={<ApprovalCenter />} />
         <Route path="workforce"  element={<Workforce />} />
+        {/* Phase F · Workforce Explorer — additive dual-route. */}
+        <Route path="workforce/explorer" element={<WorkforceExplorer />} />
 
         {/* Strategies (deep-linked from Engineering rail as "Strategy Passports") */}
         <Route path="strategies" element={<Strategies />} />

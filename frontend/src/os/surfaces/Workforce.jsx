@@ -3,6 +3,7 @@
  * refs DESIGN_FREEZE_v1.0.md §1.4 · D4
  */
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Cpu, Sparkles, Landmark, Bot } from 'lucide-react';
 import { PipelineStageBar } from '../primitives/PipelineStageBar';
 import { WorkerCard } from '../primitives/WorkerCard';
@@ -45,6 +46,16 @@ export const Workforce = () => {
           Each worker is a purposeful agent. States tell you where attention is needed; subjects tell
           you what they're working on right now.
         </p>
+        <Link
+          to="/c/workforce/explorer"
+          data-testid="workforce-try-explorer"
+          style={{ display: 'inline-block', marginTop: 'var(--space-3)',
+                   fontSize: 'var(--font-caption)', color: 'var(--sig-info)',
+                   textDecoration: 'none', textTransform: 'uppercase',
+                   letterSpacing: '0.08em', fontFamily: 'ui-monospace, monospace' }}
+        >
+          Try Workforce Explorer →
+        </Link>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
