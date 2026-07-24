@@ -71,7 +71,7 @@ _All measurements from `yarn build` output — main bundle after gzip._
 | Baseline / phase           | main.js (gzipped) | Δ vs. Phase D2 baseline |
 |----------------------------|-------------------|--------------------------|
 | Phase D2 baseline          | 237.18 kB         | 0 kB (reference)        |
-| Phase E (TimelineExplorer) | _to be measured after `yarn build`_ | expected ≤ +3 kB |
+| Phase E (TimelineExplorer + StrategyPassport crumb) | **239.30 kB** | **+2.12 kB (+0.89%)** |
 
 Guardrail: keep cumulative main.js growth ≤ ~1% per phase, ≤ ~5% overall.
 

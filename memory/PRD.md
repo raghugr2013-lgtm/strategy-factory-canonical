@@ -16,6 +16,31 @@ introducing new backend API functionality (Backend API is under a strict
 
 ## Milestone Log
 
+### 2026-07-24 · Frontend Phase E — Timeline Explorer
+Ported the prototype's chronological activity affordances into a new
+additive surface at `/c/timeline/explorer` alongside legacy `Timeline` at
+`/c/timeline`. Reuses `timelineAdapter.fetchTimeline`, `streamAdapter.useStream`,
+`navigationStore` (actor facet + saveSurface + setCrumb), `useWorkspaceStore`
+(`timeWindow`, `selectStrategy`), and existing primitives/features (SurfaceHeader,
+SignatureFrame, ActivityRow, EvidenceDrawer, FacetBar, TimeWindowChip,
+StreamPostmark). Also patched `StrategyPassport.jsx` to consume
+`navigationStore.crumb` so both Phase C's `StrategyExplorer` and Phase E's
+`TimelineExplorer` produce a visible "back to explorer / back to timeline"
+return button (previously the crumb was written but never read).
+
+Deliverables:
+- `frontend/src/os/surfaces/TimelineExplorer.jsx` (~250 lines)
+- `frontend/src/os/surfaces/TimelineExplorer.stories.jsx` (3 variants)
+- `frontend/tests/e2e/timeline-explorer.spec.cjs` (8 tests)
+- Route `/c/timeline/explorer` in `AppRouter.jsx` (additive only)
+- Discovery link `timeline-try-explorer` on legacy Timeline
+- Passport back-link now consumes `navigationStore.crumb`
+- `docs/PHASE_E_ARCHITECTURE.md`, `docs/PROTOTYPE_MIGRATION_TRACKER.md`
+
+Verified: iteration_11 (initial) → 89% pass (crumb rendering gap). Fix
+verified in iteration_12 → 100% pass. Bundle: 237.18 → 239.30 kB gzipped
+(+0.89%, within guardrail). Backend Feature Freeze preserved.
+
 ### 2026-07-24 · Frontend Phase D2 — Evaluation Harness interactions unlocked
 Pure "unlock" commit on the surface shipped in D1. Wired the five pre-declared
 store mutators to the UI:
