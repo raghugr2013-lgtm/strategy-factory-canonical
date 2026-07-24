@@ -183,8 +183,8 @@ export const MissionControl = () => {
         </div>
       </div>
 
-      {/* Evaluation Harness discovery affordance · Phase D1.
-          Subtle link — mirrors the Phase B/C pattern. Read-only preview. */}
+      {/* Evaluation Harness discovery affordance · Phase D2 (interactions live).
+          Subtle link — mirrors the Phase B/C pattern. */}
       <a
         href="/c/evaluation"
         data-testid="mc-open-evaluation"
@@ -200,7 +200,7 @@ export const MissionControl = () => {
                         textTransform: 'uppercase', color: 'var(--content-md)' }}>
           Interactive Prototype Gate
         </span>
-        <Chip tone="info" label="D1 preview" showGlyph={false}
+        <Chip tone="info" label="walkable checklist" showGlyph={false}
               testId="mc-open-evaluation-badge" />
         <span style={{ marginLeft: 'auto', fontSize: 'var(--font-caption)',
                         color: 'var(--content-lo)' }}>

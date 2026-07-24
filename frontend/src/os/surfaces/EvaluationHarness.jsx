@@ -1,31 +1,31 @@
 /*
- * EvaluationHarness — Phase D1: read-only visualization of the 24-criterion
- * Interactive Prototype Gate (P0 §9). Ports the prototype surface
- * (prototype/src/surfaces/EvaluationHarness.tsx) into the production
- * frontend without enabling any write-side interactions.
+ * EvaluationHarness — Phase D2: interactions unlocked.
  *
- * D1 scope (this commit):
- *   • Six dimension sections rendered with all 24 criteria (headline,
- *     detail, reference).
- *   • Overall readiness card (verdict = unstarted on cold-load).
- *   • Session Summary strip (roll-up per dimension).
- *   • Notes textarea and session-label input (both disabled — visible).
- *   • Verdict buttons rendered in final position but disabled with a
- *     tooltip that reads "Interactive evaluation controls will be
- *     enabled in Phase D2." Layout is pixel-stable across D1 → D2.
+ * D1 shipped the read-only visualization. D2 is a PURE UNLOCK — the
+ * layout, testids, styles, and route are unchanged. The only diff is:
  *
- * OUT OF SCOPE (D2):
- *   • setVerdict / clearAll / markAllPass / setNotes / setSession — the
- *     store already exposes them; D2 wires them to the UI.
+ *   • Verdict buttons wire to setVerdict(criterionId, verdict).
+ *   • Session-label input wires to setSession(str).
+ *   • Notes textarea wires to setNotes(str).
+ *   • Reset button wires to clearAll().
+ *   • Mark-all-pass button wires to markAllPass().
+ *   • Disabled / readOnly / aria-disabled attributes removed.
+ *   • D2 tooltip removed.
  *
- * Architecture (see /app/docs/PHASE_D1_ARCHITECTURE.md):
+ * The store, DIMENSIONS catalogue, and derived helpers
+ * (summariseDimension / overallReadiness) are the same file that D1
+ * used — no store refactor was needed because D1 pre-declared all five
+ * mutators.
+ *
+ * Architecture (see /app/docs/PHASE_D1_ARCHITECTURE.md · unchanged):
  *
  *     AppRouter (/c/evaluation)
  *          │
  *          ▼
  *     EvaluationHarness.jsx  ← this file
  *          │
- *          ├── useEvaluationStore  (zustand · read verdicts/notes/session)
+ *          ├── useEvaluationStore  (read + write; persisted to
+ *          │                        localStorage sf.eval.v1)
  *          │       └── DIMENSIONS  (24-criterion catalogue)
  *          │       └── summariseDimension / overallReadiness (derived)
  *          │
@@ -33,7 +33,7 @@
  *          │
  *          └── react-router  (useNavigate → back to /c/mission)
  *
- * No new backend adapters. No API calls. Client-only surface.
+ * No backend adapters. No API calls. Client-only surface.
  */
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -74,15 +74,17 @@ const READINESS_TONE = {
   unstarted: { tone: 'advisory' },
 };
 
-// D1 read-only tooltip. Applied to every write-side control.
-const D2_TOOLTIP = 'Interactive evaluation controls will be enabled in Phase D2.';
-
 export const EvaluationHarness = () => {
   const nav = useNavigate();
-  // Read-only: we intentionally do NOT bind setters in D1.
-  const verdicts = useEvaluationStore((s) => s.verdicts);
-  const notes    = useEvaluationStore((s) => s.notes);
-  const session  = useEvaluationStore((s) => s.session);
+  // D2 unlock: bind read AND write. Store mutators persist to localStorage.
+  const verdicts     = useEvaluationStore((s) => s.verdicts);
+  const notes        = useEvaluationStore((s) => s.notes);
+  const session      = useEvaluationStore((s) => s.session);
+  const setVerdict   = useEvaluationStore((s) => s.setVerdict);
+  const setNotes     = useEvaluationStore((s) => s.setNotes);
+  const setSession   = useEvaluationStore((s) => s.setSession);
+  const clearAll     = useEvaluationStore((s) => s.clearAll);
+  const markAllPass  = useEvaluationStore((s) => s.markAllPass);
 
   const summaries = useMemo(
     () => DIMENSIONS.map((d) => summariseDimension(d, verdicts)),
@@ -94,7 +96,7 @@ export const EvaluationHarness = () => {
   return (
     <section
       data-testid="evaluation-harness"
-      data-phase="d1"
+      data-phase="d2"
       style={{
         padding: 'var(--space-6) var(--space-5)', maxWidth: 1200,
         display: 'flex', flexDirection: 'column', gap: 'var(--space-6)',
@@ -103,12 +105,12 @@ export const EvaluationHarness = () => {
       <SurfaceHeader
         eyebrow="Evaluation Harness · Interactive Prototype Gate"
         headline="Six dimensions. One walkable checklist. Design Freeze on the far side."
-        briefing="Walk each surface with the criteria below. Verdict controls are locked in Phase D1 — this surface is a read-only preview of the 24-criterion catalogue. Interactive verdicts, reset, and notes land in Phase D2."
+        briefing="Walk each surface with the criteria below. Mark pass / review / fail as you go — the overall readiness verdict updates live and is the go/no-go signal for Design Freeze declaration."
         status="P0 §9 · 6 dimensions · 24 criteria"
         testId="eval-header"
       />
 
-      {/* Session controls — DISABLED in D1. */}
+      {/* Session controls */}
       <div
         data-testid="eval-controls"
         style={{
@@ -127,58 +129,37 @@ export const EvaluationHarness = () => {
           <input
             data-testid="eval-session-label"
             value={session}
-            placeholder="Phase D2 · e.g. 2026-02-04 walk-through #1"
-            readOnly
-            aria-readonly="true"
-            title={D2_TOOLTIP}
+            placeholder="e.g. 2026-02-04 walk-through #1"
+            onChange={(e) => setSession(e.target.value)}
             style={{
               background: 'var(--surface-2)',
-              color: 'var(--content-md)',
+              color: 'var(--content-hi)',
               border: '1px solid var(--stroke-2)',
               borderRadius: 'var(--radius-1)',
               padding: '4px 8px',
               fontFamily: 'ui-monospace, monospace',
               fontSize: 'var(--font-caption)',
               minWidth: 280,
-              opacity: 0.6,
-              cursor: 'not-allowed',
             }}
           />
         </label>
         <button
           data-testid="eval-reset"
           type="button"
-          disabled
-          aria-disabled="true"
-          title={D2_TOOLTIP}
-          style={secondaryBtn(true)}
+          onClick={clearAll}
+          style={secondaryBtn(false)}
         >
           <RotateCcw size={12} /> reset verdicts
         </button>
         <button
           data-testid="eval-mark-all-pass"
           type="button"
-          disabled
-          aria-disabled="true"
-          title={D2_TOOLTIP}
-          style={secondaryBtn(true)}
+          onClick={markAllPass}
+          title="Diagnostic-only shortcut; use only when every criterion has been verified."
+          style={secondaryBtn(false)}
         >
           <ClipboardCheck size={12} /> mark all pass
         </button>
-        <span
-          data-testid="eval-phase-badge"
-          style={{
-            marginLeft: 'auto',
-            fontSize: 'var(--font-caption)',
-            color: 'var(--content-lo)',
-            fontFamily: 'ui-monospace, monospace',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-          }}
-          title={D2_TOOLTIP}
-        >
-          phase · D1 read-only preview
-        </span>
       </div>
 
       {/* Overall readiness card */}
@@ -403,10 +384,8 @@ export const EvaluationHarness = () => {
                           type="button"
                           data-testid={`eval-verdict-${c.id}-${opt}`}
                           aria-pressed={v === opt}
-                          aria-disabled="true"
-                          disabled
-                          title={D2_TOOLTIP}
-                          style={verdictBtn(v === opt, opt, true)}
+                          onClick={() => setVerdict(c.id, opt)}
+                          style={verdictBtn(v === opt, opt, false)}
                         >
                           {verdictLabel[opt]}
                         </button>
@@ -420,29 +399,25 @@ export const EvaluationHarness = () => {
         );
       })}
 
-      {/* Notes — disabled in D1. */}
+      {/* Notes */}
       <SignatureFrame tone="info" caption="Walk-through notes" testId="eval-notes-frame">
         <textarea
           data-testid="eval-notes"
           value={notes}
-          readOnly
-          aria-readonly="true"
-          title={D2_TOOLTIP}
-          placeholder="Phase D2 · Any refinements to author as D-series or E-series addenda before Design Freeze."
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Any refinements to author as D-series or E-series addenda before Design Freeze."
           rows={5}
           style={{
             width: '100%',
             resize: 'vertical',
             background: 'var(--surface-2)',
-            color: 'var(--content-md)',
+            color: 'var(--content-hi)',
             border: '1px solid var(--stroke-2)',
             borderRadius: 'var(--radius-1)',
             padding: 'var(--space-3)',
             fontFamily: 'inherit',
             fontSize: 'var(--font-body-sm)',
             lineHeight: 1.5,
-            opacity: 0.7,
-            cursor: 'not-allowed',
           }}
         />
       </SignatureFrame>
