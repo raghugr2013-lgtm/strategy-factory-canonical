@@ -194,6 +194,11 @@ services:
     build:
       context: ../../frontend
       dockerfile: Dockerfile
+      args:
+        # Baked into the CRA bundle at build time via ARG→ENV in
+        # frontend/Dockerfile. Required so apiClient.isLiveMode() returns
+        # true in production and POST /api/auth/login actually fires.
+        REACT_APP_BACKEND_URL: "https://${FACTORY_DOMAIN}"
     image: ${FACTORY_IMAGE_REPO:-strategy-factory}/frontend:${FACTORY_IMAGE_TAG:-1.1.0}
     container_name: factory-frontend
     restart: unless-stopped
