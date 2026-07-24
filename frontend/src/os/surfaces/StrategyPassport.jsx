@@ -39,6 +39,7 @@ import { SignalStateBadge, FreezeCaption } from './engineering/LivenessBadge';
 import { useWorkspaceContext } from '../hooks/useWorkspaceContext';
 import { openApproval } from '../shell/ApprovalsModal';
 import { useTimelineEvents } from '../adapters/timelineShim';
+import { useNavigationStore } from '../workspace-state/navigationStore';
 
 const iso = (v) => {
   if (!v) return '—';
@@ -145,6 +146,15 @@ export const StrategyPassport = () => {
   const activeTab = searchParams.get('tab') || 'evidence';
   const { context, setContext } = useWorkspaceContext();
 
+  // Return-crumb consumer (Rule of Predictable Return · E5 §4.5).
+  // Consumers such as StrategyExplorer / TimelineExplorer / ApprovalCenter
+  // stamp a crumb via navigationStore.setCrumb before navigating here.
+  // We read it (but do not consume it eagerly — the operator may want the
+  // back button to remain until they actually click it) and clear it on
+  // click via consumeCrumb().
+  const returnCrumb = useNavigationStore((s) => s.crumb);
+  const consumeCrumb = useNavigationStore((s) => s.consumeCrumb);
+
   const [strategyState, setStrategyState] = useState({ status: 'loading', liveness: 'partial', reason: null, payload: null });
   const [neighbourState, setNeighbourState] = useState({ status: 'idle', liveness: 'partial', reason: null, matches: [], total: 0 });
   const [siblingState, setSiblingState] = useState({ status: 'loading', liveness: 'partial', list: [] });
@@ -215,9 +225,18 @@ export const StrategyPassport = () => {
       <section data-testid="engineering-surface-passport"
                style={{ padding: 'var(--space-6) var(--space-5)', maxWidth: 1000 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-          <Link data-testid="passport-back" to="/c/strategies" style={backLink}>
-            <ArrowLeft size={12} /> Passports
-          </Link>
+          {returnCrumb ? (
+            <Link data-testid="passport-back"
+                  to={returnCrumb.path}
+                  onClick={() => consumeCrumb()}
+                  style={backLink}>
+              <ArrowLeft size={12} /> {returnCrumb.label}
+            </Link>
+          ) : (
+            <Link data-testid="passport-back" to="/c/strategies" style={backLink}>
+              <ArrowLeft size={12} /> Passports
+            </Link>
+          )}
           <span style={{ marginLeft: 'auto' }}>
             <SignalStateBadge state="error" reason={strategyState.reason} testId="passport-liveness" />
           </span>
@@ -244,9 +263,18 @@ export const StrategyPassport = () => {
 
       {/* HEADER */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
-        <Link data-testid="passport-back" to="/c/strategies" style={backLink}>
-          <ArrowLeft size={12} /> Passports
-        </Link>
+        {returnCrumb ? (
+          <Link data-testid="passport-back"
+                to={returnCrumb.path}
+                onClick={() => consumeCrumb()}
+                style={backLink}>
+            <ArrowLeft size={12} /> {returnCrumb.label}
+          </Link>
+        ) : (
+          <Link data-testid="passport-back" to="/c/strategies" style={backLink}>
+            <ArrowLeft size={12} /> Passports
+          </Link>
+        )}
         <span style={{ color: 'var(--content-lo)' }}>/</span>
         <span style={{ ...eyebrow, color: 'var(--content-hi)' }} data-testid="passport-id">
           {id}
