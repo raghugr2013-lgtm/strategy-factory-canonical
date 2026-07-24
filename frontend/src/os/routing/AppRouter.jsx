@@ -37,6 +37,7 @@ import { DataGovernanceDashboard } from '../surfaces/factory/DataGovernanceDashb
 import { FactoryCockpit } from '../surfaces/factory/FactoryCockpit';
 import { CuratedLibraryDashboard } from '../surfaces/factory/CuratedLibraryDashboard';
 import { EvaluationHarness } from '../surfaces/EvaluationHarness';
+import { TimelineExplorer } from '../surfaces/TimelineExplorer';
 import { DEFAULT_AUTHENTICATED_ROUTE, SIGN_IN_ROUTE } from './routes';
 
 export const AppRouter = () => (
@@ -57,6 +58,9 @@ export const AppRouter = () => (
         <Route path="mission"    element={<MissionControl />} />
         <Route path="masterbot"  element={<MasterBot />} />
         <Route path="timeline"   element={<Timeline />} />
+        {/* Phase E · Timeline Explorer — additive dual-route. Order matters
+            only for consistency; React Router v6 resolves by specificity. */}
+        <Route path="timeline/explorer" element={<TimelineExplorer />} />
         <Route path="approvals"  element={<Approvals />} />
         <Route path="approvals/center" element={<ApprovalCenter />} />
         <Route path="workforce"  element={<Workforce />} />

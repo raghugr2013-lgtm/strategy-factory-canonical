@@ -86,6 +86,15 @@ export const Timeline = () => {
         <FacetBar axis="actor" options={ACTOR_OPTIONS} testIdPrefix="timeline-facet" />
         <TimeWindowChip testId="timeline-time-window" />
         <StreamPostmark status={streamStatus} testId="timeline-stream-postmark" />
+        <a
+          href="/c/timeline/explorer"
+          data-testid="timeline-try-explorer"
+          style={{ fontSize: 'var(--font-caption)', color: 'var(--sig-info)',
+                   textDecoration: 'none', textTransform: 'uppercase',
+                   letterSpacing: '0.08em', fontFamily: 'ui-monospace, monospace' }}
+        >
+          Try Timeline Explorer →
+        </a>
         <span data-testid="timeline-cascade-hint"
               style={{ marginLeft: 'auto', fontSize: 'var(--font-caption)',
                        color: 'var(--content-lo)', textTransform: 'uppercase',
