@@ -17,7 +17,8 @@ introduced in any migration phase. Every surface reuses existing adapters._
 | C | StrategyExplorer | `/c/strategies/explorer` (alongside `/c/strategies`) | Phase C | ✅ Merged |
 | D1 | EvaluationHarness (read-only) | `/c/evaluation` (net-new) | Phase D1 | ✅ Merged |
 | D2 | EvaluationHarness (interactions unlocked) | `/c/evaluation` (same route) | Phase D2 | ✅ Merged |
-| E | TimelineExplorer | `/c/timeline/explorer` (alongside `/c/timeline`) | Phase E | ✅ Merged |
+| E | TimelineExplorer + StrategyPassport return-crumb consumer | `/c/timeline/explorer` (alongside `/c/timeline`) | Phase E | ✅ Merged |
+| F | WorkforceExplorer | `/c/workforce/explorer` (alongside `/c/workforce` + `/c/masterbot`) | Phase F | ✅ Merged |
 
 Every phase is a single, self-contained, rollback-safe commit. Reverting any
 single phase leaves earlier phases functional.
@@ -26,7 +27,6 @@ single phase leaves earlier phases functional.
 
 | Surface | Status | Planned action |
 |---------|--------|----------------|
-| Master Bot / Workforce | 🟡 Pending | **Phase F** — new `WorkforceExplorer` at `/c/workforce/explorer` alongside `/c/workforce` and `/c/masterbot`. Reuses `masterBotAdapter`. |
 | Mission Control | 🟢 Optional | **Phase G (optional)** — in-place polish only. Skip if operator considers current MC acceptable. |
 
 ## 3. Decisions on skipped migrations
@@ -52,6 +52,7 @@ doc. To roll back:
 | D1    | Revert Phase-D1 commit               | Also reverts D2 (D2 diffed on D1) |
 | D2    | Revert Phase-D2 commit               | None (returns to D1 read-only state) |
 | E     | Revert Phase-E commit                | None |
+| F     | Revert Phase-F commit                | None |
 
 Each revert removes exactly:
 
@@ -71,7 +72,8 @@ _All measurements from `yarn build` output — main bundle after gzip._
 | Baseline / phase           | main.js (gzipped) | Δ vs. Phase D2 baseline |
 |----------------------------|-------------------|--------------------------|
 | Phase D2 baseline          | 237.18 kB         | 0 kB (reference)        |
-| Phase E (TimelineExplorer + StrategyPassport crumb) | **239.30 kB** | **+2.12 kB (+0.89%)** |
+| Phase E (TimelineExplorer + StrategyPassport crumb) | 239.30 kB | +2.12 kB (+0.89%) |
+| Phase F (WorkforceExplorer) | **240.76 kB**    | **+3.58 kB cumulative (+1.51%)** |
 
 Guardrail: keep cumulative main.js growth ≤ ~1% per phase, ≤ ~5% overall.
 
@@ -85,14 +87,19 @@ Guardrail: keep cumulative main.js growth ≤ ~1% per phase, ≤ ~5% overall.
 | D1    | `useEvaluationStore` (client-only, `localStorage['sf.eval.v1']`) | 0 |
 | D2    | Same as D1 (mutators pre-declared) | 0 |
 | E     | `timelineAdapter`, `streamAdapter (useStream)`, `navigationStore`, `useWorkspaceStore` | 0 |
+| F     | `factoryAdapter.fetchWorkers`, `masterBotAdapter.aggregateMasterBot`, `navigationStore.saveSurface`, `useWorkspaceStore.killPostureArmed` | 0 |
 
 ## 7. Deferred backlog (post-migration)
 
 - **P2** — Deprecate legacy `Approvals.jsx`, `Strategies.jsx`, and optionally
-  `Timeline.jsx` / `Workforce.jsx` once operators validate the Explorer
-  variants.
+  `Timeline.jsx` / `Workforce.jsx` / `MasterBot.jsx` once operators validate
+  the Explorer variants.
+- **P2** — Extend the return-crumb pattern to `ApprovalCenter → StrategyPassport`
+  (deferred per user direction from Phase F kickoff; keep this polish out of
+  the D–F migration scope). Would complete the Bible §7.4a Predictable Return
+  triad across Explorer / Timeline / Approvals.
 - **P2** — Productivity add-ons for the Evaluation Harness (deferred per
-  user direction until Phase F completes):
+  user direction until Phase G decision):
   - Copy readiness summary to clipboard
   - Export report (Markdown / JSON)
   - Share snapshot (URL-encoded state)

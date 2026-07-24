@@ -16,6 +16,33 @@ introducing new backend API functionality (Backend API is under a strict
 
 ## Milestone Log
 
+### 2026-07-24 · Frontend Phase F — Workforce Explorer
+Ported the prototype's Master-Bot-headed workforce surface into a new
+additive surface at `/c/workforce/explorer` alongside legacy `Workforce`
+(`/c/workforce`) and `MasterBot` (`/c/masterbot`). Reuses `factoryAdapter.fetchWorkers`
++ `masterBotAdapter.aggregateMasterBot` + `WorkerCard` primitive + `navigationStore.saveSurface`
+for view memory + `useWorkspaceStore.killPostureArmed` for the danger
+ribbon. Three-view toggle (org / purpose / status) with view memory persisted
+across route changes. State-first table sorts errors and blocked workers to
+the top (Bible §7.6 attention-first ordering).
+
+Deliverables:
+- `frontend/src/os/surfaces/WorkforceExplorer.jsx` (~370 lines)
+- `frontend/src/os/surfaces/WorkforceExplorer.stories.jsx` (4 variants)
+- `frontend/tests/e2e/workforce-explorer.spec.cjs` (9 tests)
+- Route `/c/workforce/explorer` in `AppRouter.jsx` (additive only)
+- Discovery links: `workforce-try-explorer` on Workforce, `masterbot-try-workforce-explorer` on MasterBot
+- `docs/PHASE_F_ARCHITECTURE.md`
+- Updated `docs/PROTOTYPE_MIGRATION_TRACKER.md`
+
+Bug fixed mid-phase: view-memory mount race (iteration_13 flagged; fix
+verified in iteration_14 → 13/13 pass). Replaced the async two-effect
+pattern with a synchronous lazy `useState` initializer + `hydratedRef`-guarded
+save effect so the persisted view is not stomped on first mount.
+
+Bundle: 239.30 → 240.76 kB gzipped (+0.61% for this phase; +1.51%
+cumulative since Phase D2). Backend Feature Freeze preserved.
+
 ### 2026-07-24 · Frontend Phase E — Timeline Explorer
 Ported the prototype's chronological activity affordances into a new
 additive surface at `/c/timeline/explorer` alongside legacy `Timeline` at
@@ -151,15 +178,18 @@ env activation profile that would be applied on the VPS via `.env` +
 See `docs/PHASE2_ACTIVATION_MATRIX.md` §"VPS activation procedure".
 
 ## Backlog
-- **P1** — Phase E · next scheduled surface migration from prototype.
-- **P1** — Phase F · final surfaces migration.
-- **P2** — Deprecate legacy `Approvals.jsx` and `Strategies.jsx` once operators
-  validate the new `ApprovalCenter` / `StrategyExplorer` surfaces.
-- **P2** — **Post-migration productivity phase** (after frontend migration
-  completes): productivity enhancements for the Evaluation Harness such as
+- **P1** — Phase G (**optional**) · Mission Control in-place polish. Skip if
+  operator considers current Mission Control acceptable.
+- **P2** — Deprecate legacy `Approvals.jsx`, `Strategies.jsx`, and optionally
+  `Timeline.jsx` / `Workforce.jsx` / `MasterBot.jsx` once operators validate
+  the Explorer variants.
+- **P2** — Extend the return-crumb pattern to `ApprovalCenter →
+  StrategyPassport` (post-migration polish; completes Bible §7.4a Predictable
+  Return triad). Deferred per Phase F kickoff.
+- **P2** — **Post-migration productivity phase** (after Explorer migration is
+  signed off): productivity enhancements for the Evaluation Harness such as
   _Copy readiness summary to clipboard_, _Export report_ (Markdown / JSON),
-  and _Share snapshot_ (URL-encoded state). Deliberately deferred out of the
-  D-series scope.
+  and _Share snapshot_ (URL-encoded state).
 - **P1** — Operator applies Phase-2 activation profile on VPS (env-only,
   no rebuild needed for backend since app/main.py already boots orchestrator
   when `ORCHESTRATOR_ENABLED=true`; runner rebuild picks up the new
