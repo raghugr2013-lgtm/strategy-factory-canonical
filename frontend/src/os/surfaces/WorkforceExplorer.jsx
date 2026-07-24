@@ -27,7 +27,7 @@
  *   /c/workforce/explorer   → this new surface
  * The existing surfaces are untouched. Rollback = revert this commit.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bot, Cpu, Sparkles, Landmark, LayoutGrid, Flag, ListChecks } from 'lucide-react';
 import { SurfaceHeader } from '../primitives/SurfaceHeader';
@@ -78,22 +78,28 @@ export const WorkforceExplorer = () => {
   const loc = useLocation();
 
   const saveSurface  = useNavigationStore((s) => s.saveSurface);
-  const readSurface  = useNavigationStore((s) => s.readSurface);
   const killArmed    = useWorkspaceStore((s) => s.killPostureArmed);
 
   const [workers, setWorkers] = useState(null);
   const [masterBot, setMasterBot] = useState(null);
-  const [view, setView] = useState('org');
+  // View memory: hydrate synchronously from navigationStore on mount to
+  // avoid a mount-time race with the save effect below (found by testing
+  // agent iteration_13).
+  const [view, setView] = useState(() => {
+    const mem = useNavigationStore.getState().memory?.[loc.pathname];
+    return mem?.view && VIEWS.some((v) => v.key === mem.view) ? mem.view : 'org';
+  });
 
-  // Restore last-selected view from surface memory (Predictable Return).
-  useEffect(() => {
-    const mem = readSurface(loc.pathname);
-    if (mem?.view && VIEWS.some((v) => v.key === mem.view)) setView(mem.view);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loc.pathname]);
+  // Skip the very first save effect so the hydrated value is not stomped
+  // by a redundant write with the same shape.
+  const hydratedRef = useRef(false);
 
-  // Persist view into surface memory.
+  // Persist view into surface memory (after the first render).
   useEffect(() => {
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+      return;
+    }
     saveSurface(loc.pathname, { view });
   }, [view, loc.pathname, saveSurface]);
 
