@@ -16,6 +16,30 @@ introducing new backend API functionality (Backend API is under a strict
 
 ## Milestone Log
 
+### 2026-07-24 · Frontend Phase D2 — Evaluation Harness interactions unlocked
+Pure "unlock" commit on the surface shipped in D1. Wired the five pre-declared
+store mutators to the UI:
+
+- `setVerdict(criterionId, verdict)` — 96 verdict buttons (24 × 4)
+- `setSession(str)` — session-label input
+- `setNotes(str)` — walk-through notes textarea
+- `clearAll()` — reset verdicts
+- `markAllPass()` — diagnostic mark-all shortcut
+
+Removed `disabled` / `readOnly` / `aria-disabled` attributes and the
+"D2 unlock" tooltip. Layout, testids, and route are unchanged from D1
+(surface anatomy verified against iteration_9 baseline).
+
+Deliverables:
+- `frontend/src/os/surfaces/EvaluationHarness.jsx` — mutator wiring
+- `frontend/src/os/surfaces/MissionControl.jsx` — badge label `D1 preview` → `walkable checklist`
+- `frontend/tests/e2e/evaluation-harness.spec.cjs` — replaced with 9 interaction tests
+- `docs/PHASE_D2_ARCHITECTURE.md` — D2 unlock diff + interaction graph
+
+Verified: `iteration_10.json` → 100% pass (12/12 checks). ZERO new `/api`
+endpoints. Persistence via `localStorage['sf.eval.v1']` confirmed by
+reload-restore test. Phase A/B/C regression clean.
+
 ### 2026-07-24 · Frontend Phase D1 — Evaluation Harness (read-only)
 Ported the 24-criterion Interactive Prototype Gate (`prototype/src/surfaces/EvaluationHarness.tsx`)
 into a **net-new additive route** `/c/evaluation`. Verdict buttons, session-label
@@ -102,14 +126,15 @@ env activation profile that would be applied on the VPS via `.env` +
 See `docs/PHASE2_ACTIVATION_MATRIX.md` §"VPS activation procedure".
 
 ## Backlog
-- **P0** — Phase D2 · Evaluation Harness interactions: unlock `setVerdict`
-  handlers on the 96 verdict buttons, `setSession` on the session-label input,
-  `setNotes` on the textarea, and enable `reset verdicts` + `mark all pass`.
-  Layout is already stable so this is a pure "unlock" change.
 - **P1** — Phase E · next scheduled surface migration from prototype.
 - **P1** — Phase F · final surfaces migration.
 - **P2** — Deprecate legacy `Approvals.jsx` and `Strategies.jsx` once operators
   validate the new `ApprovalCenter` / `StrategyExplorer` surfaces.
+- **P2** — **Post-migration productivity phase** (after frontend migration
+  completes): productivity enhancements for the Evaluation Harness such as
+  _Copy readiness summary to clipboard_, _Export report_ (Markdown / JSON),
+  and _Share snapshot_ (URL-encoded state). Deliberately deferred out of the
+  D-series scope.
 - **P1** — Operator applies Phase-2 activation profile on VPS (env-only,
   no rebuild needed for backend since app/main.py already boots orchestrator
   when `ORCHESTRATOR_ENABLED=true`; runner rebuild picks up the new
